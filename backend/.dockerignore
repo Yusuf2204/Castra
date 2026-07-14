@@ -1,0 +1,46 @@
+# ── version control ─────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+
+# ── IDE / editor ────────────────────────────────────────────
+.editorconfig
+.idea
+.vscode
+*.swp
+*.swo
+
+# ── node ────────────────────────────────────────────────────
+node_modules
+package-lock.json
+package.json
+vite.config.js
+
+# ── Docker files (self) ─────────────────────────────────────
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# ── environment ─────────────────────────────────────────────
+.env
+.env.*
+!.env.production.example
+
+# ── test ────────────────────────────────────────────────────
+tests
+phpunit.xml
+.phpunit.result.cache
+
+# ── docs ────────────────────────────────────────────────────
+docs
+README.md
+
+# ── storage (runtime only via volumes) ───────────────────────
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+!storage/logs/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep

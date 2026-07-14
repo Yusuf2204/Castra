@@ -1,0 +1,119 @@
+# ============================================================
+# React CMS — Docker Compose
+# ============================================================
+# Services:
+#   nginx    — reverse proxy (public entry)
+#   backend  — Laravel 12 API (PHP 8.3 FPM + Nginx)
+#   frontend — React SPA (Nginx static)
+#
+# External: database (already running, not part of this stack)
+# ============================================================
+
+services:
+  # ── Reverse Proxy ──────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: react-cms-proxy
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - cms-network
+    restart: unless-stopped
+
+  # ── Backend (Laravel API) ──────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: react-cms-backend
+    ports:
+      - "${BACKEND_PORT:-9001}:80"
+    volumes:
+      - cms-logs:/var/www/html/storage/logs
+    environment:
+      # Laravel
+      APP_NAME: "${APP_NAME:-React CMS}"
+      APP_ENV: "${APP_ENV:-production}"
+      APP_KEY: "${APP_KEY:-}"
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      APP_URL: "${APP_URL:-http://localhost}"
+      APP_LOCALE: "${APP_LOCALE:-en}"
+      APP_FALLBACK_LOCALE: "${APP_FALLBACK_LOCALE:-en}"
+
+      # Database (external)
+      DB_CONNECTION: "${DB_CONNECTION:-mysql}"
+      DB_HOST: "${DB_HOST}"
+      DB_PORT: "${DB_PORT:-3306}"
+      DB_DATABASE: "${DB_DATABASE}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+
+      # Session
+      SESSION_DRIVER: "${SESSION_DRIVER:-database}"
+      SESSION_LIFETIME: "${SESSION_LIFETIME:-120}"
+      SESSION_ENCRYPT: "${SESSION_ENCRYPT:-true}"
+      SESSION_SECURE_COOKIE: "${SESSION_SECURE_COOKIE:-true}"
+      SESSION_HTTP_ONLY: "${SESSION_HTTP_ONLY:-true}"
+      SESSION_SAME_SITE: "${SESSION_SAME_SITE:-lax}"
+
+      # Sanctum
+      SANCTUM_EXPIRATION: "${SANCTUM_EXPIRATION:-480}"
+      SANCTUM_STATEFUL_DOMAINS: "${SANCTUM_STATEFUL_DOMAINS:-}"
+      SANCTUM_TOKEN_PREFIX: "${SANCTUM_TOKEN_PREFIX:-react_cms_}"
+
+      # CORS
+      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-}"
+      CORS_ALLOWED_METHODS: "${CORS_ALLOWED_METHODS:-GET,POST,PUT,PATCH,DELETE,OPTIONS}"
+      CORS_ALLOWED_HEADERS: "${CORS_ALLOWED_HEADERS:-Accept,Authorization,Content-Type,Origin,X-Requested-With}"
+      CORS_MAX_AGE: "${CORS_MAX_AGE:-600}"
+      CORS_SUPPORTS_CREDENTIALS: "${CORS_SUPPORTS_CREDENTIALS:-false}"
+
+      # Admin seeder
+      ADMIN_NAME: "${ADMIN_NAME:-Administrator}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@example.com}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+
+      # Logging
+      LOG_CHANNEL: "${LOG_CHANNEL:-daily}"
+      LOG_LEVEL: "${LOG_LEVEL:-warning}"
+      LOG_DAILY_DAYS: "${LOG_DAILY_DAYS:-30}"
+
+      # Cache / Queue
+      CACHE_STORE: "${CACHE_STORE:-database}"
+      QUEUE_CONNECTION: "${QUEUE_CONNECTION:-database}"
+      FILESYSTEM_DISK: "${FILESYSTEM_DISK:-local}"
+
+      # Swagger
+      L5_SWAGGER_GENERATE_ALWAYS: "${L5_SWAGGER_GENERATE_ALWAYS:-false}"
+      L5_SWAGGER_UI_PERSIST_AUTHORIZATION: "${L5_SWAGGER_UI_PERSIST_AUTHORIZATION:-false}"
+    networks:
+      - cms-network
+    restart: unless-stopped
+
+  # ── Frontend (React SPA) ───────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: react-cms-frontend
+    ports:
+      - "${FRONTEND_PORT:-9002}:80"
+    networks:
+      - cms-network
+    restart: unless-stopped
+
+# ── Volumes ──────────────────────────────────────────────────
+volumes:
+  cms-logs:
+    name: react-cms-logs
+
+# ── Networks ─────────────────────────────────────────────────
+networks:
+  cms-network:
+    name: react-cms-network
+    driver: bridge

@@ -1,0 +1,2232 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "React CMS API",
+        "description": "OpenAPI documentation for the React CMS backend.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000/api",
+            "description": "Configured from APP_URL + /api"
+        }
+    ],
+    "paths": {
+        "/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login and create a Sanctum token",
+                "operationId": "9a5f0387b5e16c7fc63ef766b8c182ba",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            },
+                            "example": {
+                                "email": "admin@gmail.com",
+                                "password": "password"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginSuccessResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "token": "1|xxxxx",
+                                        "user": {
+                                            "id": 1,
+                                            "name": "Admin",
+                                            "email": "admin@gmail.com",
+                                            "role_id": 1
+                                        }
+                                    },
+                                    "message": "Login successful",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginUnauthorizedResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "Invalid credentials",
+                                    "errors": {
+                                        "auth": [
+                                            "Email or password incorrect"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get authenticated user",
+                "operationId": "5c4c2905001ce355b6ca7c699a6dbece",
+                "responses": {
+                    "200": {
+                        "description": "Authenticated user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MeResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "user": {
+                                            "id": 1,
+                                            "name": "Admin",
+                                            "email": "admin@gmail.com",
+                                            "role_id": 1
+                                        }
+                                    },
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Delete current Sanctum token",
+                "operationId": "11cdec38d03d5f4f3dd371eadcec1378",
+                "responses": {
+                    "200": {
+                        "description": "Logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LogoutResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "Logged out",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/company": {
+            "get": {
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Get company profile",
+                "operationId": "8eed05e57bdf62f3d74b859672e8b6e1",
+                "responses": {
+                    "200": {
+                        "description": "Company profile",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "comp_name": "React CMS",
+                                        "app_title": "React CMS",
+                                        "comp_logo": "data:image/png;base64,iVBORw0KGgo...",
+                                        "fav_icon": "data:image/png;base64,iVBORw0KGgo..."
+                                    },
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Update company profile",
+                "description": "Uploads logo and favicon as base64 data URL strings, for example data:image/png;base64,iVBORw0KGgo...",
+                "operationId": "2f013dc483d674471dc78405a73ad67a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompanyRequest"
+                            },
+                            "example": {
+                                "comp_name": "React CMS",
+                                "app_title": "React CMS",
+                                "comp_logo": "data:image/png;base64,iVBORw0KGgo...",
+                                "fav_icon": "data:image/png;base64,iVBORw0KGgo..."
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "comp_name": "React CMS",
+                                        "app_title": "React CMS",
+                                        "comp_logo": "data:image/png;base64,iVBORw0KGgo...",
+                                        "fav_icon": "data:image/png;base64,iVBORw0KGgo..."
+                                    },
+                                    "message": "Updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "List users",
+                "description": "Returns a plain array of users. Pagination metadata is not returned by the current API.",
+                "operationId": "ecfb830590c0c203d01abcc7f9583a76",
+                "responses": {
+                    "200": {
+                        "description": "User list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UsersListResponse"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "name": "Admin",
+                                            "email": "admin@gmail.com",
+                                            "role_id": 1,
+                                            "role": {
+                                                "id": 1,
+                                                "role_name": "Administrator"
+                                            }
+                                        },
+                                        {
+                                            "id": 2,
+                                            "name": "Editor",
+                                            "email": "editor@example.com",
+                                            "role_id": 2,
+                                            "role": {
+                                                "id": 2,
+                                                "role_name": "Editor"
+                                            }
+                                        }
+                                    ],
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create user",
+                "operationId": "3d27f8ae2cae1398c5a4cd31c1090ac0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreateRequest"
+                            },
+                            "example": {
+                                "name": "Editor",
+                                "email": "editor@example.com",
+                                "password": "secret123",
+                                "role_id": 2
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 2,
+                                        "name": "Editor",
+                                        "email": "editor@example.com",
+                                        "role_id": 2
+                                    },
+                                    "message": "User created",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "The given data was invalid.",
+                                    "errors": {
+                                        "email": [
+                                            "The email has already been taken."
+                                        ],
+                                        "password": [
+                                            "The password field must be at least 6 characters."
+                                        ],
+                                        "role_id": [
+                                            "The selected role id is invalid."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user detail",
+                "operationId": "13ae4d783ea5147d7e131fb34b69bf01",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 1,
+                                        "name": "Admin",
+                                        "email": "admin@gmail.com",
+                                        "role_id": 1,
+                                        "role": {
+                                            "id": 1,
+                                            "role_name": "Administrator"
+                                        }
+                                    },
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user",
+                "description": "Editable fields: name, email, password, and role_id. Password may be omitted when it should not be changed.",
+                "operationId": "0871d71e2591c6a4bac3efc56e0a411f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdateRequest"
+                            },
+                            "example": {
+                                "name": "Editor Updated",
+                                "email": "editor@example.com",
+                                "role_id": 2
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 2,
+                                        "name": "Editor Updated",
+                                        "email": "editor@example.com",
+                                        "role_id": 2
+                                    },
+                                    "message": "User updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete user",
+                "operationId": "b51c9ed3d83d546ef44b8185405dc4a0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserDeleteResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "User deleted",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/change-password": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Change authenticated user password",
+                "operationId": "778fa5e54dd36d4780954c9880d25573",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePasswordRequest"
+                            },
+                            "example": {
+                                "current_password": "secret123",
+                                "new_password": "newsecret123",
+                                "confirm_password": "newsecret123"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChangePasswordResponse"
+                                },
+                                "example": {
+                                    "data": true,
+                                    "message": "Password updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "Current password is incorrect",
+                                    "errors": {
+                                        "current_password": [
+                                            "Wrong password"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/roles": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "List roles",
+                "operationId": "b311f21624fedcd44e1eb1c082b66978",
+                "responses": {
+                    "200": {
+                        "description": "Role list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RolesListResponse"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "role_id": 1,
+                                            "role_name": "Administrator"
+                                        },
+                                        {
+                                            "role_id": 2,
+                                            "role_name": "Editor"
+                                        }
+                                    ],
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Create role",
+                "operationId": "b4d285524b6a9c706bc031f80967045f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RoleRequest"
+                            },
+                            "example": {
+                                "role_name": "Administrator"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Role created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "role_id": 1,
+                                        "role_name": "Administrator"
+                                    },
+                                    "message": "Roles created",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "The given data was invalid.",
+                                    "errors": {
+                                        "role_name": [
+                                            "The role name has already been taken."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/roles/{id}": {
+            "put": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Update role",
+                "operationId": "98669e43ed5eb90717cc4967e3d2b73e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Role ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RoleRequest"
+                            },
+                            "example": {
+                                "role_name": "Editor"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Role updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "role_id": 1,
+                                        "role_name": "Editor"
+                                    },
+                                    "message": "Role updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "The given data was invalid.",
+                                    "errors": {
+                                        "role_name": [
+                                            "The role name has already been taken."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Delete role",
+                "operationId": "f41b880cf99ba84b4ed836ec72cf2ff7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Role ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleDeleteResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "Role deleted",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/menus": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "List menus",
+                "operationId": "79dcf2af88603a07b15ffdb95306b2f2",
+                "responses": {
+                    "200": {
+                        "description": "Menu list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenusListResponse"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "menu_id": 1,
+                                            "menu_name": "Setup",
+                                            "menu_path": "/setup",
+                                            "menu_icon": "cil-settings",
+                                            "menu_parent_id": null,
+                                            "menu_order": 1
+                                        },
+                                        {
+                                            "id": 2,
+                                            "menu_id": 2,
+                                            "menu_name": "Users",
+                                            "menu_path": "/setup/users",
+                                            "menu_icon": "cil-user",
+                                            "menu_parent_id": 1,
+                                            "menu_order": 2
+                                        }
+                                    ],
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Create menu",
+                "operationId": "97c3bb6598815f42bf3894b7ea7cbfbd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuRequest"
+                            },
+                            "example": {
+                                "menu_name": "Dashboard",
+                                "menu_path": "/dashboard",
+                                "menu_icon": "cil-speedometer",
+                                "menu_parent_id": null,
+                                "menu_order": 1
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Menu created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 3,
+                                        "menu_id": 3,
+                                        "menu_name": "Dashboard",
+                                        "menu_path": "/dashboard",
+                                        "menu_icon": "cil-speedometer",
+                                        "menu_parent_id": null,
+                                        "menu_order": 1
+                                    },
+                                    "message": "Created",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/menus-tree": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "List menus as tree",
+                "description": "Recursive menu tree used by the dynamic sidebar and menu setup screens.",
+                "operationId": "8fd6de3241aff3819bedbc3c151c84ce",
+                "responses": {
+                    "200": {
+                        "description": "Menu tree",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuTreeResponse"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "menu_id": 1,
+                                            "menu_name": "Setup",
+                                            "menu_path": "/setup",
+                                            "menu_icon": "cil-settings",
+                                            "menu_parent_id": null,
+                                            "menu_order": 1,
+                                            "children": [
+                                                {
+                                                    "id": 2,
+                                                    "menu_id": 2,
+                                                    "menu_name": "Users",
+                                                    "menu_path": "/setup/users",
+                                                    "menu_icon": "cil-user",
+                                                    "menu_parent_id": 1,
+                                                    "menu_order": 2,
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/menus/{id}": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Get menu detail",
+                "operationId": "f110b9592d81d3b271554baab8d4f1ef",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Menu ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Menu detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Update menu",
+                "operationId": "268a056323ac672589b9fdde068db0b2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Menu ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuRequest"
+                            },
+                            "example": {
+                                "menu_name": "Setup",
+                                "menu_path": "/setup",
+                                "menu_icon": "cil-settings",
+                                "menu_parent_id": null,
+                                "menu_order": 1
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Menu updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 1,
+                                        "menu_id": 1,
+                                        "menu_name": "Setup",
+                                        "menu_path": "/setup",
+                                        "menu_icon": "cil-settings",
+                                        "menu_parent_id": null,
+                                        "menu_order": 1
+                                    },
+                                    "message": "Updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Delete menu",
+                "operationId": "69b7bd8a9eb0574bb46192aa29fdb272",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Menu ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Menu deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuDeleteResponse"
+                                },
+                                "example": {
+                                    "data": true,
+                                    "message": "Deleted",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/role-menus/{role}": {
+            "get": {
+                "tags": [
+                    "Role Permissions"
+                ],
+                "summary": "Get role menu permissions",
+                "description": "Recursive checked menu tree used by the dynamic sidebar permission system.",
+                "operationId": "5f390b1c430cf654779a8487d681162e",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "Role ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role menu tree",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleMenuTreeResponse"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "menu_id": 1,
+                                            "menu_name": "Setup",
+                                            "menu_path": "/setup",
+                                            "checked": true,
+                                            "children": [
+                                                {
+                                                    "id": 2,
+                                                    "menu_id": 2,
+                                                    "menu_name": "Users",
+                                                    "menu_path": "/setup/users",
+                                                    "checked": false,
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Role Permissions"
+                ],
+                "summary": "Update role menu permissions",
+                "operationId": "c6d0fbf62c78696e4fc479bfa9089087",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "Role ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RoleMenuUpdateRequest"
+                            },
+                            "example": {
+                                "menu_ids": [
+                                    1,
+                                    2,
+                                    3
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissions updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleMenuUpdateResponse"
+                                },
+                                "example": {
+                                    "data": true,
+                                    "message": "Permissions updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApiSuccess": {
+                "properties": {
+                    "data": {
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ApiError": {
+                "properties": {
+                    "data": {
+                        "example": null,
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "The given data was invalid."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "nullable": true,
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ApiMetaResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationErrorResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiError"
+                    }
+                ]
+            },
+            "AuthUser": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Admin"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@gmail.com"
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@gmail.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginSuccessResponse": {
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "token": {
+                                "type": "string",
+                                "example": "1|xxxxx"
+                            },
+                            "user": {
+                                "$ref": "#/components/schemas/AuthUser"
+                            },
+                            "company": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Company"
+                                    }
+                                ],
+                                "nullable": true
+                            },
+                            "navigation": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/RoleMenuTree"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Login successful"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LoginUnauthorizedResponse": {
+                "properties": {
+                    "data": {
+                        "example": null,
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Invalid credentials"
+                    },
+                    "errors": {
+                        "properties": {
+                            "auth": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "example": "Email or password incorrect"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "MeResponse": {
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "user": {
+                                "$ref": "#/components/schemas/AuthUser"
+                            },
+                            "company": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Company"
+                                    }
+                                ],
+                                "nullable": true
+                            },
+                            "navigation": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/RoleMenuTree"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LogoutResponse": {
+                "properties": {
+                    "data": {
+                        "example": null,
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Logged out"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Role": {
+                "properties": {
+                    "role_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "role_name": {
+                        "type": "string",
+                        "example": "Administrator"
+                    }
+                },
+                "type": "object"
+            },
+            "RoleModel": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "role_name": {
+                        "type": "string",
+                        "example": "Administrator"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RoleRequest": {
+                "required": [
+                    "role_name"
+                ],
+                "properties": {
+                    "role_name": {
+                        "type": "string",
+                        "example": "Administrator"
+                    }
+                },
+                "type": "object"
+            },
+            "RolesListResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Role"
+                        }
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RoleResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Role"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Role updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RoleDeleteResponse": {
+                "properties": {
+                    "data": {
+                        "example": null,
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Role deleted"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Admin"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@example.com"
+                    },
+                    "email_verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "role": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RoleModel"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UserCreateRequest": {
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "role_id"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Editor"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "editor@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secret123",
+                        "minLength": 6
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "UserUpdateRequest": {
+                "required": [
+                    "name",
+                    "email"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Editor Updated"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "editor@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "newsecret123",
+                        "nullable": true,
+                        "minLength": 6
+                    },
+                    "role_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UsersListResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/User"
+                        }
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UserResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UserDeleteResponse": {
+                "properties": {
+                    "data": {
+                        "example": null,
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "User deleted"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ChangePasswordRequest": {
+                "required": [
+                    "current_password",
+                    "new_password",
+                    "confirm_password"
+                ],
+                "properties": {
+                    "current_password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secret123"
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "newsecret123",
+                        "minLength": 6
+                    },
+                    "confirm_password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "newsecret123"
+                    }
+                },
+                "type": "object"
+            },
+            "ChangePasswordResponse": {
+                "properties": {
+                    "data": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Password updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Company": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "comp_name": {
+                        "type": "string",
+                        "example": "React CMS"
+                    },
+                    "comp_logo": {
+                        "description": "Logo image as a base64 data URL.",
+                        "type": "string",
+                        "example": "data:image/png;base64,iVBORw0KGgo...",
+                        "nullable": true
+                    },
+                    "fav_icon": {
+                        "description": "Favicon image as a base64 data URL.",
+                        "type": "string",
+                        "example": "data:image/png;base64,iVBORw0KGgo...",
+                        "nullable": true
+                    },
+                    "app_title": {
+                        "type": "string",
+                        "example": "React CMS",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "CompanyRequest": {
+                "required": [
+                    "comp_name"
+                ],
+                "properties": {
+                    "comp_name": {
+                        "type": "string",
+                        "example": "React CMS"
+                    },
+                    "app_title": {
+                        "type": "string",
+                        "example": "React CMS",
+                        "nullable": true
+                    },
+                    "comp_logo": {
+                        "description": "Logo image as a base64 data URL. Example format: data:image/png;base64,{base64}.",
+                        "type": "string",
+                        "example": "data:image/png;base64,iVBORw0KGgo...",
+                        "nullable": true
+                    },
+                    "fav_icon": {
+                        "description": "Favicon image as a base64 data URL. Example format: data:image/png;base64,{base64}.",
+                        "type": "string",
+                        "example": "data:image/png;base64,iVBORw0KGgo...",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "CompanyResponse": {
+                "properties": {
+                    "data": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Company"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Menu": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "menu_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "menu_name": {
+                        "type": "string",
+                        "example": "Dashboard"
+                    },
+                    "menu_path": {
+                        "type": "string",
+                        "example": "/dashboard"
+                    },
+                    "menu_icon": {
+                        "type": "string",
+                        "example": "cil-speedometer",
+                        "nullable": true
+                    },
+                    "menu_parent_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "menu_order": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MenuRequest": {
+                "required": [
+                    "menu_name",
+                    "menu_path"
+                ],
+                "properties": {
+                    "menu_name": {
+                        "type": "string",
+                        "example": "Dashboard"
+                    },
+                    "menu_path": {
+                        "type": "string",
+                        "example": "/dashboard"
+                    },
+                    "menu_icon": {
+                        "type": "string",
+                        "example": "cil-speedometer",
+                        "nullable": true
+                    },
+                    "menu_parent_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "menu_order": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MenusListResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Menu"
+                        }
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MenuResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Menu"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MenuDeleteResponse": {
+                "properties": {
+                    "data": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Deleted"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MenuTree": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Menu"
+                    },
+                    {
+                        "properties": {
+                            "children": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/MenuTree"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "MenuTreeResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MenuTree"
+                        }
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RoleMenuTree": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Menu"
+                    },
+                    {
+                        "properties": {
+                            "checked": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "children": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/RoleMenuTree"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "RoleMenuTreeResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RoleMenuTree"
+                        }
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RoleMenuUpdateRequest": {
+                "required": [
+                    "menu_ids"
+                ],
+                "properties": {
+                    "menu_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "RoleMenuUpdateResponse": {
+                "properties": {
+                    "data": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Permissions updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Use the token from /login as: Bearer {token}",
+                "bearerFormat": "Sanctum token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Authentication and token management"
+        },
+        {
+            "name": "Users",
+            "description": "User account management"
+        },
+        {
+            "name": "Roles",
+            "description": "Role management"
+        },
+        {
+            "name": "Menus",
+            "description": "Menu and sidebar management"
+        },
+        {
+            "name": "Role Permissions",
+            "description": "Dynamic sidebar permission system"
+        },
+        {
+            "name": "Company",
+            "description": "Company profile and branding"
+        }
+    ]
+}

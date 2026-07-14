@@ -1,0 +1,28 @@
+# ── version control ─────────────────────────────────────────
+.git
+.gitignore
+
+# ── IDE / editor ────────────────────────────────────────────
+.idea
+.vscode
+*.swp
+*.swo
+
+# ── build output (built inside container) ───────────────────
+build
+dist
+
+# ── dependencies (installed inside container) ───────────────
+node_modules
+
+# ── Docker files (self) ─────────────────────────────────────
+Dockerfile
+.dockerignore
+nginx.conf
+
+# ── env (not needed at build, VITE_ vars baked at build) ────
+.env
+.env.*
+
+# ── misc ────────────────────────────────────────────────────
+README.md
