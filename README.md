@@ -52,7 +52,7 @@ react-cms/
 
 - Docker Engine 24+
 - Docker Compose v2
-- Database MySQL/MariaDB yang sudah berjalan (eksternal)
+- Database MySQL/MariaDB disediakan sebagai layanan `db` dalam stack Docker
 
 ---
 
@@ -109,8 +109,7 @@ request `/api` ke backend di `http://localhost:8000`.
 
 ## Deployment Docker
 
-Database diasumsikan sudah berjalan sebagai container terpisah dan tidak menjadi
-bagian dari stack ini. Contoh: `mysql-container` atau `mariadb-container`.
+Stack ini mencakup layanan basis data MySQL sebagai container yang dapat diakses oleh backend melalui nama host `db`. Layanan lain termasuk nginx reverse proxy, backend, dan frontend.
 
 ### Arsitektur
 
@@ -125,8 +124,8 @@ Internet
     └── /api/*  → Backend Container (Laravel)
                        │
                        ▼
-                 External Database
-              (mysql-container:3306)
+                 Database Container (MySQL)
+                     (db:3306)
 ```
 
 ### Konfigurasi
