@@ -123,12 +123,16 @@ return [
             /**
              * analyser: defaults to \OpenApi\StaticAnalyser .
              *
+             * A plain ReflectionAnalyser instance is not serializable and
+             * breaks `php artisan config:cache`, and passing null here
+             * makes l5-swagger fall back to an attributes-only analyser
+             * (DocBlock annotations like @OA\Info would not be scanned).
+             * The wrapper below keeps both annotation styles working and
+             * stays serializable via its __set_state().
+             *
              * @see \OpenApi\scan
              */
-            'analyser' => new \OpenApi\Analysers\ReflectionAnalyser([
-                new \OpenApi\Analysers\AttributeAnnotationFactory(),
-                new \OpenApi\Analysers\DocBlockAnnotationFactory(),
-            ]),
+            'analyser' => new \App\OpenApi\Analysers\DocBlockReflectionAnalyser(),
 
             /**
              * analysis: defaults to a new \OpenApi\Analysis .

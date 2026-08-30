@@ -24,16 +24,12 @@ docker-compose*.yml
 # ── environment ─────────────────────────────────────────────
 .env
 .env.*
-!.env.example
 !.env.production.example
 
 # ── test ────────────────────────────────────────────────────
 tests
 phpunit.xml
 .phpunit.result.cache
-
-# ── backup / scratch files ─────────────────────────────────
-*.bak
 
 # ── docs ────────────────────────────────────────────────────
 docs

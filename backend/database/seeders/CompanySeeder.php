@@ -13,6 +13,11 @@ class CompanySeeder extends Seeder
      */
     public function run(): void
     {
+        // guard: never duplicate the company on repeated db:seed runs
+        if (Company::exists()) {
+            return;
+        }
+
         Company::create([
             'comp_name' => 'CMS Template',
             'app_title' => 'CMS Template',

@@ -13,6 +13,11 @@ class MenuSeeder extends Seeder
      */
     public function run(): void
     {
+        // guard: never duplicate menus on repeated db:seed runs
+        if (Menus::exists()) {
+            return;
+        }
+
         $dashboard = Menus::create([
             'menu_name' => 'Dashboard',
             'menu_path' => '/dashboard',
