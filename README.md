@@ -240,9 +240,11 @@ npm run build
 
 ## Dokumentasi
 
+- [Index dokumentasi](docs/README.md)
+- [Backend — context](docs/backend/context.md) · [rules](docs/backend/rules.md) · [design](docs/backend/design.md) · [deployment production](docs/backend/production-deployment.md)
+- [Frontend — context](docs/frontend/context.md) · [rules](docs/frontend/rules.md) · [design](docs/frontend/design.md)
 - [Panduan backend](backend/README.md)
 - [Panduan frontend](frontend/README.md)
-- [Panduan deployment production](backend/docs/production-deployment.md)
 
 ---
 
