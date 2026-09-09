@@ -1,120 +1,237 @@
-# Frontend Design — Aplikasi Pencatatan Keuangan
+# Frontend Design - Castra
 
 ## Fondasi
 
-UI dibangun di atas **CoreUI 5 (free)** React Admin Template. Komponen, layout,
-dan konvensi styling mengikuti CoreUI; penyesuaian dilakukan lewat SCSS,
-bukan menulis ulang komponen.
-
-Referensi resmi:
-
-- Demo: https://coreui.io/demos/react/latest/free/?theme=light#/dashboard
-- Dokumentasi: https://coreui.io/react/
-- Template dasar: https://github.com/coreui/coreui-free-react-admin-template
+UI Castra memakai **CoreUI 5 (free)** React Admin Template. Gunakan komponen
+CoreUI, SCSS terpusat, dan pola layout admin existing. Aplikasi ini adalah alat
+operasional harian, jadi tampilan harus padat, jelas, dan mudah dipindai.
 
 ## Prinsip Desain
 
-1. **Angka dulu** — di aplikasi keuangan, nominal, saldo, dan tren adalah konten utama.
-2. **Semantik warna uang** — pemasukan hijau (`success`), pengeluaran merah (`danger`).
-   Jangan memakai warna lain untuk dua arah ini.
-3. **Konsisten dengan modul existing** — halaman baru mengikuti pola setup
-   (tabel + form modal + filter + konfirmasi hapus).
-4. **Nominal mudah dibanding** — format IDR (`Intl.NumberFormat('id-ID')`)
-   dan angka tabular (monospace) agar digit sejajar di tabel.
+1. Angka dulu: nominal, budget, sisa, dan status adalah konten utama.
+2. Alur pemasukan harus eksplisit: user melihat dari mana uang masuk dan ke mana
+   uang dialokasikan.
+3. Need/Fun/Saving selalu menjadi struktur visual utama.
+4. Emergency ditampilkan sebagai reserve/sisa rencana, bukan pembagian utama
+   yang menambah total budget.
+5. Status tidak boleh hanya bergantung pada warna; tampilkan label dan tanda.
 
-## Layout
+## Layout Menu
 
-- **AppSidebar**: menu dari state Redux `navigation` (backend mengirim menu per role).
-  Kelompok menu yang direncanakan: Dashboard · Keuangan (Transaksi, Kategori,
-  Ringkasan Bulanan) · Setup (Users, Roles, Menus, Role Permissions, Company).
-- **AppHeader**: breadcrumb, toggle sidebar, dropdown user (Change Password, Logout).
-- **AppContent**: container-fluid — semua halaman dirender di sini.
-- **AppFooter**: versi aplikasi & copyright.
-- **Branding dinamis**: judul tab & favicon mengikuti `company` dari Redux (`App.js`).
+- `Dashboard`: ringkasan periode aktif.
+- `Keuangan`:
+  - `Pemasukan`
+  - `Rincian Transaksi`
+  - `Rencana Bulanan`
+  - `Ringkasan Bulanan`
+- `Master`:
+  - `Sumber Dana`
+  - `Pembagian Budget`
+  - `Kategori`
+- `Setup`: modul sistem existing.
 
-## Halaman & Komponen
+Menu tetap berasal dari backend melalui `navigation`.
 
-### Dashboard Keuangan
+## Dashboard Keuangan
 
-- Baris kartu ringkasan (4 kartu): Pemasukan bulan ini, Pengeluaran bulan ini,
-  Saldo (net), Jumlah transaksi.
-- Grafik tren 6 bulan terakhir: pemasukan vs pengeluaran (bar/line).
-- Grafik komposisi pengeluaran per kategori (donat).
-- Tabel transaksi terbaru (5–10 baris) + tautan ke halaman transaksi.
-- Kartu memakai `CCard`/`CWidgetStats` CoreUI.
+Dashboard mengikuti sheet `Dashboard`.
 
-### Transaksi
+Komponen utama:
 
-- Filter: rentang tanggal (start–end), pilih kategori, pilih tipe
-  (Semua/Pemasukan/Pengeluaran).
-- Tabel kolom: Tanggal · Deskripsi · Kategori · Jumlah (hijau/merah) · Aksi.
-- Form (modal): pilih kategori (tipenya menentukan arah transaksi), tanggal
-  (date picker), deskripsi, nominal. Validasi per field memakai pola
-  `getFieldError` existing.
-- Aksi: edit (modal yang sama), hapus (konfirmasi, lalu toast sukses).
-- Nominal di input tanpa pemisah ribuan; format tampilan lewat helper formatter.
+- Period selector bulan/tahun.
+- Kartu ringkasan:
+  - Total Pemasukan
+  - Total Realisasi Pengeluaran
+  - Sisa Alokasi
+  - Net
+- Kondisi per Pembagian:
+  - Pembagian
+  - Budget
+  - Realisasi
+  - Sisa
+  - Status
+- Estimasi vs Realisasi:
+  - Kategori
+  - Estimasi
+  - Realisasi
+  - Selisih
+  - Persentase
+- Kesimpulan bulanan berbasis status.
+- Transaksi terbaru.
 
-### Kategori
+Status:
 
-- Tabs: Pemasukan | Pengeluaran (komponen tab CoreUI).
-- Tabel: Nama · Tipe · Aksi (edit/hapus).
-- Menghapus kategori yang masih dipakai transaksi ditolak backend (422) —
-  tampilkan pesan dari `error.validationErrors`.
+- `Aman`: badge success
+- `Mendekati Batas`: badge warning
+- `Over Budget`: badge danger
 
-### Ringkasan Bulanan
+## Pemasukan
 
-- Picker bulan + tahun (`CFormSelect`).
-- Kartu: Total Pemasukan, Total Pengeluaran, Net.
-- Breakdown per kategori (tabel/donat).
+Halaman untuk menjawab masalah workbook: "bagaimana membagi jika ada pemasukan?"
 
-### Halaman Setup (existing)
+Elemen UI:
 
-- Tetap sebagaimana adanya — modul keuangan tidak mengubah pola ini.
+- Filter periode bulan/tahun.
+- Kartu total pemasukan periode.
+- Form tambah pemasukan:
+  - tanggal
+  - sumber dana
+  - nominal
+  - catatan
+  - opsi `alokasikan otomatis` aktif secara default
+- Panel hasil alokasi:
+  - Need 50%
+  - Fun 30%
+  - Saving 20%
+  - Emergency/Reserve dari sisa rencana
+- Tabel pemasukan periode.
 
-## Warna & Grafik
+Setelah submit sukses, halaman menampilkan allocation preview hasil backend,
+bukan menghitung angka final sendiri.
 
-- **Pemasukan**: variabel success CoreUI (hijau) — nominal positif, tanda `+`.
-- **Pengeluaran**: variabel danger CoreUI (merah) — nominal negatif, tanda `−`.
-- **Netral**: palet abu CoreUI untuk teks, border, background.
-- Grafik memakai warna semantik yang sama — konsisten antara kartu, tabel, dan grafik.
-- Dark mode: ikuti mekanisme CoreUI (`useColorModes`), jangan hardcode warna —
-  pakai variabel CSS CoreUI.
+## Rencana Bulanan
+
+Padanan utama sheet `Estimasi`.
+
+Elemen UI:
+
+- Period selector.
+- Summary total pemasukan dan total alokasi.
+- Tabel pembagian budget:
+  - Pembagian
+  - Persentase
+  - Budget
+  - Estimasi kategori
+  - Reserve
+- Tabel estimasi kategori:
+  - Kategori
+  - Pembagian
+  - Estimasi
+  - Realisasi
+  - Sisa
+  - Status
+- Tombol recalculate alokasi.
+
+Editing estimasi kategori dilakukan inline atau modal sederhana. Hindari wizard;
+workflow ini akan sering dipakai.
+
+## Rincian Transaksi
+
+Padanan sheet `Rincian`.
+
+Filter:
+
+- periode bulan/tahun
+- rentang tanggal
+- tipe transaksi
+- kategori
+- pembagian budget
+
+Tabel:
+
+- Tanggal
+- Tipe
+- Kategori
+- Pembagian
+- Budget
+- Nominal
+- Sisa Budget
+- Status
+- Keterangan
+- Aksi
+
+Nominal pemasukan ditampilkan hijau dengan tanda `+`; pengeluaran merah dengan
+tanda `-`. Input nominal tetap angka positif.
+
+## Master Sumber Dana
+
+Tabel:
+
+- Nama
+- Deskripsi
+- Status aktif
+- Aksi
+
+Sumber dana yang sudah dipakai transaksi tidak boleh dihapus keras. UI harus
+menawarkan nonaktifkan bila backend menolak delete.
+
+## Master Pembagian Budget
+
+Tabel:
+
+- Nama
+- Kode
+- Persentase
+- Urutan
+- Status
+- Aksi
+
+Default: Need 50%, Fun 30%, Saving 20%, Emergency 0%.
+UI wajib menampilkan indikator total persentase group utama. Simpan dinonaktifkan
+jika total bukan 100%.
+
+## Master Kategori
+
+Tabs:
+
+- Pemasukan
+- Pengeluaran
+
+Tabel kategori pengeluaran:
+
+- Nama
+- Pembagian
+- Estimasi default
+- Status
+- Aksi
+
+Tabel kategori pemasukan:
+
+- Nama
+- Status
+- Aksi
+
+Saat tipe `expense`, field pembagian wajib. Saat tipe `income`, field pembagian
+disembunyikan atau opsional.
+
+## Warna dan Angka
+
+- Pemasukan: success.
+- Pengeluaran: danger.
+- Mendekati batas: warning.
+- Netral: variabel CoreUI.
+- Format uang: `Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' })`.
+- Angka di tabel memakai `text-end` dan `font-variant-numeric: tabular-nums`.
+- Jangan hardcode warna untuk dark mode; gunakan class/variabel CoreUI.
 
 ## Ikonografi
 
-Pakai set ikon CoreUI (`@coreui/icons-react`):
+Pakai ikon CoreUI:
 
 | Ikon | Penggunaan |
 | --- | --- |
-| `cilChartLine` | Dashboard, tren |
-| `cilMoney` | Nominal, transaksi |
-| `cilArrowTop` / `cilArrowBottom` | Pemasukan / pengeluaran |
+| `cilChartLine` | Dashboard |
+| `cilMoney` | Pemasukan/transaksi |
+| `cilArrowTop` | Pemasukan |
+| `cilArrowBottom` | Pengeluaran |
+| `cilWallet` | Pembagian budget |
 | `cilTag` | Kategori |
-| `cilCalendar` | Ringkasan bulanan, filter tanggal |
-| `cilTrash` / `cilPencil` | Aksi tabel |
+| `cilCalendar` | Periode |
+| `cilPencil` | Edit |
+| `cilTrash` | Hapus |
 
-## Tipografi & Aksesibilitas
-
-- Font sistem (default CoreUI); angka nominal pakai tabular-nums / monospace.
-- Kontras minimal 4.5:1; status tidak boleh disampaikan hanya lewat warna —
-  nominal selalu diberi tanda +/−.
-- Setiap tabel punya empty state yang jelas; loading pakai spinner/skeleton
-  dengan pola existing.
-- Modal/drawer mengikuti pola fokus & keyboard CoreUI.
+Jika ikon tidak tersedia di CoreUI free, pilih ikon CoreUI terdekat.
 
 ## Responsivitas
 
-- Mobile (<768px): sidebar collapse (hamburger), kartu menumpuk,
-  tabel pakai scroll horizontal.
-- Tablet (768–1024px): sidebar collapsed by default.
-- Desktop (>1024px): sidebar terbuka.
+- Mobile: kartu menumpuk, tabel scroll horizontal, filter dalam collapse.
+- Tablet: dua kolom untuk summary, tabel tetap scroll bila sempit.
+- Desktop: summary 4 kartu, tabel penuh, panel alokasi berdampingan.
 
 ## Catatan Implementasi
 
-1. Modul keuangan dibuat di `src/views/finance/` mengikuti pola `View/Form/Table`.
-2. Tambahkan rute baru di `src/routes.js` dengan `React.lazy`.
-3. Menu sidebar (ikon + label + urutan) dikirim dari backend (`menus` +
-   `role_menus`) — jangan hardcode menu keuangan di frontend.
-4. Override styling lewat `src/scss/` (variabel CoreUI), hindari inline style.
-5. Sebelum menambah dependensi chart: manfaatkan pendekatan sederhana dulu;
-   jika perlu library, pilih satu dan gunakan konsisten di semua grafik.
+- Modul baru dibuat di `src/views/finance/` dan `src/views/master/`.
+- Route baru ditambahkan di `src/routes.js` dengan `React.lazy`.
+- Semua request memakai `services/api.js`.
+- Jangan hardcode sidebar menu di frontend.
+- Tambahkan helper formatter sebelum membuat banyak komponen nominal.

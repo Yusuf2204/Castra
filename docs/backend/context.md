@@ -1,13 +1,28 @@
-# Backend Context — Aplikasi Pencatatan Keuangan
+# Backend Context - Castra
 
 ## Ringkasan Proyek
 
-Backend adalah REST API **Laravel 12** (PHP 8.2+) untuk aplikasi **pencatatan keuangan**.
-Selain modul keuangan, backend juga menyediakan modul pengelolaan sistem
-(users, roles, menu dinamis, dan pengaturan perusahaan) sebagai fondasi aplikasi.
+Backend Castra adalah REST API **Laravel 12** (PHP 8.2+) untuk aplikasi
+pencatatan dan perencanaan keuangan pribadi berbasis pemasukan gaji.
+Castra tidak hanya mencatat pengeluaran, tetapi juga membagi setiap pemasukan
+ke budget bulanan dengan prinsip 50% Need, 30% Fun, dan 20% Saving.
 
-Backend berjalan sebagai bagian dari stack Docker Compose di root proyek:
-reverse proxy nginx → backend (PHP-FPM + Nginx + Supervisor) → MySQL 8.
+Backend berjalan dalam stack Docker Compose:
+reverse proxy nginx -> backend (PHP-FPM + Nginx + Supervisor) -> MySQL 8.
+
+## Basis Workbook
+
+Referensi PRD awal: `docs/Keuangan_September_2026.xlsx`.
+
+| Sheet | Peran dalam aplikasi |
+| --- | --- |
+| `Estimasi` | Master sumber dana, pembagian budget, kategori, estimasi kategori, dan budget per pembagian |
+| `Rincian` | Transaksi harian dengan tanggal, kategori, pembagian, budget, nominal, sisa, status, keterangan |
+| `Dashboard` | Ringkasan total alokasi, realisasi, sisa alokasi, kondisi per pembagian, estimasi vs realisasi |
+
+Workbook saat ini menghitung pemakaian dari transaksi pengeluaran. Castra harus
+menambahkan logic pemasukan: pemasukan menjadi sumber alokasi budget periode,
+lalu pengeluaran dibandingkan terhadap alokasi tersebut.
 
 ## Teknologi Utama
 
@@ -17,71 +32,84 @@ reverse proxy nginx → backend (PHP-FPM + Nginx + Supervisor) → MySQL 8.
 | Database | MySQL 8 (Eloquent ORM) |
 | Autentikasi | Laravel Sanctum 4 (token Bearer, stateless) |
 | Dokumentasi API | l5-swagger (OpenAPI) + analyser DocBlock kustom |
-| Deployment | Docker Compose (nginx proxy, backend, frontend, db) |
-| Kualitas | Laravel Pint (format), PHPUnit (test) |
+| Deployment | Docker Compose |
+| Kualitas | Laravel Pint, PHPUnit |
 
-## Modul
+## Modul Saat Ini
 
-### 1. Modul Sistem (sudah berjalan)
+### Modul Sistem
 
-- **Autentikasi**: `POST /api/login`, `GET /api/me`, `POST /api/logout`, `POST /api/change-password`
-- **Users & Roles**: CRUD user, role, dan permission (`role_menus`)
-- **Menu Dinamis**: menu bertingkat dengan navigasi berdasarkan role
-  (`menus-tree` + `App\Services\NavigationService`)
-- **Company Settings**: identitas perusahaan (nama, logo, favicon, alamat)
-- **Dashboard**: `GET /api/dashboard-summary`
+- Autentikasi: `POST /api/login`, `GET /api/me`, `POST /api/logout`,
+  `POST /api/change-password`
+- Users & Roles: CRUD user, role, dan permission (`role_menus`)
+- Menu Dinamis: menu bertingkat berdasarkan role (`menus-tree` +
+  `App\Services\NavigationService`)
+- Company Settings: nama, logo, favicon, alamat
+- Dashboard sistem: `GET /api/dashboard-summary`
 
-### 2. Modul Pencatatan Keuangan (schema DB sudah ada, API menyusul)
+### Modul Keuangan Existing
 
-Migrasi tertanggal 26 Agustus 2026 sudah membuat tiga tabel inti:
+Migrasi 26 Agustus 2026 sudah membuat:
 
-- **`categories`** — kategori per user dengan tipe `income` atau `expense`
-- **`transactions`** — transaksi harian; `amount` bertanda
-  (positif = pemasukan, negatif = pengeluaran), terhubung ke kategori
-- **`monthly_summaries`** — ringkasan per bulan (`total_income`, `total_expense`, `net`),
-  unik per user+bulan
+- `categories`: kategori per user dengan tipe `income` atau `expense`
+- `transactions`: transaksi harian; `amount` bertanda
+  (positif = pemasukan, negatif = pengeluaran)
+- `monthly_summaries`: ringkasan bulan (`total_income`, `total_expense`, `net`)
 
-Model, controller, dan route untuk tabel-tabel ini **belum dibuat** — itu
-pekerjaan utama berikutnya. Rencana fitur dari referensi konsep proyek:
-sumber pendapatan per periode, alokasi anggaran (Need/Fun/Saving/Emergency),
-estimasi pengeluaran per kategori, dan dashboard keuangan. Detail rancangan
-endpoint dan service ada di `design.md`.
+Model, controller, route, dan service keuangan belum lengkap. Schema existing
+belum cukup untuk master budget dari sheet `Estimasi`; tambahkan migrasi baru
+untuk kebutuhan master, jangan menimpa migrasi lama.
+
+## Master Data Yang Dibutuhkan
+
+| Master | Tujuan |
+| --- | --- |
+| Income Sources | Sumber pemasukan seperti Gaji, Bonus, Freelance |
+| Budget Groups | Pembagian budget: Need, Fun, Saving; Emergency sebagai reserve turunan |
+| Categories | Kategori pemasukan/pengeluaran. Kategori pengeluaran wajib punya budget group |
+| Monthly Plans | Rencana bulan/tahun berisi pemasukan, alokasi, dan estimasi kategori |
+
+Default dari workbook:
+
+- Sumber dana: `Gaji`
+- Pembagian: `Need 50%`, `Fun 30%`, `Saving 20%`
+- Kategori Need: `Makan`, `Bensin`, `Kuota`, `BPJS`, `Laundry`
+- Kategori Fun: `skincare`, `lainnya`, `Jajan`
+- Kategori Saving: `Saving`
+- Emergency: dihitung dari sisa estimasi, bukan persentase utama baru
 
 ## Arsitektur
 
-- **API-first**: semua interaksi lewat REST API di `routes/api.php`
-- **Stateless**: autentikasi Bearer token Sanctum; **satu token aktif per user**
-  (token lama dihapus saat login ulang), masa berlaku dari `SANCTUM_EXPIRATION`
-  (default 480 menit)
-- **Service layer**: business logic di `app/Services` (pola existing: `NavigationService`)
-- **Response envelope**: semua response berformat `{ "data", "message", "errors" }`
-- **Scope per user**: data keuangan selalu milik user yang login
-  (`user_id` + middleware `auth:sanctum`)
+- API-first: semua interaksi lewat REST API di `routes/api.php`
+- Stateless: autentikasi Bearer token Sanctum; satu token aktif per user
+- Service layer: business logic di `app/Services`
+- Response envelope: semua response `{ "data", "message", "errors" }`
+- Scope per user: semua data keuangan memakai `user_id`
+- Transaksi aktual tetap menjadi sumber kebenaran; summary dan dashboard
+  dihitung dari transaksi + rencana bulanan
 
 ## Struktur Direktori Penting
 
 ```text
 backend/
-├── app/
-│   ├── Http/Controllers/Api/   ← semua controller API
-│   ├── Models/                 ← Company, Menus, RoleMenus, Roles, User
-│   ├── OpenApi/Analysers/      ← DocBlockReflectionAnalyser (wajib ada, jangan dihapus)
-│   ├── Services/               ← NavigationService (pola untuk service keuangan)
-│   └── ...
-├── database/migrations/        ← termasuk 3 migrasi modul keuangan
-├── routes/api.php              ← satu-satunya file route API
-├── config/l5-swagger.php       ← jangan diubah bagian analyser (lihat rules.md)
-└── docker-entrypoint.sh        ← generate APP_KEY + auto-seed saat DB kosong
+|-- app/
+|   |-- Http/Controllers/Api/
+|   |-- Http/Resources/
+|   |-- Models/
+|   |-- OpenApi/Analysers/
+|   `-- Services/
+|-- database/migrations/
+|-- database/seeders/
+|-- routes/api.php
+`-- config/l5-swagger.php
 ```
 
-## Environment Variables (dari root `.env` via docker-compose)
-
-Daftar lengkap ada di `docker-compose.yml`. Yang paling penting:
+## Environment Variables Penting
 
 ```env
-APP_NAME=React CMS
+APP_NAME=Castra
 APP_ENV=production
-APP_KEY=                # dikosongkan saja — entrypoint generate & export sendiri
+APP_KEY=
 APP_DEBUG=false
 APP_URL=http://localhost
 
@@ -92,17 +120,16 @@ DB_USERNAME=reactcms
 DB_PASSWORD=secret
 
 SANCTUM_EXPIRATION=480
-CORS_ALLOWED_ORIGINS=   # isi domain frontend di production
+CORS_ALLOWED_ORIGINS=
 
 ADMIN_NAME=Administrator
 ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=         # minimal 12 karakter
+ADMIN_PASSWORD=
 ```
 
-## Dokumentasi API (Swagger)
+## Dokumentasi API
 
-- Swagger UI: `http://localhost/api/documentation` (lewat proxy nginx)
-- Langsung ke container backend: `http://localhost:9001/api/documentation`
+- Swagger UI: `http://localhost/api/documentation`
 - Generate ulang: `php artisan l5-swagger:generate`
-- Anotasi OpenAPI ditulis sebagai PHPDoc di controller — **baca `rules.md`
-  sebelum menyentuh `config/l5-swagger.php`**
+- Anotasi OpenAPI ditulis sebagai PHPDoc di controller
+- Jangan mengubah analyser kustom di `config/l5-swagger.php`

@@ -1,83 +1,126 @@
-# Frontend Rules — Aplikasi Pencatatan Keuangan
+# Frontend Rules - Castra
 
-Aturan menulis kode frontend. Pola yang sudah berjalan di template CoreUI
-dianggap standar — ikuti, jangan membuat pola baru yang berbeda.
+Aturan wajib untuk implementasi frontend Castra.
 
 ## Prinsip Umum
 
-- Function components + hooks; gunakan `prop-types` untuk props komponen
-  (konsisten dengan template).
-- Komponen besar dipecah: `<View>.js`, `<View>Form.js`, `<View>Table.js`
-  (pola folder `views/setup/*`) — modul keuangan mengikuti pola yang sama.
-- Route di-`lazy` lewat `React.lazy` di `src/routes.js`.
-- Error ditampilkan dekat sumbernya (per field); feedback sukses/gagal lewat toast.
+- Gunakan function components + hooks.
+- Gunakan `prop-types` untuk props komponen.
+- Ikuti pola `<View>.js`, `<View>Form.js`, `<View>Table.js`.
+- Route di-lazy lewat `React.lazy` di `src/routes.js`.
+- Semua request API lewat `src/services/api.js`.
+- Error field tampil dekat input; feedback umum lewat toast.
 
-## Organisasi Kode
+## Organisasi Modul
 
-| Lokasi | Isi |
-| --- | --- |
-| `src/components/` | Komponen reusable (AppHeader, AppSidebar, PrivateRoute, ...) |
-| `src/views/<modul>/` | Halaman per modul (dashboard, setup, nanti finance) |
-| `src/services/` | Axios instance & helper service (api, toast, sidebar) |
-| `src/utils/` | Helper murni (formatters, validators) |
-| `src/store.js` | State global Redux |
+```text
+src/views/finance/
+|-- incomes/
+|-- transactions/
+|-- monthlyPlans/
+`-- monthlySummaries/
 
-- **Semua** pemanggilan API lewat `services/api.js` — jangan memakai `axios`
-  atau `fetch` langsung di view.
-- Formatter uang/tanggal yang dipakai berulang dibuat sebagai helper di
-  `src/utils/formatters.js` (belum ada — buat saat modul keuangan mulai).
+src/views/master/
+|-- incomeSources/
+|-- budgetGroups/
+`-- categories/
+```
+
+Jangan mencampur halaman master ke `setup`; `setup` dipakai untuk administrasi
+sistem, sedangkan `master` dipakai untuk domain keuangan Castra.
+
+## Aturan Domain UI
+
+- Pemasukan adalah workflow pertama dalam periode.
+- UI tidak menghitung final allocation secara mandiri; tampilkan hasil dari backend.
+- Preview boleh dihitung di frontend, tetapi angka final setelah save harus dari API.
+- Input nominal selalu positif. Tanda plus/minus hanya untuk tampilan.
+- Emergency ditampilkan sebagai `Reserve` atau `Emergency Reserve` dari sisa
+  rencana. Jangan menjumlahkannya sebagai pembagian tambahan di total utama.
+- Kategori expense wajib memilih pembagian budget.
+- Kategori income tidak wajib memilih pembagian budget.
+- Jangan hardcode data default workbook di komponen; ambil dari API/seed backend.
 
 ## State Management
 
-- Store global hanya untuk hal lintas halaman: `user`, `company`, `navigation`,
-  `theme`, `sidebarShow`. Pola dispatch memakai action `set` yang sudah ada.
-- Data per halaman (list transaksi, kategori, filter) pakai `useState`/`useEffect`
-  lokal. Jangan memindahkan data per halaman ke Redux.
+- Redux hanya untuk `sidebarShow`, `theme`, `user`, `company`, `navigation`.
+- Data halaman seperti list, filter, form, pagination, dan summary memakai
+  `useState`/`useEffect` lokal.
+- Filter periode sebaiknya disimpan lokal per halaman. Jangan simpan di
+  `localStorage` kecuali ada kebutuhan eksplisit.
 
-## API & Penanganan Error
+## API dan Error Handling
 
-- Interceptor `services/api.js` sudah menangani: attach token Bearer,
-  401 → logout + `/#/login`, 403 → `/#/403`, 404 → `/#/404`, 5xx & network error
-  → toast. **Jangan duplikasi redirect ini di view.**
-- Error validasi dibaca dari `error.validationErrors`; pesan per field
-  ditampilkan dengan `getFieldError(errors, 'field')` (pola di `Login.js`).
-- Setiap request asinkron punya state `loading` dan tombol submit di-disable
-  saat loading (pola di `Login.js`).
-- Baca data response lewat `res.data.data` (envelope backend).
+- Baca data response lewat `res.data.data`.
+- Baca validasi lewat `error.validationErrors`.
+- Gunakan `getFieldError(errors, 'field')` untuk error field.
+- Interceptor sudah menangani 401, 403, 404, 5xx, dan network error.
+- Jangan membuat redirect auth tambahan di halaman.
+- Setiap request punya `loading`.
+- Tombol submit disabled saat loading.
+- Setelah create/update/delete, refresh list atau update state secara konsisten.
 
-## Format Angka & Tanggal
+## Format Angka dan Tanggal
 
-- Nominal uang selalu diformat:
-  `new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' })`.
-- Kolom nominal di tabel pakai `text-end` + tabular nums agar mudah dibanding.
-- Kirim tanggal ke backend dalam format `YYYY-MM-DD`; tampilkan `d MMM yyyy`
-  (locale `id-ID`).
-- Pemasukan = hijau (`text-success`, tanda `+`), pengeluaran = merah
-  (`text-danger`, tanda `−`). Jangan memakai warna lain untuk nominal.
+- Buat dan pakai `src/utils/formatters.js` untuk format reusable.
+- Uang:
+
+  ```js
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' })
+  ```
+
+- Tanggal kirim ke API: `YYYY-MM-DD`.
+- Tanggal tampil: locale `id-ID`.
+- Nominal tabel memakai `text-end` dan tabular nums.
+- Pemasukan tampil dengan tanda `+` dan class `text-success`.
+- Pengeluaran tampil dengan tanda `-` dan class `text-danger`.
+
+## Status Budget
+
+Gunakan mapping konsisten:
+
+| Status API | Label | Badge |
+| --- | --- | --- |
+| `safe` | Aman | success |
+| `near_limit` | Mendekati Batas | warning |
+| `over_budget` | Over Budget | danger |
+
+Status harus tampil sebagai teks/badge, bukan warna saja.
 
 ## UI/UX
 
-- Hapus data selalu lewat dialog konfirmasi, lalu toast sukses/gagal (`toastService`).
-- Tabel wajib punya empty state; loading pakai `CSpinner`/skeleton.
-- Form modal: reset state saat dibuka ulang; validasi tampil per field.
-- Sidebar menu bersumber dari `navigation` (Redux) — menu baru didaftarkan di
-  backend (tabel `menus`/`role_menus`), bukan di-hardcode di frontend.
+- Tabel wajib punya empty state.
+- Loading memakai `CSpinner` atau skeleton sesuai pola existing.
+- Hapus data selalu lewat dialog konfirmasi.
+- Form modal reset saat dibuka ulang.
+- Form edit dan create boleh satu komponen jika validasi tetap jelas.
+- Filter yang banyak ditempatkan dalam panel/collapse agar tabel tetap dominan.
+- Jangan menambahkan landing page; dashboard adalah layar utama setelah login.
 
 ## Styling
 
-- SCSS terpusat di `src/scss/`; override lewat variabel CoreUI.
-- Hindari inline style kecuali nilai dinamis (mis. warna dari data).
-- Prettier: 2 spasi, single quote, tanpa semicolon (sesuai `.prettierrc.js`).
+- Styling di `src/scss/`, bukan inline style, kecuali nilai benar-benar dinamis.
+- Pakai class CoreUI/Bootstrap lebih dulu.
+- Dukung dark mode dengan variabel CoreUI.
+- Hindari layout card di dalam card.
+- Pastikan teks tombol dan badge tidak terpotong pada mobile.
 
-## Keamanan & Performa
+## Menu dan Navigasi
 
-- Token di `localStorage` mengikuti pola existing; jangan menyimpan data lain di sana.
-- Jangan render HTML dari input user — React sudah escape, jangan pakai
-  `dangerouslySetInnerHTML`.
-- Route di-lazy untuk menjaga bundle kecil; komponen berat (grafik) di-import dinamis.
+- Sidebar menu bersumber dari `navigation` Redux yang dikirim backend.
+- Route tetap harus ada di frontend untuk path menu baru.
+- Jangan hardcode visibility menu berdasarkan role di frontend.
+- Jika user tidak punya permission, backend navigation tidak mengirim menu itu.
 
-## Git & Kualitas
+## Kualitas
 
-- Commit: conventional commits (`feat:`, `fix:`, ...) — konsisten dengan repo.
-- Sebelum commit: `npm run lint` wajib lolos; `npm run build` wajib sukses.
+- Sebelum selesai, jalankan:
+  - `npm run lint`
+  - `npm run build`
 - Jangan commit `node_modules/` dan hasil build.
+- Test manual minimal:
+  - login
+  - membuka menu finance/master
+  - create/update/delete master
+  - catat pemasukan dan lihat alokasi
+  - catat pengeluaran dan lihat status budget berubah

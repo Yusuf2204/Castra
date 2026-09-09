@@ -1,105 +1,134 @@
-# Frontend Context — Aplikasi Pencatatan Keuangan
+# Frontend Context - Castra
 
 ## Ringkasan
 
-Frontend adalah single-page application (SPA) untuk **pencatatan keuangan**
-berbasis **React 19 + Vite 7 + Redux + CoreUI 5 (free)**. Aplikasi menyediakan
-dashboard ringkasan, pengelolaan sistem (users, roles, menu, company), dan —
-ke depannya — modul keuangan: transaksi harian, kategori pemasukan/pengeluaran,
-dan ringkasan bulanan.
+Frontend Castra adalah SPA **React 19 + Vite 7 + Redux + CoreUI 5 (free)**
+untuk pencatatan dan perencanaan keuangan pribadi berbasis pemasukan gaji.
+Alur utama aplikasi: catat pemasukan, alokasikan ke Need/Fun/Saving, susun
+rencana kategori bulanan, lalu pantau realisasi harian dan sisa budget.
 
-Template dasar berasal dari CoreUI Free React Admin Template yang sudah
-disesuaikan dengan kebutuhan proyek (branding dinamis dari `company`,
-navigasi berbasis role dari backend, penanganan error terpusat).
+Template dasar berasal dari CoreUI Free React Admin Template dan sudah memiliki
+branding dinamis, navigasi berbasis role, auth Sanctum, dan error handling
+terpusat.
+
+## Basis Workbook
+
+Referensi awal: `docs/Keuangan_September_2026.xlsx`.
+
+| Sheet | Padanan UI |
+| --- | --- |
+| `Estimasi` | Halaman Master + Rencana Bulanan |
+| `Rincian` | Halaman Rincian Transaksi |
+| `Dashboard` | Dashboard Keuangan |
+
+Masalah utama workbook: pengeluaran sudah dihitung, tetapi pemasukan belum
+menjadi alur eksplisit. Di Castra, pemasukan harus menjadi langkah pertama yang
+menghasilkan alokasi budget.
 
 ## Teknologi
 
 | Komponen | Teknologi |
 | --- | --- |
 | Framework | React 19.2 |
-| Build | Vite 7 (dev server + build) |
-| State | Redux 5 + React-Redux 9 (store sederhana di `src/store.js`) |
-| UI | CoreUI 5 free (`@coreui/react`, `@coreui/icons-react`) |
-| Routing | React Router 7 (**HashRouter**) |
-| HTTP | Axios dengan interceptor (`src/services/api.js`) |
-| Styling | SCSS (`src/scss/style.scss`) |
+| Build | Vite 7 |
+| State | Redux 5 + React-Redux 9 |
+| UI | CoreUI 5 free |
+| Routing | React Router 7 dengan HashRouter |
+| HTTP | Axios instance di `src/services/api.js` |
+| Styling | SCSS |
 | Kualitas | ESLint 9, Prettier |
 
 ## Struktur Kode
 
 ```text
 src/
-├── components/          ← komponen bersama (AppHeader, AppSidebar, PrivateRoute, ...)
-├── layout/              ← DefaultLayout (sidebar + header + content)
-├── views/
-│   ├── dashboard/       ← Dashboard.js
-│   ├── pages/           ← login, register, 403, 404, 500
-│   └── setup/           ← users, roles, menus, rolePermissions, changePassword, company
-├── services/
-│   ├── api.js           ← axios instance + interceptor auth/error
-│   ├── sidebarService.js
-│   └── toastService.js
-├── utils/formErrors.js  ← normalisasi error validasi per field
-├── store.js             ← store Redux global
-├── routes.js            ← definisi route (React.lazy)
-└── App.js
+|-- components/
+|-- layout/
+|-- views/
+|   |-- dashboard/
+|   |-- finance/
+|   |   |-- incomes/
+|   |   |-- transactions/
+|   |   |-- monthlyPlans/
+|   |   `-- monthlySummaries/
+|   |-- master/
+|   |   |-- incomeSources/
+|   |   |-- budgetGroups/
+|   |   `-- categories/
+|   |-- pages/
+|   `-- setup/
+|-- services/
+|-- utils/
+|-- store.js
+|-- routes.js
+`-- App.js
 ```
 
-Pola halaman setup selalu sama: `<View>.js` (wadah) + `<View>Form.js` (form modal)
-+ `<View>Table.js` (tabel) — modul keuangan wajib mengikuti pola ini.
+Pola halaman tetap mengikuti setup existing: `<View>.js`, `<View>Form.js`,
+`<View>Table.js`.
 
-## State Global (Redux)
+## State Global
 
 ```js
 { sidebarShow, theme, user, company, navigation }
 ```
 
-- `user`, `company`, `navigation` diisi setelah login / `GET /me`.
-- `navigation` menentukan menu sidebar (berbasis role, dikirim dari backend).
-- State lokal per halaman memakai `useState`/`useEffect` — jangan memindahkan
-  semua state ke Redux.
+Data transaksi, master, filter, dan rencana bulanan tetap state lokal halaman.
+Redux hanya untuk state lintas halaman.
 
-## Alur Autentikasi
+## Menu Aplikasi
 
-1. Login → `POST /api/login` → token disimpan di `localStorage` key `token`,
-   lalu `user`, `company`, `navigation` di-dispatch ke store → redirect `/dashboard`.
-2. Saat halaman login dibuka dengan token tersimpan, aplikasi mengecek `GET /me`;
-   jika valid langsung masuk dashboard, jika tidak token dihapus.
-3. Interceptor request menyisipkan `Authorization: Bearer <token>` otomatis.
-4. Interceptor response menangani: 401 (non-`/login`) → hapus token → `/#/login`;
-   403 → `/#/403`; 404 → `/#/404`; 5xx → toast error; network error → toast.
-   **Jangan menambahkan redirect serupa di level view** — sudah terpusat di interceptor.
+Sidebar berasal dari `navigation` backend, bukan hardcode frontend.
 
-## Integrasi dengan Backend
+Menu target:
 
-- Base URL API: `/api` — saat dev, Vite mem-proxy ke backend lokal; saat Docker,
-  nginx reverse proxy di root stack meneruskan `/api/*` ke container backend.
-- Format response backend: `{ data, message, errors }` — selalu akses lewat `res.data.data`.
-- Error validasi (422) dibaca dari `error.validationErrors` (hasil normalisasi
-  `utils/formErrors.js`) dan `error.userMessage` untuk pesan umum.
+- Dashboard
+- Keuangan
+  - Pemasukan
+  - Rincian Transaksi
+  - Rencana Bulanan
+  - Ringkasan Bulanan
+- Master
+  - Sumber Dana
+  - Pembagian Budget
+  - Kategori
+- Setup
+  - Company, Users, Roles, Menus, Role Permissions, Change Password
 
-## Modul Keuangan (rencana)
+## Alur UX Utama
 
-Halaman yang akan ditambahkan di `src/views/finance/`:
+1. User membuka periode bulan/tahun.
+2. User mencatat pemasukan dari sumber dana.
+3. Sistem menampilkan hasil alokasi Need/Fun/Saving.
+4. User menyusun atau meninjau estimasi kategori di Rencana Bulanan.
+5. User mencatat pengeluaran harian di Rincian Transaksi.
+6. Dashboard menampilkan alokasi, realisasi, sisa, status, dan estimasi vs realisasi.
 
-- **Transaksi** — list + filter (rentang tanggal, kategori, tipe), form tambah/ubah, hapus
-- **Kategori** — dua tab: Pemasukan & Pengeluaran
-- **Ringkasan Bulanan** — pilih bulan/tahun, kartu total & breakdown kategori
-- **Dashboard Keuangan** — kartu ringkasan + grafik tren (lihat `design.md`)
+## Integrasi Backend
+
+- Base URL API: `/api`.
+- Response dibaca lewat `res.data.data`.
+- Error validasi dari `error.validationErrors`.
+- Interceptor `services/api.js` sudah menangani auth redirect dan error umum.
+- Halaman finance/master tidak boleh menduplikasi logic redirect auth.
+
+## Helper Yang Dibutuhkan
+
+Tambahkan saat implementasi modul:
+
+- `src/utils/formatters.js`
+  - `formatCurrency(value)`
+  - `formatSignedCurrency(value)`
+  - `formatDate(value)`
+  - `formatPeriod(year, month)`
+- `src/utils/budgetStatus.js`
+  - mapping `safe`, `near_limit`, `over_budget` ke label, warna, dan badge
 
 ## Perintah Umum
 
 ```bash
-npm ci          # install
-npm start       # dev server (vite)
-npm run lint    # ESLint
-npm run build   # build production
-npm run serve   # preview hasil build
+npm ci
+npm start
+npm run lint
+npm run build
 ```
-
-## Konfigurasi Environment
-
-- Base URL API `src/services/api.js` memakai path relatif `/api` — portabel
-  antara dev dan Docker, tidak perlu env khusus.
-- Tema light/dark mengikuti pola CoreUI (`useColorModes` di `App.js`).
-- Judul dokumen & favicon diatur dinamis dari `company` di Redux (lihat `App.js`).
