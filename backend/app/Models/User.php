@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\IncomeSource;
 use App\Models\Roles;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -51,5 +52,10 @@ class User extends Authenticatable
 
     public function role() {
         return $this->belongsTo(Roles::class, 'role_id');
+    }
+
+    public function incomeSources()
+    {
+        return $this->hasMany(IncomeSource::class);
     }
 }

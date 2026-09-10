@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000/api",
+            "url": "http://localhost/api",
             "description": "Configured from APP_URL + /api"
         }
     ],
@@ -15,7 +15,7 @@
         "/login": {
             "post": {
                 "tags": [
-                    "Auth"
+                    "Setup - Auth"
                 ],
                 "summary": "Login and create a Sanctum token",
                 "operationId": "9a5f0387b5e16c7fc63ef766b8c182ba",
@@ -92,7 +92,7 @@
         "/me": {
             "get": {
                 "tags": [
-                    "Auth"
+                    "Setup - Auth"
                 ],
                 "summary": "Get authenticated user",
                 "operationId": "5c4c2905001ce355b6ca7c699a6dbece",
@@ -133,7 +133,7 @@
         "/logout": {
             "post": {
                 "tags": [
-                    "Auth"
+                    "Setup - Auth"
                 ],
                 "summary": "Delete current Sanctum token",
                 "operationId": "11cdec38d03d5f4f3dd371eadcec1378",
@@ -167,7 +167,7 @@
         "/company": {
             "get": {
                 "tags": [
-                    "Company"
+                    "Setup - Company"
                 ],
                 "summary": "Get company profile",
                 "operationId": "8eed05e57bdf62f3d74b859672e8b6e1",
@@ -196,7 +196,7 @@
             },
             "put": {
                 "tags": [
-                    "Company"
+                    "Setup - Company"
                 ],
                 "summary": "Update company profile",
                 "description": "Uploads logo and favicon as base64 data URL strings, for example data:image/png;base64,iVBORw0KGgo...",
@@ -262,7 +262,7 @@
         "/users": {
             "get": {
                 "tags": [
-                    "Users"
+                    "Setup - Users"
                 ],
                 "summary": "List users",
                 "description": "Returns a plain array of users. Pagination metadata is not returned by the current API.",
@@ -316,7 +316,7 @@
             },
             "post": {
                 "tags": [
-                    "Users"
+                    "Setup - Users"
                 ],
                 "summary": "Create user",
                 "operationId": "3d27f8ae2cae1398c5a4cd31c1090ac0",
@@ -396,7 +396,7 @@
         "/users/{id}": {
             "get": {
                 "tags": [
-                    "Users"
+                    "Setup - Users"
                 ],
                 "summary": "Get user detail",
                 "operationId": "13ae4d783ea5147d7e131fb34b69bf01",
@@ -452,7 +452,7 @@
             },
             "put": {
                 "tags": [
-                    "Users"
+                    "Setup - Users"
                 ],
                 "summary": "Update user",
                 "description": "Editable fields: name, email, password, and role_id. Password may be omitted when it should not be changed.",
@@ -530,7 +530,7 @@
             },
             "delete": {
                 "tags": [
-                    "Users"
+                    "Setup - Users"
                 ],
                 "summary": "Delete user",
                 "operationId": "b51c9ed3d83d546ef44b8185405dc4a0",
@@ -579,7 +579,7 @@
         "/change-password": {
             "post": {
                 "tags": [
-                    "Users"
+                    "Setup - Users"
                 ],
                 "summary": "Change authenticated user password",
                 "operationId": "778fa5e54dd36d4780954c9880d25573",
@@ -647,7 +647,7 @@
         "/roles": {
             "get": {
                 "tags": [
-                    "Roles"
+                    "Setup - Roles"
                 ],
                 "summary": "List roles",
                 "operationId": "b311f21624fedcd44e1eb1c082b66978",
@@ -688,7 +688,7 @@
             },
             "post": {
                 "tags": [
-                    "Roles"
+                    "Setup - Roles"
                 ],
                 "summary": "Create role",
                 "operationId": "b4d285524b6a9c706bc031f80967045f",
@@ -757,7 +757,7 @@
         "/roles/{id}": {
             "put": {
                 "tags": [
-                    "Roles"
+                    "Setup - Roles"
                 ],
                 "summary": "Update role",
                 "operationId": "98669e43ed5eb90717cc4967e3d2b73e",
@@ -839,7 +839,7 @@
             },
             "delete": {
                 "tags": [
-                    "Roles"
+                    "Setup - Roles"
                 ],
                 "summary": "Delete role",
                 "operationId": "f41b880cf99ba84b4ed836ec72cf2ff7",
@@ -888,7 +888,7 @@
         "/menus": {
             "get": {
                 "tags": [
-                    "Menus"
+                    "Setup - Menus"
                 ],
                 "summary": "List menus",
                 "operationId": "79dcf2af88603a07b15ffdb95306b2f2",
@@ -914,7 +914,7 @@
                                         {
                                             "id": 2,
                                             "menu_id": 2,
-                                            "menu_name": "Users",
+                                            "menu_name": "Setup - Users",
                                             "menu_path": "/setup/users",
                                             "menu_icon": "cil-user",
                                             "menu_parent_id": 1,
@@ -939,7 +939,7 @@
             },
             "post": {
                 "tags": [
-                    "Menus"
+                    "Setup - Menus"
                 ],
                 "summary": "Create menu",
                 "operationId": "97c3bb6598815f42bf3894b7ea7cbfbd",
@@ -998,7 +998,7 @@
         "/menus-tree": {
             "get": {
                 "tags": [
-                    "Menus"
+                    "Setup - Menus"
                 ],
                 "summary": "List menus as tree",
                 "description": "Recursive menu tree used by the dynamic sidebar and menu setup screens.",
@@ -1025,7 +1025,7 @@
                                                 {
                                                     "id": 2,
                                                     "menu_id": 2,
-                                                    "menu_name": "Users",
+                                                    "menu_name": "Setup - Users",
                                                     "menu_path": "/setup/users",
                                                     "menu_icon": "cil-user",
                                                     "menu_parent_id": 1,
@@ -1052,7 +1052,7 @@
         "/menus/{id}": {
             "get": {
                 "tags": [
-                    "Menus"
+                    "Setup - Menus"
                 ],
                 "summary": "Get menu detail",
                 "operationId": "f110b9592d81d3b271554baab8d4f1ef",
@@ -1094,7 +1094,7 @@
             },
             "put": {
                 "tags": [
-                    "Menus"
+                    "Setup - Menus"
                 ],
                 "summary": "Update menu",
                 "operationId": "268a056323ac672589b9fdde068db0b2",
@@ -1166,7 +1166,7 @@
             },
             "delete": {
                 "tags": [
-                    "Menus"
+                    "Setup - Menus"
                 ],
                 "summary": "Delete menu",
                 "operationId": "69b7bd8a9eb0574bb46192aa29fdb272",
@@ -1215,7 +1215,7 @@
         "/role-menus/{role}": {
             "get": {
                 "tags": [
-                    "Role Permissions"
+                    "Setup - Role Permissions"
                 ],
                 "summary": "Get role menu permissions",
                 "description": "Recursive checked menu tree used by the dynamic sidebar permission system.",
@@ -1252,7 +1252,7 @@
                                                 {
                                                     "id": 2,
                                                     "menu_id": 2,
-                                                    "menu_name": "Users",
+                                                    "menu_name": "Setup - Users",
                                                     "menu_path": "/setup/users",
                                                     "checked": false,
                                                     "children": []
@@ -1275,7 +1275,7 @@
             },
             "post": {
                 "tags": [
-                    "Role Permissions"
+                    "Setup - Role Permissions"
                 ],
                 "summary": "Update role menu permissions",
                 "operationId": "c6d0fbf62c78696e4fc479bfa9089087",
@@ -1319,6 +1319,372 @@
                                 "example": {
                                     "data": true,
                                     "message": "Permissions updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/income-sources": {
+            "get": {
+                "tags": [
+                    "Master - Income Sources"
+                ],
+                "summary": "List income sources for the authenticated user",
+                "operationId": "4bdf4a55f57b21d78aba87034bf56a2c",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search in name and description",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (1-100, default 15)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Income source list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "name": "Gaji",
+                                            "description": "Gaji bulanan",
+                                            "is_active": true,
+                                            "created_at": "2026-09-10T10:00:00.000000Z",
+                                            "updated_at": "2026-09-10T10:00:00.000000Z"
+                                        }
+                                    ],
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Master - Income Sources"
+                ],
+                "summary": "Create an income source",
+                "operationId": "31694504c57114a65230e0e49da16543",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Gaji",
+                                        "maxLength": 100
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Gaji bulanan",
+                                        "nullable": true
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Income source created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 1,
+                                        "name": "Gaji",
+                                        "description": "Gaji bulanan",
+                                        "is_active": true,
+                                        "created_at": "2026-09-10T10:00:00.000000Z",
+                                        "updated_at": "2026-09-10T10:00:00.000000Z"
+                                    },
+                                    "message": "Income source created",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "Validation failed",
+                                    "errors": {
+                                        "name": [
+                                            "The name has already been taken."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/income-sources/{incomeSource}": {
+            "get": {
+                "tags": [
+                    "Master - Income Sources"
+                ],
+                "summary": "Show an income source",
+                "operationId": "159adeedb1ea8e7fd8393ca3a021d165",
+                "parameters": [
+                    {
+                        "name": "incomeSource",
+                        "in": "path",
+                        "description": "Income source ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Income source detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 1,
+                                        "name": "Gaji",
+                                        "description": "Gaji bulanan",
+                                        "is_active": true,
+                                        "created_at": "2026-09-10T10:00:00.000000Z",
+                                        "updated_at": "2026-09-10T10:00:00.000000Z"
+                                    },
+                                    "message": "OK",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Master - Income Sources"
+                ],
+                "summary": "Update an income source",
+                "operationId": "1a6806b01fa0a8d2a2b82b1fb88efe9d",
+                "parameters": [
+                    {
+                        "name": "incomeSource",
+                        "in": "path",
+                        "description": "Income source ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Gaji",
+                                        "maxLength": 100
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Gaji bulanan",
+                                        "nullable": true
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Income source updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 1,
+                                        "name": "Gaji",
+                                        "description": "Gaji bulanan",
+                                        "is_active": true,
+                                        "created_at": "2026-09-10T10:00:00.000000Z",
+                                        "updated_at": "2026-09-10T10:00:00.000000Z"
+                                    },
+                                    "message": "Income source updated",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "Validation failed",
+                                    "errors": {
+                                        "name": [
+                                            "The name has already been taken."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Master - Income Sources"
+                ],
+                "summary": "Delete an income source",
+                "operationId": "154bddfa6ee4ba06d517b2cb9806e5bd",
+                "parameters": [
+                    {
+                        "name": "incomeSource",
+                        "in": "path",
+                        "description": "Income source ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Income source deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "Income source deleted",
                                     "errors": null
                                 }
                             }
@@ -1859,7 +2225,7 @@
                 },
                 "type": "object"
             },
-            "Company": {
+            "Setup - Company": {
                 "properties": {
                     "id": {
                         "type": "integer",
@@ -2205,28 +2571,32 @@
     },
     "tags": [
         {
-            "name": "Auth",
+            "name": "Setup - Auth",
             "description": "Authentication and token management"
         },
         {
-            "name": "Users",
+            "name": "Setup - Users",
             "description": "User account management"
         },
         {
-            "name": "Roles",
+            "name": "Setup - Roles",
             "description": "Role management"
         },
         {
-            "name": "Menus",
+            "name": "Setup - Menus",
             "description": "Menu and sidebar management"
         },
         {
-            "name": "Role Permissions",
+            "name": "Setup - Role Permissions",
             "description": "Dynamic sidebar permission system"
         },
         {
-            "name": "Company",
+            "name": "Setup - Company",
             "description": "Company profile and branding"
+        },
+        {
+            "name": "Master - Income Sources",
+            "description": "Master data for income sources (Sumber Dana), scoped per user"
         }
     ]
 }
