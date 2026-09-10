@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 // Route Controllers
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\IncomeSourceController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RoleMenuController;
@@ -28,4 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('role-menus/{role}', [RoleMenuController::class, 'store']);
     Route::post('change-password', [UserController::class, 'changePassword']);
     Route::put('company', [CompanyController::class, 'update']);
+
+    // Master Keuangan
+    Route::apiResource('income-sources', IncomeSourceController::class);
 });

@@ -16,12 +16,13 @@ use OpenApi\Annotations as OA;
  *     description="Configured from APP_URL + /api"
  * )
  *
- * @OA\Tag(name="Auth", description="Authentication and token management")
- * @OA\Tag(name="Users", description="User account management")
- * @OA\Tag(name="Roles", description="Role management")
- * @OA\Tag(name="Menus", description="Menu and sidebar management")
- * @OA\Tag(name="Role Permissions", description="Dynamic sidebar permission system")
- * @OA\Tag(name="Company", description="Company profile and branding")
+ * @OA\Tag(name="Setup - Auth", description="Authentication and token management")
+ * @OA\Tag(name="Setup - Users", description="User account management")
+ * @OA\Tag(name="Setup - Roles", description="Role management")
+ * @OA\Tag(name="Setup - Menus", description="Menu and sidebar management")
+ * @OA\Tag(name="Setup - Role Permissions", description="Dynamic sidebar permission system")
+ * @OA\Tag(name="Setup - Company", description="Company profile and branding")
+ * @OA\Tag(name="Master - Income Sources", description="Master data for income sources (Sumber Dana), scoped per user")
  *
  * @OA\SecurityScheme(
  *     securityScheme="bearerAuth",
@@ -439,7 +440,7 @@ class ApiDocumentation
     /**
      * @OA\Post(
      *     path="/login",
-     *     tags={"Auth"},
+     *     tags={"Setup - Auth"},
      *     summary="Login and create a Sanctum token",
      *
      *     @OA\RequestBody(
@@ -499,7 +500,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/me",
-     *     tags={"Auth"},
+     *     tags={"Setup - Auth"},
      *     summary="Get authenticated user",
      *     security={{"bearerAuth":{}}},
      *
@@ -529,7 +530,7 @@ class ApiDocumentation
      *
      * @OA\Post(
      *     path="/logout",
-     *     tags={"Auth"},
+     *     tags={"Setup - Auth"},
      *     summary="Delete current Sanctum token",
      *     security={{"bearerAuth":{}}},
      *
@@ -551,7 +552,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/company",
-     *     tags={"Company"},
+     *     tags={"Setup - Company"},
      *     summary="Get company profile",
      *
      *     @OA\Response(
@@ -576,7 +577,7 @@ class ApiDocumentation
      *
      * @OA\Put(
      *     path="/company",
-     *     tags={"Company"},
+     *     tags={"Setup - Company"},
      *     summary="Update company profile",
      *     description="Uploads logo and favicon as base64 data URL strings, for example data:image/png;base64,iVBORw0KGgo...",
      *     security={{"bearerAuth":{}}},
@@ -623,7 +624,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/users",
-     *     tags={"Users"},
+     *     tags={"Setup - Users"},
      *     summary="List users",
      *     description="Returns a plain array of users. Pagination metadata is not returned by the current API.",
      *     security={{"bearerAuth":{}}},
@@ -662,7 +663,7 @@ class ApiDocumentation
      *
      * @OA\Post(
      *     path="/users",
-     *     tags={"Users"},
+     *     tags={"Setup - Users"},
      *     summary="Create user",
      *     security={{"bearerAuth":{}}},
      *
@@ -714,7 +715,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/users/{id}",
-     *     tags={"Users"},
+     *     tags={"Setup - Users"},
      *     summary="Get user detail",
      *     security={{"bearerAuth":{}}},
      *
@@ -746,7 +747,7 @@ class ApiDocumentation
      *
      * @OA\Put(
      *     path="/users/{id}",
-     *     tags={"Users"},
+     *     tags={"Setup - Users"},
      *     summary="Update user",
      *     description="Editable fields: name, email, password, and role_id. Password may be omitted when it should not be changed.",
      *     security={{"bearerAuth":{}}},
@@ -783,7 +784,7 @@ class ApiDocumentation
      *
      * @OA\Delete(
      *     path="/users/{id}",
-     *     tags={"Users"},
+     *     tags={"Setup - Users"},
      *     summary="Delete user",
      *     security={{"bearerAuth":{}}},
      *
@@ -808,7 +809,7 @@ class ApiDocumentation
     /**
      * @OA\Post(
      *     path="/change-password",
-     *     tags={"Users"},
+     *     tags={"Setup - Users"},
      *     summary="Change authenticated user password",
      *     security={{"bearerAuth":{}}},
      *
@@ -852,7 +853,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/roles",
-     *     tags={"Roles"},
+     *     tags={"Setup - Roles"},
      *     summary="List roles",
      *     security={{"bearerAuth":{}}},
      *
@@ -878,7 +879,7 @@ class ApiDocumentation
      *
      * @OA\Post(
      *     path="/roles",
-     *     tags={"Roles"},
+     *     tags={"Setup - Roles"},
      *     summary="Create role",
      *     security={{"bearerAuth":{}}},
      *
@@ -926,7 +927,7 @@ class ApiDocumentation
     /**
      * @OA\Put(
      *     path="/roles/{id}",
-     *     tags={"Roles"},
+     *     tags={"Setup - Roles"},
      *     summary="Update role",
      *     security={{"bearerAuth":{}}},
      *
@@ -974,7 +975,7 @@ class ApiDocumentation
      *
      * @OA\Delete(
      *     path="/roles/{id}",
-     *     tags={"Roles"},
+     *     tags={"Setup - Roles"},
      *     summary="Delete role",
      *     security={{"bearerAuth":{}}},
      *
@@ -999,7 +1000,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/menus",
-     *     tags={"Menus"},
+     *     tags={"Setup - Menus"},
      *     summary="List menus",
      *     security={{"bearerAuth":{}}},
      *
@@ -1041,7 +1042,7 @@ class ApiDocumentation
      *
      * @OA\Post(
      *     path="/menus",
-     *     tags={"Menus"},
+     *     tags={"Setup - Menus"},
      *     summary="Create menu",
      *     security={{"bearerAuth":{}}},
      *
@@ -1090,7 +1091,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/menus-tree",
-     *     tags={"Menus"},
+     *     tags={"Setup - Menus"},
      *     summary="List menus as tree",
      *     description="Recursive menu tree used by the dynamic sidebar and menu setup screens.",
      *     security={{"bearerAuth":{}}},
@@ -1134,7 +1135,7 @@ class ApiDocumentation
      *
      * @OA\Get(
      *     path="/menus/{id}",
-     *     tags={"Menus"},
+     *     tags={"Setup - Menus"},
      *     summary="Get menu detail",
      *     security={{"bearerAuth":{}}},
      *
@@ -1153,7 +1154,7 @@ class ApiDocumentation
      *
      * @OA\Put(
      *     path="/menus/{id}",
-     *     tags={"Menus"},
+     *     tags={"Setup - Menus"},
      *     summary="Update menu",
      *     security={{"bearerAuth":{}}},
      *
@@ -1202,7 +1203,7 @@ class ApiDocumentation
      *
      * @OA\Delete(
      *     path="/menus/{id}",
-     *     tags={"Menus"},
+     *     tags={"Setup - Menus"},
      *     summary="Delete menu",
      *     security={{"bearerAuth":{}}},
      *
@@ -1227,7 +1228,7 @@ class ApiDocumentation
     /**
      * @OA\Get(
      *     path="/role-menus/{role}",
-     *     tags={"Role Permissions"},
+     *     tags={"Setup - Role Permissions"},
      *     summary="Get role menu permissions",
      *     description="Recursive checked menu tree used by the dynamic sidebar permission system.",
      *     security={{"bearerAuth":{}}},
@@ -1269,7 +1270,7 @@ class ApiDocumentation
      *
      * @OA\Post(
      *     path="/role-menus/{role}",
-     *     tags={"Role Permissions"},
+     *     tags={"Setup - Role Permissions"},
      *     summary="Update role menu permissions",
      *     security={{"bearerAuth":{}}},
      *
@@ -1299,4 +1300,192 @@ class ApiDocumentation
      * )
      */
     public function roleMenus(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/income-sources",
+     *     tags={"Master - Income Sources"},
+     *     summary="List income sources for the authenticated user",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="search", in="query", required=false, description="Search in name and description", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="is_active", in="query", required=false, description="Filter by active status", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="per_page", in="query", required=false, description="Items per page (1-100, default 15)", @OA\Schema(type="integer", example=15)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income source list",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *             example={
+     *                 "data": {
+     *                     {
+     *                         "id": 1,
+     *                         "name": "Gaji",
+     *                         "description": "Gaji bulanan",
+     *                         "is_active": true,
+     *                         "created_at": "2026-09-10T10:00:00.000000Z",
+     *                         "updated_at": "2026-09-10T10:00:00.000000Z"
+     *                     }
+     *                 },
+     *                 "message": "OK",
+     *                 "errors": null
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Post(
+     *     path="/income-sources",
+     *     tags={"Master - Income Sources"},
+     *     summary="Create an income source",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"name"},
+     *
+     *             @OA\Property(property="name", type="string", maxLength=100, example="Gaji"),
+     *             @OA\Property(property="description", type="string", nullable=true, example="Gaji bulanan"),
+     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Income source created",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *             example={
+     *                 "data": {
+     *                     "id": 1,
+     *                     "name": "Gaji",
+     *                     "description": "Gaji bulanan",
+     *                     "is_active": true,
+     *                     "created_at": "2026-09-10T10:00:00.000000Z",
+     *                     "updated_at": "2026-09-10T10:00:00.000000Z"
+     *                 },
+     *                 "message": "Income source created",
+     *                 "errors": null
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function incomeSourcesCollection(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/income-sources/{incomeSource}",
+     *     tags={"Master - Income Sources"},
+     *     summary="Show an income source",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="incomeSource", in="path", required=true, description="Income source ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income source detail",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *             example={
+     *                 "data": {
+     *                     "id": 1,
+     *                     "name": "Gaji",
+     *                     "description": "Gaji bulanan",
+     *                     "is_active": true,
+     *                     "created_at": "2026-09-10T10:00:00.000000Z",
+     *                     "updated_at": "2026-09-10T10:00:00.000000Z"
+     *                 },
+     *                 "message": "OK",
+     *                 "errors": null
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Put(
+     *     path="/income-sources/{incomeSource}",
+     *     tags={"Master - Income Sources"},
+     *     summary="Update an income source",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="incomeSource", in="path", required=true, description="Income source ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"name", "is_active"},
+     *
+     *             @OA\Property(property="name", type="string", maxLength=100, example="Gaji"),
+     *             @OA\Property(property="description", type="string", nullable=true, example="Gaji bulanan"),
+     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income source updated",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *             example={
+     *                 "data": {
+     *                     "id": 1,
+     *                     "name": "Gaji",
+     *                     "description": "Gaji bulanan",
+     *                     "is_active": true,
+     *                     "created_at": "2026-09-10T10:00:00.000000Z",
+     *                     "updated_at": "2026-09-10T10:00:00.000000Z"
+     *                 },
+     *                 "message": "Income source updated",
+     *                 "errors": null
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     *
+     * @OA\Delete(
+     *     path="/income-sources/{incomeSource}",
+     *     tags={"Master - Income Sources"},
+     *     summary="Delete an income source",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="incomeSource", in="path", required=true, description="Income source ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income source deleted",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *             example={"data":null,"message":"Income source deleted","errors":null}
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
+    public function incomeSourcesItem(): void {}
 }
