@@ -1,36 +1,20 @@
 import { CNavItem, CNavGroup } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilBuilding,
-  cilHamburgerMenu,
-  cilListRich,
-  cilLockLocked,
-  cilMenu,
-  cilPeople,
-  cilSettings,
-  cilShieldAlt,
-  cilSpeedometer,
-  cilUser,
-} from '@coreui/icons'
+import * as CoreUIIcons from '@coreui/icons'
 
-const icons = {
-  cilBuilding,
-  cilHamburgerMenu,
-  cilListRich,
-  cilLockLocked,
-  cilMenu,
-  cilPeople,
-  cilSettings,
-  cilShieldAlt,
-  cilSpeedometer,
-  cilUser,
+const normalizeIconName = (iconName) => {
+  if (!iconName) return null
+
+  return String(iconName)
+    .trim()
+    .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
 }
 
 const resolveIcon = (iconName) => {
-  if (!iconName) return null
-  const icon = icons[iconName]
+  const normalizedIconName = normalizeIconName(iconName)
+  const icon = CoreUIIcons[normalizedIconName]
   if (!icon) return null
-  return <CIcon icon={icon} className="nav-icon" />
+  return <CIcon icon={icon} customClassName="nav-icon" />
 }
 
 /* ===============================

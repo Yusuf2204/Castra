@@ -914,7 +914,7 @@
                                         {
                                             "id": 2,
                                             "menu_id": 2,
-                                            "menu_name": "Setup - Users",
+                                            "menu_name": "Users",
                                             "menu_path": "/setup/users",
                                             "menu_icon": "cil-user",
                                             "menu_parent_id": 1,
@@ -1025,7 +1025,7 @@
                                                 {
                                                     "id": 2,
                                                     "menu_id": 2,
-                                                    "menu_name": "Setup - Users",
+                                                    "menu_name": "Users",
                                                     "menu_path": "/setup/users",
                                                     "menu_icon": "cil-user",
                                                     "menu_parent_id": 1,
@@ -1252,7 +1252,7 @@
                                                 {
                                                     "id": 2,
                                                     "menu_id": 2,
-                                                    "menu_name": "Setup - Users",
+                                                    "menu_name": "Users",
                                                     "menu_path": "/setup/users",
                                                     "checked": false,
                                                     "children": []
@@ -1373,6 +1373,16 @@
                             "type": "integer",
                             "example": 15
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Pagination page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -1381,19 +1391,33 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/IncomeSourcesListResponse"
                                 },
                                 "example": {
-                                    "data": [
-                                        {
-                                            "id": 1,
-                                            "name": "Gaji",
-                                            "description": "Gaji bulanan",
-                                            "is_active": true,
-                                            "created_at": "2026-09-10T10:00:00.000000Z",
-                                            "updated_at": "2026-09-10T10:00:00.000000Z"
+                                    "data": {
+                                        "data": [
+                                            {
+                                                "id": 1,
+                                                "name": "Gaji",
+                                                "description": "Gaji bulanan",
+                                                "is_active": true,
+                                                "created_at": "2026-09-10T10:00:00.000000Z",
+                                                "updated_at": "2026-09-10T10:00:00.000000Z"
+                                            }
+                                        ],
+                                        "links": {
+                                            "first": "http://localhost/api/income-sources?page=1",
+                                            "last": "http://localhost/api/income-sources?page=1",
+                                            "prev": null,
+                                            "next": null
+                                        },
+                                        "meta": {
+                                            "current_page": 1,
+                                            "last_page": 1,
+                                            "per_page": 10,
+                                            "total": 1
                                         }
-                                    ],
+                                    },
                                     "message": "OK",
                                     "errors": null
                                 }
@@ -1421,26 +1445,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Gaji",
-                                        "maxLength": 100
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "Gaji bulanan",
-                                        "nullable": true
-                                    },
-                                    "is_active": {
-                                        "type": "boolean",
-                                        "example": true
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/IncomeSourceRequest"
+                            },
+                            "example": {
+                                "name": "Gaji",
+                                "description": "Gaji bulanan",
+                                "is_active": true
                             }
                         }
                     }
@@ -1451,7 +1461,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/IncomeSourceResponse"
                                 },
                                 "example": {
                                     "data": {
@@ -1477,15 +1487,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationErrorResponse"
-                                },
-                                "example": {
-                                    "data": null,
-                                    "message": "Validation failed",
-                                    "errors": {
-                                        "name": [
-                                            "The name has already been taken."
-                                        ]
-                                    }
                                 }
                             }
                         }
@@ -1523,7 +1524,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/IncomeSourceResponse"
                                 },
                                 "example": {
                                     "data": {
@@ -1576,27 +1577,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "name",
-                                    "is_active"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Gaji",
-                                        "maxLength": 100
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "Gaji bulanan",
-                                        "nullable": true
-                                    },
-                                    "is_active": {
-                                        "type": "boolean",
-                                        "example": true
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/IncomeSourceRequest"
+                            },
+                            "example": {
+                                "name": "Gaji",
+                                "description": "Gaji bulanan",
+                                "is_active": true
                             }
                         }
                     }
@@ -1607,7 +1593,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/IncomeSourceResponse"
                                 },
                                 "example": {
                                     "data": {
@@ -1636,15 +1622,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationErrorResponse"
-                                },
-                                "example": {
-                                    "data": null,
-                                    "message": "Validation failed",
-                                    "errors": {
-                                        "name": [
-                                            "The name has already been taken."
-                                        ]
-                                    }
                                 }
                             }
                         }
@@ -1680,7 +1657,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/IncomeSourceDeleteResponse"
                                 },
                                 "example": {
                                     "data": null,
@@ -2225,7 +2202,7 @@
                 },
                 "type": "object"
             },
-            "Setup - Company": {
+            "Company": {
                 "properties": {
                     "id": {
                         "type": "integer",
@@ -2551,6 +2528,175 @@
                     "message": {
                         "type": "string",
                         "example": "Permissions updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationLinks": {
+                "properties": {
+                    "first": {
+                        "type": "string",
+                        "example": "http://localhost/api/income-sources?page=1",
+                        "nullable": true
+                    },
+                    "last": {
+                        "type": "string",
+                        "example": "http://localhost/api/income-sources?page=2",
+                        "nullable": true
+                    },
+                    "prev": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "next": {
+                        "type": "string",
+                        "example": "http://localhost/api/income-sources?page=2",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationMeta": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 12
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeSource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Gaji"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Gaji bulanan",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-10T10:00:00.000000Z",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-10T10:00:00.000000Z",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeSourceRequest": {
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Gaji",
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Gaji bulanan",
+                        "nullable": true,
+                        "maxLength": 1000
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeSourcesListData": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/IncomeSource"
+                        }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/PaginationLinks"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeSourcesListResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/IncomeSourcesListData"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeSourceResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/IncomeSource"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "OK"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeSourceDeleteResponse": {
+                "properties": {
+                    "data": {
+                        "example": null,
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Income source deleted"
                     },
                     "errors": {
                         "example": null,

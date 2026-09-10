@@ -37,7 +37,21 @@ class IncomeSourceController extends Controller
         $incomeSources = $query->orderBy('name')->paginate($perPage);
 
         return response()->json([
-            'data' => IncomeSourceResource::collection($incomeSources),
+            'data' => [
+                'data' => IncomeSourceResource::collection($incomeSources)->resolve(),
+                'links' => [
+                    'first' => $incomeSources->url(1),
+                    'last' => $incomeSources->url($incomeSources->lastPage()),
+                    'prev' => $incomeSources->previousPageUrl(),
+                    'next' => $incomeSources->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $incomeSources->currentPage(),
+                    'last_page' => $incomeSources->lastPage(),
+                    'per_page' => $incomeSources->perPage(),
+                    'total' => $incomeSources->total(),
+                ],
+            ],
             'message' => 'OK',
             'errors' => null,
         ]);

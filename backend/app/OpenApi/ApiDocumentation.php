@@ -434,6 +434,76 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="message", type="string", example="Permissions updated"),
  *     @OA\Property(property="errors", nullable=true, example=null)
  * )
+ *
+ * @OA\Schema(
+ *     schema="PaginationLinks",
+ *
+ *     @OA\Property(property="first", type="string", nullable=true, example="http://localhost/api/income-sources?page=1"),
+ *     @OA\Property(property="last", type="string", nullable=true, example="http://localhost/api/income-sources?page=2"),
+ *     @OA\Property(property="prev", type="string", nullable=true, example=null),
+ *     @OA\Property(property="next", type="string", nullable=true, example="http://localhost/api/income-sources?page=2")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="PaginationMeta",
+ *
+ *     @OA\Property(property="current_page", type="integer", example=1),
+ *     @OA\Property(property="last_page", type="integer", example=2),
+ *     @OA\Property(property="per_page", type="integer", example=10),
+ *     @OA\Property(property="total", type="integer", example=12)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeSource",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="Gaji"),
+ *     @OA\Property(property="description", type="string", nullable=true, example="Gaji bulanan"),
+ *     @OA\Property(property="is_active", type="boolean", example=true),
+ *     @OA\Property(property="created_at", type="string", format="date-time", nullable=true, example="2026-09-10T10:00:00.000000Z"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", nullable=true, example="2026-09-10T10:00:00.000000Z")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeSourceRequest",
+ *     required={"name"},
+ *
+ *     @OA\Property(property="name", type="string", maxLength=100, example="Gaji"),
+ *     @OA\Property(property="description", type="string", maxLength=1000, nullable=true, example="Gaji bulanan"),
+ *     @OA\Property(property="is_active", type="boolean", example=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeSourcesListData",
+ *
+ *     @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/IncomeSource")),
+ *     @OA\Property(property="links", ref="#/components/schemas/PaginationLinks"),
+ *     @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeSourcesListResponse",
+ *
+ *     @OA\Property(property="data", ref="#/components/schemas/IncomeSourcesListData"),
+ *     @OA\Property(property="message", type="string", example="OK"),
+ *     @OA\Property(property="errors", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeSourceResponse",
+ *
+ *     @OA\Property(property="data", ref="#/components/schemas/IncomeSource"),
+ *     @OA\Property(property="message", type="string", example="OK"),
+ *     @OA\Property(property="errors", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeSourceDeleteResponse",
+ *
+ *     @OA\Property(property="data", nullable=true, example=null),
+ *     @OA\Property(property="message", type="string", example="Income source deleted"),
+ *     @OA\Property(property="errors", nullable=true, example=null)
+ * )
  */
 class ApiDocumentation
 {
@@ -1311,22 +1381,37 @@ class ApiDocumentation
      *     @OA\Parameter(name="search", in="query", required=false, description="Search in name and description", @OA\Schema(type="string")),
      *     @OA\Parameter(name="is_active", in="query", required=false, description="Filter by active status", @OA\Schema(type="boolean")),
      *     @OA\Parameter(name="per_page", in="query", required=false, description="Items per page (1-100, default 15)", @OA\Schema(type="integer", example=15)),
+     *     @OA\Parameter(name="page", in="query", required=false, description="Pagination page", @OA\Schema(type="integer", example=1)),
      *
      *     @OA\Response(
      *         response=200,
      *         description="Income source list",
      *
      *         @OA\JsonContent(
-     *             type="object",
+     *             ref="#/components/schemas/IncomeSourcesListResponse",
      *             example={
      *                 "data": {
-     *                     {
-     *                         "id": 1,
-     *                         "name": "Gaji",
-     *                         "description": "Gaji bulanan",
-     *                         "is_active": true,
-     *                         "created_at": "2026-09-10T10:00:00.000000Z",
-     *                         "updated_at": "2026-09-10T10:00:00.000000Z"
+     *                     "data": {
+     *                         {
+     *                             "id": 1,
+     *                             "name": "Gaji",
+     *                             "description": "Gaji bulanan",
+     *                             "is_active": true,
+     *                             "created_at": "2026-09-10T10:00:00.000000Z",
+     *                             "updated_at": "2026-09-10T10:00:00.000000Z"
+     *                         }
+     *                     },
+     *                     "links": {
+     *                         "first": "http://localhost/api/income-sources?page=1",
+     *                         "last": "http://localhost/api/income-sources?page=1",
+     *                         "prev": null,
+     *                         "next": null
+     *                     },
+     *                     "meta": {
+     *                         "current_page": 1,
+     *                         "last_page": 1,
+     *                         "per_page": 10,
+     *                         "total": 1
      *                     }
      *                 },
      *                 "message": "OK",
@@ -1348,12 +1433,8 @@ class ApiDocumentation
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             type="object",
-     *             required={"name"},
-     *
-     *             @OA\Property(property="name", type="string", maxLength=100, example="Gaji"),
-     *             @OA\Property(property="description", type="string", nullable=true, example="Gaji bulanan"),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *             ref="#/components/schemas/IncomeSourceRequest",
+     *             example={"name":"Gaji","description":"Gaji bulanan","is_active":true}
      *         )
      *     ),
      *
@@ -1362,7 +1443,7 @@ class ApiDocumentation
      *         description="Income source created",
      *
      *         @OA\JsonContent(
-     *             type="object",
+     *             ref="#/components/schemas/IncomeSourceResponse",
      *             example={
      *                 "data": {
      *                     "id": 1,
@@ -1398,7 +1479,7 @@ class ApiDocumentation
      *         description="Income source detail",
      *
      *         @OA\JsonContent(
-     *             type="object",
+     *             ref="#/components/schemas/IncomeSourceResponse",
      *             example={
      *                 "data": {
      *                     "id": 1,
@@ -1430,12 +1511,8 @@ class ApiDocumentation
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             type="object",
-     *             required={"name", "is_active"},
-     *
-     *             @OA\Property(property="name", type="string", maxLength=100, example="Gaji"),
-     *             @OA\Property(property="description", type="string", nullable=true, example="Gaji bulanan"),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *             ref="#/components/schemas/IncomeSourceRequest",
+     *             example={"name":"Gaji","description":"Gaji bulanan","is_active":true}
      *         )
      *     ),
      *
@@ -1444,7 +1521,7 @@ class ApiDocumentation
      *         description="Income source updated",
      *
      *         @OA\JsonContent(
-     *             type="object",
+     *             ref="#/components/schemas/IncomeSourceResponse",
      *             example={
      *                 "data": {
      *                     "id": 1,
@@ -1478,7 +1555,7 @@ class ApiDocumentation
      *         description="Income source deleted",
      *
      *         @OA\JsonContent(
-     *             type="object",
+     *             ref="#/components/schemas/IncomeSourceDeleteResponse",
      *             example={"data":null,"message":"Income source deleted","errors":null}
      *         )
      *     ),

@@ -11,6 +11,9 @@ const Menus = React.lazy(() => import('./views/setup/menus/Menus'))
 const RolePermissions = React.lazy(() => import('./views/setup/rolePermissions/Rolepermissions'))
 const ChangePassword = React.lazy(() => import('./views/setup/changePassword/Changepassword'))
 
+// Master
+const IncomeSources = React.lazy(() => import('./views/master/incomeSources/IncomeSources'))
+
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -22,6 +25,9 @@ const routes = [
   { path: '/setup/role-permissions', name: 'Role Permissions', element: RolePermissions },
   { path: '/setup/change-password', name: 'Change Password', element: ChangePassword },
   { path: '/setup/company', name: 'Company', element: Company },
+
+  // Master
+  { path: '/master/income-sources', name: 'Sumber Dana', element: IncomeSources },
 ]
 
 export default routes

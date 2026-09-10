@@ -83,8 +83,9 @@ class IncomeSourceTest extends TestCase
         $response = $this->getJson('/api/income-sources');
 
         $response->assertStatus(200)
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.name', 'Gaji A');
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.name', 'Gaji A')
+            ->assertJsonPath('data.meta.total', 1);
     }
 
     public function test_user_cannot_view_another_users_income_source_detail(): void
@@ -142,8 +143,8 @@ class IncomeSourceTest extends TestCase
         $response = $this->getJson('/api/income-sources?search=Bonus');
 
         $response->assertStatus(200)
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.name', 'Bonus');
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.name', 'Bonus');
     }
 
     public function test_is_active_filter_works(): void
@@ -157,7 +158,24 @@ class IncomeSourceTest extends TestCase
         $response = $this->getJson('/api/income-sources?is_active=0');
 
         $response->assertStatus(200)
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.is_active', false);
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.is_active', false);
+    }
+
+    public function test_index_response_includes_pagination_meta(): void
+    {
+        $user = User::factory()->create();
+        IncomeSource::factory()->for($user)->count(3)->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/income-sources?per_page=2');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(2, 'data.data')
+            ->assertJsonPath('data.meta.current_page', 1)
+            ->assertJsonPath('data.meta.last_page', 2)
+            ->assertJsonPath('data.meta.per_page', 2)
+            ->assertJsonPath('data.meta.total', 3);
     }
 }
