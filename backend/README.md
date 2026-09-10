@@ -230,4 +230,4 @@ Lihat `.env.production.example` untuk template konfigurasi.
 
 Panduan lengkap mengenai environment, cache, database, scheduler, backup,
 logging, dan rollback tersedia di
-[docs/production-deployment.md](docs/production-deployment.md).
+[../docs/backend/production-deployment.md](../docs/backend/production-deployment.md).
