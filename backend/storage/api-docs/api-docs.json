@@ -1,14 +1,14 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "React CMS API",
-        "description": "OpenAPI documentation for the React CMS backend.",
+        "title": "Castra Financial API",
+        "description": "Dokumentasi RESTful API Modul Finansial Castra (Master, Pemasukan, Pengeluaran, Laporan) & Admin CMS.",
         "version": "1.0.0"
     },
     "servers": [
         {
-            "url": "http://localhost/api",
-            "description": "Configured from APP_URL + /api"
+            "url": "/api",
+            "description": "Relative API Base Path"
         }
     ],
     "paths": {
@@ -1680,6 +1680,1970 @@
                     }
                 ]
             }
+        },
+        "/categories": {
+            "get": {
+                "tags": [
+                    "Master - Categories"
+                ],
+                "summary": "List categories",
+                "operationId": "e5f6f82545084c8154471dd90fe98010",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by type (income|expense)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "income",
+                                "expense"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "budget_group_id",
+                        "in": "query",
+                        "description": "Filter by budget group ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search category name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "all",
+                        "in": "query",
+                        "description": "Return all items without pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of categories",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Category"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Master - Categories"
+                ],
+                "summary": "Create a category",
+                "operationId": "8f96dd5dc95fb424bda305beae103879",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CategoryRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Category created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Category"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category created"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/categories/{category}": {
+            "get": {
+                "tags": [
+                    "Master - Categories"
+                ],
+                "summary": "Show a category",
+                "operationId": "7a1980bf8a433faa8507dba43d8bd447",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Category"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Master - Categories"
+                ],
+                "summary": "Update a category",
+                "operationId": "2247596f4ab02d77512177e894343924",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CategoryRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Category"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category updated"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Master - Categories"
+                ],
+                "summary": "Delete a category",
+                "operationId": "50482214c535ccc6e8b5eab4f519106d",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category deleted"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Cannot delete category in use",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/budget-groups": {
+            "get": {
+                "tags": [
+                    "Master - Budget Groups"
+                ],
+                "summary": "List budget groups",
+                "operationId": "c05851cfef44a43f968ea41f4e4ac113",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of budget groups",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BudgetGroup"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Master - Budget Groups"
+                ],
+                "summary": "Create a budget group",
+                "operationId": "0efcd8368ce5871ef071f11c4275a4c9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BudgetGroupRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Budget group created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BudgetGroup"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Budget group created"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/budget-groups/{budgetGroup}": {
+            "get": {
+                "tags": [
+                    "Master - Budget Groups"
+                ],
+                "summary": "Show a budget group",
+                "operationId": "44f46d8528dff7bd0972073594cecd06",
+                "parameters": [
+                    {
+                        "name": "budgetGroup",
+                        "in": "path",
+                        "description": "Budget Group ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Budget group detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BudgetGroup"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Master - Budget Groups"
+                ],
+                "summary": "Update a budget group",
+                "operationId": "86ee3f1d902eae748593290c9d97ded1",
+                "parameters": [
+                    {
+                        "name": "budgetGroup",
+                        "in": "path",
+                        "description": "Budget Group ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BudgetGroupRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Budget group updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BudgetGroup"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Budget group updated"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Master - Budget Groups"
+                ],
+                "summary": "Delete a budget group",
+                "operationId": "780a3b2ea3e48d38609cbb8534cb4d49",
+                "parameters": [
+                    {
+                        "name": "budgetGroup",
+                        "in": "path",
+                        "description": "Budget Group ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Budget group deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Budget group deleted"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Cannot delete system or referenced group",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/incomes": {
+            "get": {
+                "tags": [
+                    "Pemasukan - Transactions"
+                ],
+                "summary": "List income transactions",
+                "operationId": "c10bb0e57030af6483371a41b8d5d1ac",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Filter month (YYYY-MM)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Filter start date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Filter end date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "income_source_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of incomes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/IncomeTransaction"
+                                                    }
+                                                },
+                                                "links": {
+                                                    "$ref": "#/components/schemas/PaginationLinks"
+                                                },
+                                                "meta": {
+                                                    "$ref": "#/components/schemas/PaginationMeta"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Pemasukan - Transactions"
+                ],
+                "summary": "Record income transaction",
+                "operationId": "3c049e05d7acc54f3cc0944da2324983",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IncomeTransactionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Income created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IncomeTransaction"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaksi pemasukan berhasil dicatat"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/incomes/calendar": {
+            "get": {
+                "tags": [
+                    "Pemasukan - Transactions"
+                ],
+                "summary": "Get monthly income calendar aggregate",
+                "operationId": "5333a177c462967200e0814ee1fbeaef",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Month in YYYY-MM format",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10"
+                        }
+                    },
+                    {
+                        "name": "income_source_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Monthly income calendar breakdown",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string",
+                                                    "example": "2026-10"
+                                                },
+                                                "total_month": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10000000
+                                                },
+                                                "transaction_count": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "days": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/incomes/{income}": {
+            "get": {
+                "tags": [
+                    "Pemasukan - Transactions"
+                ],
+                "summary": "Show income transaction",
+                "operationId": "395c1015007f2dc88dc63ecb71b03a8e",
+                "parameters": [
+                    {
+                        "name": "income",
+                        "in": "path",
+                        "description": "Income transaction ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Income transaction detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IncomeTransaction"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Pemasukan - Transactions"
+                ],
+                "summary": "Update income transaction",
+                "operationId": "c1a98e134a85abae6dbcb964cd87fb85",
+                "parameters": [
+                    {
+                        "name": "income",
+                        "in": "path",
+                        "description": "Income transaction ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IncomeTransactionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Income transaction updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/IncomeTransaction"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaksi pemasukan berhasil diperbarui"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Pemasukan - Transactions"
+                ],
+                "summary": "Delete income transaction",
+                "operationId": "16e4e14d2d2971e596d6028b28501f04",
+                "parameters": [
+                    {
+                        "name": "income",
+                        "in": "path",
+                        "description": "Income transaction ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Income transaction deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaksi pemasukan berhasil dihapus"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/expenses": {
+            "get": {
+                "tags": [
+                    "Pengeluaran - Transactions"
+                ],
+                "summary": "List expense transactions",
+                "operationId": "983493812453a6f5859b30f97e649f22",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Filter month (YYYY-MM)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Filter start date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Filter end date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "budget_group_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of expenses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ExpenseTransaction"
+                                                    }
+                                                },
+                                                "links": {
+                                                    "$ref": "#/components/schemas/PaginationLinks"
+                                                },
+                                                "meta": {
+                                                    "$ref": "#/components/schemas/PaginationMeta"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Pengeluaran - Transactions"
+                ],
+                "summary": "Record expense transaction",
+                "operationId": "a2aa0de7f8354964d2eb6dffc93c78fb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExpenseTransactionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Expense created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExpenseTransaction"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaksi pengeluaran berhasil dicatat"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/expenses/calendar": {
+            "get": {
+                "tags": [
+                    "Pengeluaran - Transactions"
+                ],
+                "summary": "Get monthly expense calendar aggregate",
+                "operationId": "143e4dc75c12ff2c498c4a8e9a6e0dc0",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Month in YYYY-MM format",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "budget_group_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Monthly expense calendar breakdown",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string",
+                                                    "example": "2026-10"
+                                                },
+                                                "total_month": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5500000
+                                                },
+                                                "transaction_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "days": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/expenses/{expense}": {
+            "get": {
+                "tags": [
+                    "Pengeluaran - Transactions"
+                ],
+                "summary": "Show expense transaction",
+                "operationId": "f6c4c0b906c321d6ca825469ee224366",
+                "parameters": [
+                    {
+                        "name": "expense",
+                        "in": "path",
+                        "description": "Expense transaction ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Expense transaction detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExpenseTransaction"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Pengeluaran - Transactions"
+                ],
+                "summary": "Update expense transaction",
+                "operationId": "fd8ac50eae5549fe302f78b1276a402d",
+                "parameters": [
+                    {
+                        "name": "expense",
+                        "in": "path",
+                        "description": "Expense transaction ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExpenseTransactionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Expense transaction updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExpenseTransaction"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaksi pengeluaran berhasil diperbarui"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Pengeluaran - Transactions"
+                ],
+                "summary": "Delete expense transaction",
+                "operationId": "f1c9d86395b6c0dce89bee12e345956d",
+                "parameters": [
+                    {
+                        "name": "expense",
+                        "in": "path",
+                        "description": "Expense transaction ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Expense transaction deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaksi pengeluaran berhasil dihapus"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/reports/cash-flow": {
+            "get": {
+                "tags": [
+                    "Laporan - Reports"
+                ],
+                "summary": "Get annual cash flow report",
+                "operationId": "48f7a9dcfdde7a6e62479641c8ce3ee9",
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Year (default: current year)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Annual cash flow report with monthly figures",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "year": {
+                                                    "type": "integer",
+                                                    "example": 2026
+                                                },
+                                                "total_income_year": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 120000000
+                                                },
+                                                "total_expense_year": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 70000000
+                                                },
+                                                "net_savings_year": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000000
+                                                },
+                                                "savings_rate_percent": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 41.67
+                                                },
+                                                "months": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/reports/budget-comparison": {
+            "get": {
+                "tags": [
+                    "Laporan - Reports"
+                ],
+                "summary": "Get monthly 50/30/20 budget envelope comparison",
+                "operationId": "9889ad7f438a45d690bbb6dad717b5cc",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Month in YYYY-MM format",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Budget allocation vs actual spending",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string",
+                                                    "example": "2026-10"
+                                                },
+                                                "total_income": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10000000
+                                                },
+                                                "total_expense": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5500000
+                                                },
+                                                "unallocated_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0
+                                                },
+                                                "budget_groups": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/reports/category-breakdown": {
+            "get": {
+                "tags": [
+                    "Laporan - Reports"
+                ],
+                "summary": "Get monthly expense breakdown by category",
+                "operationId": "8ab218fdd8ea06aab10709b4e956efd4",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Month in YYYY-MM format",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category breakdown percentage and estimates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string",
+                                                    "example": "2026-10"
+                                                },
+                                                "total_expense": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5500000
+                                                },
+                                                "category_count": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard-summary": {
+            "get": {
+                "tags": [
+                    "Dashboard - Analytics"
+                ],
+                "summary": "Get system & financial analytics summary",
+                "operationId": "99b212e3648353b17d35521c9543d787",
+                "responses": {
+                    "200": {
+                        "description": "Combined system stats and current month financial health metrics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "system": {
+                                                    "properties": {
+                                                        "total_users": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "total_roles": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "total_menus": {
+                                                            "type": "integer",
+                                                            "example": 15
+                                                        },
+                                                        "active_role": {
+                                                            "type": "string",
+                                                            "example": "Super Admin"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "finance": {
+                                                    "properties": {
+                                                        "current_month": {
+                                                            "type": "string",
+                                                            "example": "2026-10"
+                                                        },
+                                                        "total_income_this_month": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 10000000
+                                                        },
+                                                        "total_expense_this_month": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 5500000
+                                                        },
+                                                        "net_savings_this_month": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 4500000
+                                                        },
+                                                        "budget_utilization_percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 55
+                                                        },
+                                                        "budget_groups_summary": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "recent_transactions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -2704,6 +4668,296 @@
                     }
                 },
                 "type": "object"
+            },
+            "BudgetGroup": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "need"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Need (Kebutuhan Pokok)"
+                    },
+                    "percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "is_system": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "BudgetGroupRequest": {
+                "required": [
+                    "code",
+                    "name"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "example": "need"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Need (Kebutuhan Pokok)"
+                    },
+                    "percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "Category": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Makan & Minum"
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "expense",
+                        "enum": [
+                            "income",
+                            "expense"
+                        ]
+                    },
+                    "budget_group_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "monthly_estimate": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2000000
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "budget_group": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BudgetGroup"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "CategoryRequest": {
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Makan & Minum"
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "expense",
+                        "enum": [
+                            "income",
+                            "expense"
+                        ]
+                    },
+                    "budget_group_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "monthly_estimate": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2000000
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeTransaction": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "transaction_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-10-01"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 10000000
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Gaji pokok bulanan",
+                        "nullable": true
+                    },
+                    "income_source_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "category_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "income_source": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/IncomeSource"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "category": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Category"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "IncomeTransactionRequest": {
+                "required": [
+                    "income_source_id",
+                    "transaction_date",
+                    "amount"
+                ],
+                "properties": {
+                    "income_source_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "category_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "transaction_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-10-01"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 10000000
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Gaji pokok bulanan",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ExpenseTransaction": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "category_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "transaction_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-10-02"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50000
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Makan siang",
+                        "nullable": true
+                    },
+                    "category": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Category"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ExpenseTransactionRequest": {
+                "required": [
+                    "category_id",
+                    "transaction_date",
+                    "amount"
+                ],
+                "properties": {
+                    "category_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "transaction_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-10-02"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50000
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Makan siang",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -2717,32 +4971,56 @@
     },
     "tags": [
         {
-            "name": "Setup - Auth",
-            "description": "Authentication and token management"
+            "name": "Dashboard - Analytics",
+            "description": "Ringkasan finansial dan statistik operasional"
         },
         {
-            "name": "Setup - Users",
-            "description": "User account management"
+            "name": "Master - Categories",
+            "description": "Pengelolaan pos kategori transaksi pemasukan dan pengeluaran"
         },
         {
-            "name": "Setup - Roles",
-            "description": "Role management"
-        },
-        {
-            "name": "Setup - Menus",
-            "description": "Menu and sidebar management"
-        },
-        {
-            "name": "Setup - Role Permissions",
-            "description": "Dynamic sidebar permission system"
-        },
-        {
-            "name": "Setup - Company",
-            "description": "Company profile and branding"
+            "name": "Master - Budget Groups",
+            "description": "Pengelolaan alokasi amplop anggaran bulanan"
         },
         {
             "name": "Master - Income Sources",
-            "description": "Master data for income sources (Sumber Dana), scoped per user"
+            "description": "Pengelolaan sumber dana pemasukan per pengguna"
+        },
+        {
+            "name": "Pemasukan - Transactions",
+            "description": "Pencatatan dan kalender arus kas masuk"
+        },
+        {
+            "name": "Pengeluaran - Transactions",
+            "description": "Pencatatan dan kalender arus kas keluar"
+        },
+        {
+            "name": "Laporan - Reports",
+            "description": "Laporan arus kas, realisasi anggaran, dan breakdown beban kategori"
+        },
+        {
+            "name": "Setup - Auth",
+            "description": "Autentikasi dan token Bearer Sanctum"
+        },
+        {
+            "name": "Setup - Users",
+            "description": "Manajemen akun pengguna"
+        },
+        {
+            "name": "Setup - Roles",
+            "description": "Manajemen role pengguna"
+        },
+        {
+            "name": "Setup - Menus",
+            "description": "Manajemen menu navigasi dinamis"
+        },
+        {
+            "name": "Setup - Role Permissions",
+            "description": "Pengaturan hak akses menu per role"
+        },
+        {
+            "name": "Setup - Company",
+            "description": "Pengaturan profil dan identitas aplikasi"
         }
     ]
 }

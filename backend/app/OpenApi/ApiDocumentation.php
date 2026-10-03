@@ -6,23 +6,29 @@ use OpenApi\Annotations as OA;
 
 /**
  * @OA\Info(
- *     title="React CMS API",
+ *     title="Castra Financial API",
  *     version="1.0.0",
- *     description="OpenAPI documentation for the React CMS backend."
+ *     description="Dokumentasi RESTful API Modul Finansial Castra (Master, Pemasukan, Pengeluaran, Laporan) & Admin CMS."
  * )
  *
  * @OA\Server(
- *     url=L5_SWAGGER_CONST_HOST,
- *     description="Configured from APP_URL + /api"
+ *     url="/api",
+ *     description="Relative API Base Path"
  * )
  *
- * @OA\Tag(name="Setup - Auth", description="Authentication and token management")
- * @OA\Tag(name="Setup - Users", description="User account management")
- * @OA\Tag(name="Setup - Roles", description="Role management")
- * @OA\Tag(name="Setup - Menus", description="Menu and sidebar management")
- * @OA\Tag(name="Setup - Role Permissions", description="Dynamic sidebar permission system")
- * @OA\Tag(name="Setup - Company", description="Company profile and branding")
- * @OA\Tag(name="Master - Income Sources", description="Master data for income sources (Sumber Dana), scoped per user")
+ * @OA\Tag(name="Dashboard - Analytics", description="Ringkasan finansial dan statistik operasional")
+ * @OA\Tag(name="Master - Categories", description="Pengelolaan pos kategori transaksi pemasukan dan pengeluaran")
+ * @OA\Tag(name="Master - Budget Groups", description="Pengelolaan alokasi amplop anggaran bulanan")
+ * @OA\Tag(name="Master - Income Sources", description="Pengelolaan sumber dana pemasukan per pengguna")
+ * @OA\Tag(name="Pemasukan - Transactions", description="Pencatatan dan kalender arus kas masuk")
+ * @OA\Tag(name="Pengeluaran - Transactions", description="Pencatatan dan kalender arus kas keluar")
+ * @OA\Tag(name="Laporan - Reports", description="Laporan arus kas, realisasi anggaran, dan breakdown beban kategori")
+ * @OA\Tag(name="Setup - Auth", description="Autentikasi dan token Bearer Sanctum")
+ * @OA\Tag(name="Setup - Users", description="Manajemen akun pengguna")
+ * @OA\Tag(name="Setup - Roles", description="Manajemen role pengguna")
+ * @OA\Tag(name="Setup - Menus", description="Manajemen menu navigasi dinamis")
+ * @OA\Tag(name="Setup - Role Permissions", description="Pengaturan hak akses menu per role")
+ * @OA\Tag(name="Setup - Company", description="Pengaturan profil dan identitas aplikasi")
  *
  * @OA\SecurityScheme(
  *     securityScheme="bearerAuth",
@@ -503,6 +509,97 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="data", nullable=true, example=null),
  *     @OA\Property(property="message", type="string", example="Income source deleted"),
  *     @OA\Property(property="errors", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="BudgetGroup",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="code", type="string", example="need"),
+ *     @OA\Property(property="name", type="string", example="Need (Kebutuhan Pokok)"),
+ *     @OA\Property(property="percentage", type="number", format="float", example=50.0),
+ *     @OA\Property(property="sort_order", type="integer", example=1),
+ *     @OA\Property(property="is_system", type="boolean", example=true),
+ *     @OA\Property(property="is_active", type="boolean", example=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="BudgetGroupRequest",
+ *     required={"code","name"},
+ *
+ *     @OA\Property(property="code", type="string", example="need"),
+ *     @OA\Property(property="name", type="string", example="Need (Kebutuhan Pokok)"),
+ *     @OA\Property(property="percentage", type="number", format="float", example=50.0),
+ *     @OA\Property(property="sort_order", type="integer", example=1),
+ *     @OA\Property(property="is_active", type="boolean", example=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="Category",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="Makan & Minum"),
+ *     @OA\Property(property="type", type="string", enum={"income","expense"}, example="expense"),
+ *     @OA\Property(property="budget_group_id", type="integer", nullable=true, example=1),
+ *     @OA\Property(property="monthly_estimate", type="number", format="float", example=2000000.0),
+ *     @OA\Property(property="is_active", type="boolean", example=true),
+ *     @OA\Property(property="budget_group", ref="#/components/schemas/BudgetGroup", nullable=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="CategoryRequest",
+ *     required={"name","type"},
+ *
+ *     @OA\Property(property="name", type="string", example="Makan & Minum"),
+ *     @OA\Property(property="type", type="string", enum={"income","expense"}, example="expense"),
+ *     @OA\Property(property="budget_group_id", type="integer", nullable=true, example=1),
+ *     @OA\Property(property="monthly_estimate", type="number", format="float", example=2000000.0),
+ *     @OA\Property(property="is_active", type="boolean", example=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeTransaction",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="transaction_date", type="string", format="date", example="2026-10-01"),
+ *     @OA\Property(property="amount", type="number", format="float", example=10000000.0),
+ *     @OA\Property(property="notes", type="string", nullable=true, example="Gaji pokok bulanan"),
+ *     @OA\Property(property="income_source_id", type="integer", example=1),
+ *     @OA\Property(property="category_id", type="integer", nullable=true, example=1),
+ *     @OA\Property(property="income_source", ref="#/components/schemas/IncomeSource", nullable=true),
+ *     @OA\Property(property="category", ref="#/components/schemas/Category", nullable=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="IncomeTransactionRequest",
+ *     required={"income_source_id","transaction_date","amount"},
+ *
+ *     @OA\Property(property="income_source_id", type="integer", example=1),
+ *     @OA\Property(property="category_id", type="integer", nullable=true, example=1),
+ *     @OA\Property(property="transaction_date", type="string", format="date", example="2026-10-01"),
+ *     @OA\Property(property="amount", type="number", format="float", example=10000000.0),
+ *     @OA\Property(property="notes", type="string", nullable=true, example="Gaji pokok bulanan")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="ExpenseTransaction",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="category_id", type="integer", example=1),
+ *     @OA\Property(property="transaction_date", type="string", format="date", example="2026-10-02"),
+ *     @OA\Property(property="amount", type="number", format="float", example=50000.0),
+ *     @OA\Property(property="notes", type="string", nullable=true, example="Makan siang"),
+ *     @OA\Property(property="category", ref="#/components/schemas/Category", nullable=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="ExpenseTransactionRequest",
+ *     required={"category_id","transaction_date","amount"},
+ *
+ *     @OA\Property(property="category_id", type="integer", example=1),
+ *     @OA\Property(property="transaction_date", type="string", format="date", example="2026-10-02"),
+ *     @OA\Property(property="amount", type="number", format="float", example=50000.0),
+ *     @OA\Property(property="notes", type="string", nullable=true, example="Makan siang")
  * )
  */
 class ApiDocumentation
@@ -1565,4 +1662,795 @@ class ApiDocumentation
      * )
      */
     public function incomeSourcesItem(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/categories",
+     *     tags={"Master - Categories"},
+     *     summary="List categories",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="type", in="query", required=false, description="Filter by type (income|expense)", @OA\Schema(type="string", enum={"income","expense"})),
+     *     @OA\Parameter(name="is_active", in="query", required=false, description="Filter active status", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="budget_group_id", in="query", required=false, description="Filter by budget group ID", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="search", in="query", required=false, description="Search category name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="all", in="query", required=false, description="Return all items without pagination", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="per_page", in="query", required=false, @OA\Schema(type="integer", example=15)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of categories",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Category")),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Post(
+     *     path="/categories",
+     *     tags={"Master - Categories"},
+     *     summary="Create a category",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/CategoryRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Category created",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/Category"),
+     *             @OA\Property(property="message", type="string", example="Category created"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function categoriesCollection(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/categories/{category}",
+     *     tags={"Master - Categories"},
+     *     summary="Show a category",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="category", in="path", required=true, description="Category ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category detail",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/Category"),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Put(
+     *     path="/categories/{category}",
+     *     tags={"Master - Categories"},
+     *     summary="Update a category",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="category", in="path", required=true, description="Category ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/CategoryRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category updated",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/Category"),
+     *             @OA\Property(property="message", type="string", example="Category updated"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     *
+     * @OA\Delete(
+     *     path="/categories/{category}",
+     *     tags={"Master - Categories"},
+     *     summary="Delete a category",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="category", in="path", required=true, description="Category ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category deleted",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", nullable=true, example=null),
+     *             @OA\Property(property="message", type="string", example="Category deleted"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Cannot delete category in use", @OA\JsonContent(ref="#/components/schemas/ApiError"))
+     * )
+     */
+    public function categoriesItem(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/budget-groups",
+     *     tags={"Master - Budget Groups"},
+     *     summary="List budget groups",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="is_active", in="query", required=false, description="Filter active status", @OA\Schema(type="boolean")),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of budget groups",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/BudgetGroup")),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Post(
+     *     path="/budget-groups",
+     *     tags={"Master - Budget Groups"},
+     *     summary="Create a budget group",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/BudgetGroupRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Budget group created",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/BudgetGroup"),
+     *             @OA\Property(property="message", type="string", example="Budget group created"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function budgetGroupsCollection(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/budget-groups/{budgetGroup}",
+     *     tags={"Master - Budget Groups"},
+     *     summary="Show a budget group",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budgetGroup", in="path", required=true, description="Budget Group ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget group detail",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/BudgetGroup"),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Put(
+     *     path="/budget-groups/{budgetGroup}",
+     *     tags={"Master - Budget Groups"},
+     *     summary="Update a budget group",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budgetGroup", in="path", required=true, description="Budget Group ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/BudgetGroupRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget group updated",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/BudgetGroup"),
+     *             @OA\Property(property="message", type="string", example="Budget group updated"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     *
+     * @OA\Delete(
+     *     path="/budget-groups/{budgetGroup}",
+     *     tags={"Master - Budget Groups"},
+     *     summary="Delete a budget group",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budgetGroup", in="path", required=true, description="Budget Group ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget group deleted",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", nullable=true, example=null),
+     *             @OA\Property(property="message", type="string", example="Budget group deleted"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Cannot delete system or referenced group", @OA\JsonContent(ref="#/components/schemas/ApiError"))
+     * )
+     */
+    public function budgetGroupsItem(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/incomes",
+     *     tags={"Pemasukan - Transactions"},
+     *     summary="List income transactions",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="month", in="query", required=false, description="Filter month (YYYY-MM)", @OA\Schema(type="string", example="2026-10")),
+     *     @OA\Parameter(name="start_date", in="query", required=false, description="Filter start date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="end_date", in="query", required=false, description="Filter end date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="income_source_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="category_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="per_page", in="query", required=false, @OA\Schema(type="integer", example=15)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of incomes",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/IncomeTransaction")),
+     *                 @OA\Property(property="links", ref="#/components/schemas/PaginationLinks"),
+     *                 @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Post(
+     *     path="/incomes",
+     *     tags={"Pemasukan - Transactions"},
+     *     summary="Record income transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/IncomeTransactionRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Income created",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/IncomeTransaction"),
+     *             @OA\Property(property="message", type="string", example="Transaksi pemasukan berhasil dicatat"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function incomesCollection(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/incomes/calendar",
+     *     tags={"Pemasukan - Transactions"},
+     *     summary="Get monthly income calendar aggregate",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="month", in="query", required=true, description="Month in YYYY-MM format", @OA\Schema(type="string", example="2026-10")),
+     *     @OA\Parameter(name="income_source_id", in="query", required=false, @OA\Schema(type="integer")),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Monthly income calendar breakdown",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="month", type="string", example="2026-10"),
+     *                 @OA\Property(property="total_month", type="number", format="float", example=10000000.0),
+     *                 @OA\Property(property="transaction_count", type="integer", example=2),
+     *                 @OA\Property(property="days", type="object")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function incomesCalendar(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/incomes/{income}",
+     *     tags={"Pemasukan - Transactions"},
+     *     summary="Show income transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="income", in="path", required=true, description="Income transaction ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income transaction detail",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/IncomeTransaction"),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Put(
+     *     path="/incomes/{income}",
+     *     tags={"Pemasukan - Transactions"},
+     *     summary="Update income transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="income", in="path", required=true, description="Income transaction ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/IncomeTransactionRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income transaction updated",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/IncomeTransaction"),
+     *             @OA\Property(property="message", type="string", example="Transaksi pemasukan berhasil diperbarui"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     *
+     * @OA\Delete(
+     *     path="/incomes/{income}",
+     *     tags={"Pemasukan - Transactions"},
+     *     summary="Delete income transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="income", in="path", required=true, description="Income transaction ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income transaction deleted",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", nullable=true, example=null),
+     *             @OA\Property(property="message", type="string", example="Transaksi pemasukan berhasil dihapus"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
+    public function incomesItem(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/expenses",
+     *     tags={"Pengeluaran - Transactions"},
+     *     summary="List expense transactions",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="month", in="query", required=false, description="Filter month (YYYY-MM)", @OA\Schema(type="string", example="2026-10")),
+     *     @OA\Parameter(name="start_date", in="query", required=false, description="Filter start date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="end_date", in="query", required=false, description="Filter end date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="category_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="budget_group_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="per_page", in="query", required=false, @OA\Schema(type="integer", example=15)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of expenses",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/ExpenseTransaction")),
+     *                 @OA\Property(property="links", ref="#/components/schemas/PaginationLinks"),
+     *                 @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Post(
+     *     path="/expenses",
+     *     tags={"Pengeluaran - Transactions"},
+     *     summary="Record expense transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/ExpenseTransactionRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Expense created",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/ExpenseTransaction"),
+     *             @OA\Property(property="message", type="string", example="Transaksi pengeluaran berhasil dicatat"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function expensesCollection(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/expenses/calendar",
+     *     tags={"Pengeluaran - Transactions"},
+     *     summary="Get monthly expense calendar aggregate",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="month", in="query", required=true, description="Month in YYYY-MM format", @OA\Schema(type="string", example="2026-10")),
+     *     @OA\Parameter(name="category_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="budget_group_id", in="query", required=false, @OA\Schema(type="integer")),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Monthly expense calendar breakdown",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="month", type="string", example="2026-10"),
+     *                 @OA\Property(property="total_month", type="number", format="float", example=5500000.0),
+     *                 @OA\Property(property="transaction_count", type="integer", example=5),
+     *                 @OA\Property(property="days", type="object")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function expensesCalendar(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/expenses/{expense}",
+     *     tags={"Pengeluaran - Transactions"},
+     *     summary="Show expense transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="expense", in="path", required=true, description="Expense transaction ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Expense transaction detail",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/ExpenseTransaction"),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Put(
+     *     path="/expenses/{expense}",
+     *     tags={"Pengeluaran - Transactions"},
+     *     summary="Update expense transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="expense", in="path", required=true, description="Expense transaction ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/ExpenseTransactionRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Expense transaction updated",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", ref="#/components/schemas/ExpenseTransaction"),
+     *             @OA\Property(property="message", type="string", example="Transaksi pengeluaran berhasil diperbarui"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     *
+     * @OA\Delete(
+     *     path="/expenses/{expense}",
+     *     tags={"Pengeluaran - Transactions"},
+     *     summary="Delete expense transaction",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="expense", in="path", required=true, description="Expense transaction ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Expense transaction deleted",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", nullable=true, example=null),
+     *             @OA\Property(property="message", type="string", example="Transaksi pengeluaran berhasil dihapus"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
+    public function expensesItem(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/reports/cash-flow",
+     *     tags={"Laporan - Reports"},
+     *     summary="Get annual cash flow report",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="year", in="query", required=false, description="Year (default: current year)", @OA\Schema(type="integer", example=2026)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Annual cash flow report with monthly figures",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="year", type="integer", example=2026),
+     *                 @OA\Property(property="total_income_year", type="number", format="float", example=120000000.0),
+     *                 @OA\Property(property="total_expense_year", type="number", format="float", example=70000000.0),
+     *                 @OA\Property(property="net_savings_year", type="number", format="float", example=50000000.0),
+     *                 @OA\Property(property="savings_rate_percent", type="number", format="float", example=41.67),
+     *                 @OA\Property(property="months", type="array", @OA\Items(type="object"))
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Get(
+     *     path="/reports/budget-comparison",
+     *     tags={"Laporan - Reports"},
+     *     summary="Get monthly 50/30/20 budget envelope comparison",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="month", in="query", required=false, description="Month in YYYY-MM format", @OA\Schema(type="string", example="2026-10")),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget allocation vs actual spending",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="month", type="string", example="2026-10"),
+     *                 @OA\Property(property="total_income", type="number", format="float", example=10000000.0),
+     *                 @OA\Property(property="total_expense", type="number", format="float", example=5500000.0),
+     *                 @OA\Property(property="unallocated_amount", type="number", format="float", example=0.0),
+     *                 @OA\Property(property="budget_groups", type="array", @OA\Items(type="object"))
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Get(
+     *     path="/reports/category-breakdown",
+     *     tags={"Laporan - Reports"},
+     *     summary="Get monthly expense breakdown by category",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="month", in="query", required=false, description="Month in YYYY-MM format", @OA\Schema(type="string", example="2026-10")),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category breakdown percentage and estimates",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="month", type="string", example="2026-10"),
+     *                 @OA\Property(property="total_expense", type="number", format="float", example=5500000.0),
+     *                 @OA\Property(property="category_count", type="integer", example=4),
+     *                 @OA\Property(property="categories", type="array", @OA\Items(type="object"))
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function reportsEndpoints(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/dashboard-summary",
+     *     tags={"Dashboard - Analytics"},
+     *     summary="Get system & financial analytics summary",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Combined system stats and current month financial health metrics",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="system",
+     *                     type="object",
+     *                     @OA\Property(property="total_users", type="integer", example=1),
+     *                     @OA\Property(property="total_roles", type="integer", example=1),
+     *                     @OA\Property(property="total_menus", type="integer", example=15),
+     *                     @OA\Property(property="active_role", type="string", example="Super Admin")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="finance",
+     *                     type="object",
+     *                     @OA\Property(property="current_month", type="string", example="2026-10"),
+     *                     @OA\Property(property="total_income_this_month", type="number", format="float", example=10000000.0),
+     *                     @OA\Property(property="total_expense_this_month", type="number", format="float", example=5500000.0),
+     *                     @OA\Property(property="net_savings_this_month", type="number", format="float", example=4500000.0),
+     *                     @OA\Property(property="budget_utilization_percent", type="number", format="float", example=55.0),
+     *                     @OA\Property(property="budget_groups_summary", type="array", @OA\Items(type="object")),
+     *                     @OA\Property(property="recent_transactions", type="array", @OA\Items(type="object"))
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function dashboardSummary(): void {}
 }

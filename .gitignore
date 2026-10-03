@@ -1,0 +1,23 @@
+# Environments
+.env
+.env.backup
+.env.local
+.env.*.local
+
+# Logs and runtime
+*.log
+*.pid
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker / Composer / Node subfolder safety
+/backend/.env
+/backend/vendor/
+/frontend/node_modules/
+/frontend/build/
