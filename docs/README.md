@@ -5,6 +5,7 @@ Setiap jenis dokumen punya peran berbeda — baca sesuai kebutuhan:
 
 | Dokumen | Peran | Isi |
 | --- | --- | --- |
+| `MANUAL-BOOK-PANDUAN-PENGGUNA.md` | **Panduan Pengguna** | Manual book lengkap dari awal sampai akhir untuk user operasional |
 | `context.md` | **Gambaran** | Apa proyek ini, stack, modul, dan struktur — titik awal sebelum mengerjakan apa pun |
 | `rules.md` | **Aturan** | Konvensi coding yang wajib diikuti saat menulis kode |
 | `design.md` | **Rancangan** | Desain API & database (backend) atau desain UI (frontend) |
