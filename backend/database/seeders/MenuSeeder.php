@@ -75,5 +75,23 @@ class MenuSeeder extends Seeder
                 'menu_order' => 1,
             ]
         );
+
+        Menus::firstOrCreate(
+            ['menu_path' => '/master/categories'],
+            [
+                'menu_name' => 'Kategori',
+                'menu_parent_id' => $master->id,
+                'menu_order' => 2,
+            ]
+        );
+
+        Menus::firstOrCreate(
+            ['menu_path' => '/master/budget-groups'],
+            [
+                'menu_name' => 'Alokasi Anggaran',
+                'menu_parent_id' => $master->id,
+                'menu_order' => 3,
+            ]
+        );
     }
 }

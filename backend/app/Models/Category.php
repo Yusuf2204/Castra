@@ -5,23 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class IncomeSource extends Model
+class Category extends Model
 {
-    /** @use HasFactory<\Database\Factories\IncomeSourceFactory> */
+    /** @use HasFactory<\Database\Factories\CategoryFactory> */
     use HasFactory;
 
-    protected $table = 'ms_income_sources';
+    protected $table = 'ms_categories';
 
     protected $fillable = [
         'user_id',
         'name',
-        'description',
+        'type',
+        'budget_group_id',
+        'monthly_estimate',
         'is_active',
     ];
 
     protected function casts(): array
     {
         return [
+            'monthly_estimate' => 'float',
             'is_active' => 'boolean',
         ];
     }
@@ -29,5 +32,10 @@ class IncomeSource extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function budgetGroup()
+    {
+        return $this->belongsTo(BudgetGroup::class, 'budget_group_id');
     }
 }

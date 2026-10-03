@@ -52,7 +52,7 @@ WORKDIR /var/www/html
 # --no-scripts: post-autoload-dump would boot artisan, which needs
 # the full source. Package discovery runs after the source copy.
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist \
+RUN composer install --no-interaction --prefer-dist \
     --no-progress --optimize-autoloader --no-scripts
 
 # ── copy the rest of the source ──────────────────────────────

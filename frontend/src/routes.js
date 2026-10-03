@@ -13,6 +13,8 @@ const ChangePassword = React.lazy(() => import('./views/setup/changePassword/Cha
 
 // Master
 const IncomeSources = React.lazy(() => import('./views/master/incomeSources/IncomeSources'))
+const Categories = React.lazy(() => import('./views/master/categories/Categories'))
+const BudgetGroups = React.lazy(() => import('./views/master/budgetGroups/BudgetGroups'))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -28,6 +30,8 @@ const routes = [
 
   // Master
   { path: '/master/income-sources', name: 'Sumber Dana', element: IncomeSources },
+  { path: '/master/categories', name: 'Kategori', element: Categories },
+  { path: '/master/budget-groups', name: 'Alokasi Anggaran', element: BudgetGroups },
 ]
 
 export default routes

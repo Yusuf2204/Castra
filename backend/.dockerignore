@@ -28,8 +28,6 @@ docker-compose*.yml
 !.env.production.example
 
 # ── test ────────────────────────────────────────────────────
-tests
-phpunit.xml
 .phpunit.result.cache
 
 # ── backup / scratch files ─────────────────────────────────

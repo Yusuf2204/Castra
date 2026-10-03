@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 // Route Controllers
+use App\Http\Controllers\Api\BudgetGroupController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\IncomeSourceController;
@@ -32,4 +34,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Master Keuangan
     Route::apiResource('income-sources', IncomeSourceController::class);
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('budget-groups', BudgetGroupController::class);
 });
