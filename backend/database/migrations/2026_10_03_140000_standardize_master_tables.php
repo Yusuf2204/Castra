@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Create ms_budget_groups table
-        if (!Schema::hasTable('ms_budget_groups')) {
+        if (! Schema::hasTable('ms_budget_groups')) {
             Schema::create('ms_budget_groups', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
@@ -29,27 +29,27 @@ return new class extends Migration
         }
 
         // 2. Rename categories -> ms_categories & add columns
-        if (Schema::hasTable('categories') && !Schema::hasTable('ms_categories')) {
+        if (Schema::hasTable('categories') && ! Schema::hasTable('ms_categories')) {
             Schema::rename('categories', 'ms_categories');
         }
 
         if (Schema::hasTable('ms_categories')) {
             Schema::table('ms_categories', function (Blueprint $table) {
-                if (!Schema::hasColumn('ms_categories', 'budget_group_id')) {
+                if (! Schema::hasColumn('ms_categories', 'budget_group_id')) {
                     $table->foreignId('budget_group_id')->nullable()->after('type')
                         ->constrained('ms_budget_groups')->nullOnDelete();
                 }
-                if (!Schema::hasColumn('ms_categories', 'monthly_estimate')) {
+                if (! Schema::hasColumn('ms_categories', 'monthly_estimate')) {
                     $table->decimal('monthly_estimate', 15, 2)->default(0.00)->after('budget_group_id');
                 }
-                if (!Schema::hasColumn('ms_categories', 'is_active')) {
+                if (! Schema::hasColumn('ms_categories', 'is_active')) {
                     $table->boolean('is_active')->default(true)->after('monthly_estimate');
                 }
             });
         }
 
         // 3. Rename income_sources -> ms_income_sources
-        if (Schema::hasTable('income_sources') && !Schema::hasTable('ms_income_sources')) {
+        if (Schema::hasTable('income_sources') && ! Schema::hasTable('ms_income_sources')) {
             Schema::rename('income_sources', 'ms_income_sources');
         }
     }
@@ -59,7 +59,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('ms_income_sources') && !Schema::hasTable('income_sources')) {
+        if (Schema::hasTable('ms_income_sources') && ! Schema::hasTable('income_sources')) {
             Schema::rename('ms_income_sources', 'income_sources');
         }
 
@@ -77,7 +77,7 @@ return new class extends Migration
                 }
             });
 
-            if (!Schema::hasTable('categories')) {
+            if (! Schema::hasTable('categories')) {
                 Schema::rename('ms_categories', 'categories');
             }
         }

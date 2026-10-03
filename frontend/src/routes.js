@@ -16,6 +16,15 @@ const IncomeSources = React.lazy(() => import('./views/master/incomeSources/Inco
 const Categories = React.lazy(() => import('./views/master/categories/Categories'))
 const BudgetGroups = React.lazy(() => import('./views/master/budgetGroups/BudgetGroups'))
 
+// Pemasukan
+const Incomes = React.lazy(() => import('./views/incomes/Incomes'))
+
+// Pengeluaran
+const Expenses = React.lazy(() => import('./views/expenses/Expenses'))
+
+// Laporan
+const Reports = React.lazy(() => import('./views/reports/Reports'))
+
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -32,6 +41,13 @@ const routes = [
   { path: '/master/income-sources', name: 'Sumber Dana', element: IncomeSources },
   { path: '/master/categories', name: 'Kategori', element: Categories },
   { path: '/master/budget-groups', name: 'Alokasi Anggaran', element: BudgetGroups },
+
+  // Transaksi
+  { path: '/incomes', name: 'Pemasukan', element: Incomes },
+  { path: '/expenses', name: 'Pengeluaran', element: Expenses },
+
+  // Laporan
+  { path: '/reports', name: 'Laporan', element: Reports },
 ]
 
 export default routes

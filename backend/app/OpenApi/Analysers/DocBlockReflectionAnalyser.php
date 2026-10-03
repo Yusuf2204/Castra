@@ -2,11 +2,11 @@
 
 namespace App\OpenApi\Analysers;
 
-use OpenApi\Analysis;
 use OpenApi\Analysers\AnalyserInterface;
 use OpenApi\Analysers\AttributeAnnotationFactory;
 use OpenApi\Analysers\DocBlockAnnotationFactory;
 use OpenApi\Analysers\ReflectionAnalyser;
+use OpenApi\Analysis;
 use OpenApi\Context;
 use OpenApi\Generator;
 
@@ -27,8 +27,8 @@ class DocBlockReflectionAnalyser implements AnalyserInterface
     private function delegate(): ReflectionAnalyser
     {
         return $this->delegate ??= new ReflectionAnalyser([
-            new AttributeAnnotationFactory(),
-            new DocBlockAnnotationFactory(),
+            new AttributeAnnotationFactory,
+            new DocBlockAnnotationFactory,
         ]);
     }
 
@@ -40,7 +40,7 @@ class DocBlockReflectionAnalyser implements AnalyserInterface
      */
     public static function __set_state(array $state): static
     {
-        return new static();
+        return new static;
     }
 
     public function setGenerator(Generator $generator): void

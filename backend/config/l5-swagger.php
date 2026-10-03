@@ -132,7 +132,7 @@ return [
              *
              * @see \OpenApi\scan
              */
-            'analyser' => new \App\OpenApi\Analysers\DocBlockReflectionAnalyser(),
+            'analyser' => new \App\OpenApi\Analysers\DocBlockReflectionAnalyser,
 
             /**
              * analysis: defaults to a new \OpenApi\Analysis .

@@ -11,28 +11,101 @@ class MenuSeeder extends Seeder
      * Run the database seeds.
      *
      * Idempotent per menu item (keyed by the unique `menu_path` column) so
-     * this seeder can be re-run safely and will still pick up newly added
-     * menus on a database that has already been seeded before.
+     * this seeder can be re-run safely and will update menu order, icon, and parent
+     * on an existing database.
      */
     public function run(): void
     {
-        $dashboard = Menus::firstOrCreate(
+        // 1. Dashboard
+        Menus::updateOrCreate(
             ['menu_path' => '/dashboard'],
             [
                 'menu_name' => 'Dashboard',
-                'menu_icon' => 'cilHamburgerMenu',
+                'menu_icon' => 'cilSpeedometer',
                 'menu_parent_id' => null,
-                'menu_order' => 0,
+                'menu_order' => 1,
             ]
         );
 
-        $setup = Menus::firstOrCreate(
+        // 2. Master (Financial master data dropdown)
+        $master = Menus::updateOrCreate(
+            ['menu_path' => '/master'],
+            [
+                'menu_name' => 'Master',
+                'menu_icon' => 'cilLayers',
+                'menu_parent_id' => null,
+                'menu_order' => 2,
+            ]
+        );
+
+        Menus::updateOrCreate(
+            ['menu_path' => '/master/income-sources'],
+            [
+                'menu_name' => 'Sumber Dana',
+                'menu_parent_id' => $master->id,
+                'menu_order' => 1,
+            ]
+        );
+
+        Menus::updateOrCreate(
+            ['menu_path' => '/master/categories'],
+            [
+                'menu_name' => 'Kategori',
+                'menu_parent_id' => $master->id,
+                'menu_order' => 2,
+            ]
+        );
+
+        Menus::updateOrCreate(
+            ['menu_path' => '/master/budget-groups'],
+            [
+                'menu_name' => 'Alokasi Anggaran',
+                'menu_parent_id' => $master->id,
+                'menu_order' => 3,
+            ]
+        );
+
+        // 3. Pemasukan (Incomes)
+        Menus::updateOrCreate(
+            ['menu_path' => '/incomes'],
+            [
+                'menu_name' => 'Pemasukan',
+                'menu_icon' => 'cilArrowTop',
+                'menu_parent_id' => null,
+                'menu_order' => 3,
+            ]
+        );
+
+        // 4. Pengeluaran (Expenses)
+        Menus::updateOrCreate(
+            ['menu_path' => '/expenses'],
+            [
+                'menu_name' => 'Pengeluaran',
+                'menu_icon' => 'cilArrowBottom',
+                'menu_parent_id' => null,
+                'menu_order' => 4,
+            ]
+        );
+
+        // 5. Laporan (Reports)
+        Menus::updateOrCreate(
+            ['menu_path' => '/reports'],
+            [
+                'menu_name' => 'Laporan',
+                'menu_icon' => 'cilChartPie',
+                'menu_parent_id' => null,
+                'menu_order' => 5,
+            ]
+        );
+
+        // 6. Setup (System & Administration dropdown)
+        $setup = Menus::updateOrCreate(
             ['menu_path' => '/setup'],
             [
                 'menu_name' => 'Setup',
                 'menu_icon' => 'cilSettings',
                 'menu_parent_id' => null,
-                'menu_order' => 1,
+                'menu_order' => 6,
             ]
         );
 
@@ -46,7 +119,7 @@ class MenuSeeder extends Seeder
         ];
 
         foreach ($setupChildren as $child) {
-            Menus::firstOrCreate(
+            Menus::updateOrCreate(
                 ['menu_path' => $child['menu_path']],
                 [
                     'menu_name' => $child['menu_name'],
@@ -55,43 +128,5 @@ class MenuSeeder extends Seeder
                 ]
             );
         }
-
-        // Master group (financial masters live here, e.g. Sumber Dana)
-        $master = Menus::firstOrCreate(
-            ['menu_path' => '/master'],
-            [
-                'menu_name' => 'Master',
-                'menu_icon' => 'cilSettings',
-                'menu_parent_id' => null,
-                'menu_order' => 2,
-            ]
-        );
-
-        Menus::firstOrCreate(
-            ['menu_path' => '/master/income-sources'],
-            [
-                'menu_name' => 'Sumber Dana',
-                'menu_parent_id' => $master->id,
-                'menu_order' => 1,
-            ]
-        );
-
-        Menus::firstOrCreate(
-            ['menu_path' => '/master/categories'],
-            [
-                'menu_name' => 'Kategori',
-                'menu_parent_id' => $master->id,
-                'menu_order' => 2,
-            ]
-        );
-
-        Menus::firstOrCreate(
-            ['menu_path' => '/master/budget-groups'],
-            [
-                'menu_name' => 'Alokasi Anggaran',
-                'menu_parent_id' => $master->id,
-                'menu_order' => 3,
-            ]
-        );
     }
 }

@@ -13,7 +13,7 @@ class MenuController extends Controller
         return response()->json([
             'data' => Menus::with('parent')->orderBy('menu_order')->get(),
             'message' => 'OK',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 
@@ -24,7 +24,7 @@ class MenuController extends Controller
         return response()->json([
             'data' => $menu,
             'message' => 'Created',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 
@@ -33,7 +33,7 @@ class MenuController extends Controller
         return response()->json([
             'data' => Menus::with('parent')->findOrFail($id),
             'message' => 'OK',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 
@@ -45,7 +45,7 @@ class MenuController extends Controller
         return response()->json([
             'data' => $menu,
             'message' => 'Updated',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 
@@ -57,7 +57,7 @@ class MenuController extends Controller
         return response()->json([
             'data' => true,
             'message' => 'Deleted',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 
@@ -71,7 +71,7 @@ class MenuController extends Controller
         return response()->json([
             'data' => $menus,
             'message' => 'OK',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 }

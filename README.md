@@ -8,21 +8,48 @@ Castra adalah aplikasi pencatatan dan perencanaan keuangan pribadi modern berbas
 
 1. **Master (`ms_`)**:
    - **Sumber Dana (`ms_income_sources`)**: Kelola asal dana masuk (Gaji, Freelance, Bonus, Dividen, dll.) atau rekening/dompet.
-   - **Kategori (`ms_categories`)**: Pengelompokan pos transaksi untuk pemasukan maupun pengeluaran.
-   - **Alokasi Anggaran (`ms_budget_groups`)**: Amplop batas anggaran bulanan (Need, Fun, Saving, Emergency).
+   - **Kategori (`ms_categories`)**: Pengelompokan pos transaksi untuk pemasukan (`income`) maupun pengeluaran (`expense`). Kategori pengeluaran dilengkapi dengan estimasi batas anggaran bulanan (`monthly_estimate`).
+   - **Alokasi Anggaran (`ms_budget_groups`)**: Amplop alokasi anggaran bulanan (Need, Fun, Saving, Emergency).
 2. **Pemasukan (`in_`)**:
    - Pencatatan dan riwayat transaksi dana masuk (`in_transactions`).
-   - Tampilan kalender interaktif: klik tanggal untuk membuka form modal input transaksi.
-   - Agregasi total pemasukan periode bulanan.
+   - Tampilan kalender interaktif: klik tanggal untuk membuka form modal input transaksi uang masuk.
+   - Agregasi total pemasukan periode bulanan dan navigasi bulan/tahun.
 3. **Pengeluaran (`out_`)**:
-   - Pencatatan dan riwayat transaksi dana keluar (`out_transactions`).
-   - Monitoring limit/budget per kategori pengeluaran dengan indikator status (*Aman*, *Mendekati Batas*, *Over Budget*).
-   - Tampilan kalender interaktif harian dan opsi beralih ke tabel tabular.
+   - Pencatatan dan riwayat transaksi dana keluar (`out_transactions`) murni diklasifikasikan berdasarkan kategori pos pengeluaran.
+   - Monitoring batas anggaran bulanan dengan indikator status (*Aman*, *Mendekati Batas*, *Over Budget*).
+   - Tampilan kalender interaktif harian dengan indikator nominal pengeluaran dan opsi beralih ke tabel tabular.
 4. **Laporan (`rpt_`)**:
-   - **Arus Kas (Cash Flow)**: Rekapitulasi bulanan Pemasukan vs Pengeluaran & Saldo Bersih (`rpt_monthly_summaries`).
-   - **Pengeluaran per Kategori**: Visualisasi grafik donut/batang dan rincian alokasi vs realisasi.
-   - **Realisasi Anggaran**: Monitoring serapan anggaran bulanan.
-   - **Tren Finansial**: Grafik historis multi-bulan untuk evaluasi tabungan dan belanja.
+   - **Arus Kas (Cash Flow)**: Rekapitulasi bulanan 12 bulan (Pemasukan, Pengeluaran, Arus Kas Bersih, dan Saldo Kumulatif).
+   - **Perbandingan Realisasi Anggaran**: Monitoring persentase serapan belanja terhadap estimasi anggaran per kategori.
+   - **Rincian Pengeluaran**: Distribusi pengeluaran per kelompok alokasi (*Need*, *Fun*, *Saving*) dan per pos kategori.
+
+---
+
+## Daftar Endpoint REST API Utama
+
+Seluruh endpoint keuangan dilindungi dengan Bearer token (Laravel Sanctum) dan di-scope ke pengguna yang sedang terautentikasi:
+
+| Modul | Method | Endpoint | Deskripsi |
+|---|---|---|---|
+| **Autentikasi** | `POST` | `/api/login` | Login & generate token Sanctum |
+| | `POST` | `/api/logout` | Revoke token aktif |
+| | `GET` | `/api/user` | Profil pengguna aktif |
+| **Dashboard** | `GET` | `/api/dashboard-summary` | KPI finansial bulanan, saldo kumulatif & transaksi terkini |
+| **Master** | `GET, POST` | `/api/income-sources` | CRUD Sumber Dana |
+| | `GET, PUT, DEL`| `/api/income-sources/{id}` | Detail, Update, Hapus Sumber Dana |
+| | `GET, POST` | `/api/categories` | CRUD Kategori (filter: type, is_active) |
+| | `GET, PUT, DEL`| `/api/categories/{id}` | Detail, Update, Hapus Kategori |
+| | `GET, POST` | `/api/budget-groups` | CRUD Kelompok Alokasi Anggaran |
+| | `GET, PUT, DEL`| `/api/budget-groups/{id}` | Detail, Update, Hapus Kelompok Anggaran |
+| **Pemasukan** | `GET, POST` | `/api/incomes` | CRUD Transaksi Pemasukan (filter: month, search) |
+| | `GET, PUT, DEL`| `/api/incomes/{id}` | Detail, Update, Hapus Pemasukan |
+| | `GET` | `/api/incomes/calendar` | Ringkasan harian kalender pemasukan per bulan |
+| **Pengeluaran** | `GET, POST` | `/api/expenses` | CRUD Transaksi Pengeluaran (filter: month, search) |
+| | `GET, PUT, DEL`| `/api/expenses/{id}` | Detail, Update, Hapus Pengeluaran |
+| | `GET` | `/api/expenses/calendar` | Ringkasan harian kalender pengeluaran per bulan |
+| **Laporan** | `GET` | `/api/reports/cash-flow` | Rekapitulasi arus kas 12 bulan per tahun |
+| | `GET` | `/api/reports/budget-comparison` | Evaluasi estimasi vs realisasi per bulan |
+| | `GET` | `/api/reports/category-breakdown` | Komposisi pengeluaran per kelompok anggaran |
 
 ---
 
@@ -32,9 +59,9 @@ Castra adalah aplikasi pencatatan dan perencanaan keuangan pribadi modern berbas
 - **Manajemen Akses**: Pengelolaan Pengguna, Role, dan Menu dinamis berbasis hak akses (*Role Permissions*).
 - **Pengaturan Perusahaan/Profil**: Nama instansi/aplikasi, logo, dan favicon dinamis.
 - **Pola Desain Antarmuka (SPA UI/UX)**:
-  - *Split Layout* (Default Template): Tabel data di sisi kiri, formulir input/edit di sisi kanan.
+  - *Split Layout*: Tabel data di sisi kiri, formulir input/edit di sisi kanan (Master Data).
   - *Calendar & Modal Form*: Khusus transaksi harian Pemasukan dan Pengeluaran.
-  - *Full 12-Column Grid*: Row atas untuk filter bar, row bawah 12 kolom penuh untuk tabel laporan.
+  - *Full 12-Column Grid*: Row atas untuk filter bar & sub-navigasi, row bawah 12 kolom penuh untuk tabel laporan.
 - **Dokumentasi API**: Swagger / OpenAPI 3.0 terintegrasi.
 - **Deployment Terisolasi**: Docker Compose multi-container dengan prefix `castra-*`.
 
@@ -48,7 +75,7 @@ Castra adalah aplikasi pencatatan dan perencanaan keuangan pribadi modern berbas
 | **Frontend** | React 19.2, Vite 7.3, CoreUI 5.5 (React 5.9), Redux 5, React Router 7 |
 | **Database** | MySQL 8.0 (Prefix: `ms_`, `in_`, `out_`, `rpt_`) |
 | **API Docs** | L5 Swagger / OpenAPI |
-| **Testing & Quality** | PHPUnit 11, Laravel Pint, ESLint 9, Prettier |
+| **Testing & Quality** | PHPUnit 11 (57 tests / 220 assertions), Laravel Pint, ESLint 9, Prettier |
 | **Deployment** | Docker Compose v2, Nginx Reverse Proxy |
 
 ---
@@ -61,11 +88,12 @@ castra/
 ├── frontend/                 React 19 SPA (CoreUI 5)
 ├── nginx/                    Konfigurasi Nginx reverse proxy
 ├── docs/                     Dokumentasi teknis & arsitektur
-│   ├── prd/                  Dokumen PRD & roadmap perencanaan
+│   ├── prd/                  Dokumen PRD & roadmap perencanaan (Tahap 1 - 6)
 │   ├── backend/              Panduan arsitektur & aturan backend
 │   └── frontend/             Panduan arsitektur & aturan frontend
 ├── docker-compose.yml        Orkestrasi container stack Castra
 ├── .env                      Konfigurasi environment Docker
+├── agent.md                  Panduan agen & spesifikasi domain
 └── README.md                 Dokumentasi utama proyek
 ```
 
@@ -83,51 +111,6 @@ castra/
 ### Deployment Docker
 - Docker Engine 24+
 - Docker Compose v2
-
----
-
-## Panduan Instalasi & Development Lokal
-
-### 1. Backend Setup
-
-```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-```
-
-Atur koneksi database di `backend/.env`:
-```dotenv
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=castra
-DB_USERNAME=root
-DB_PASSWORD=
-
-ADMIN_NAME=Administrator
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=change-this-password
-```
-
-Jalankan migrasi, seed, dan server:
-```bash
-php artisan migrate --seed
-php artisan l5-swagger:generate
-php artisan serve
-```
-Backend berjalan di `http://127.0.0.1:8000`.
-
-### 2. Frontend Setup
-
-Buka terminal baru:
-```bash
-cd frontend
-npm ci
-npm start
-```
-Frontend berjalan di `http://localhost:3000` (Vite mem-proxy request `/api` ke port backend `8000`).
 
 ---
 
@@ -183,6 +166,9 @@ docker compose logs -f backend
 docker compose logs -f frontend
 docker compose logs -f nginx
 
+# Jalankan database seeder
+docker exec castra-backend php artisan db:seed
+
 # Hentikan stack
 docker compose down
 ```
@@ -212,13 +198,14 @@ docker compose down
 
 ```bash
 # Backend test (PHPUnit)
-cd backend && php artisan test
+docker exec castra-backend php artisan test
 
 # Format kode backend (Laravel Pint)
-cd backend && ./vendor/bin/pint
+docker exec castra-backend ./vendor/bin/pint
 
 # Frontend lint & build
-cd frontend && npm run lint && npm run build
+cd frontend && npm run lint -- --fix && npm run build
+docker cp frontend/build/. castra-frontend:/usr/share/nginx/html/
 ```
 
 ---
@@ -226,6 +213,11 @@ cd frontend && npm run lint && npm run build
 ## Dokumentasi Terkait
 
 - [Perencanaan Perubahan Konsep (PRD 01)](docs/prd/2026-10-03-01-planning-perubahan-konsep.md)
+- [PRD Modul Master Data (PRD 02)](docs/prd/2026-10-03-02-prd-restrukturisasi-master-data.md)
+- [PRD Modul Pemasukan (PRD 03)](docs/prd/2026-10-03-03-prd-modul-pemasukan.md)
+- [PRD Modul Pengeluaran (PRD 04)](docs/prd/2026-10-03-04-prd-modul-pengeluaran.md)
+- [PRD Modul Laporan & Dashboard (PRD 05)](docs/prd/2026-10-03-05-prd-modul-laporan-dan-dashboard.md)
+- [PRD Finalisasi & Dokumentasi (PRD 06)](docs/prd/2026-10-03-06-prd-finalisasi-navigasi-seeder-dokumentasi.md)
 - [Backend Design & Database Schema](docs/backend/design.md)
 - [Backend Coding Rules](docs/backend/rules.md)
 - [Frontend UI/UX Design](docs/frontend/design.md)

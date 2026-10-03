@@ -6,8 +6,11 @@ use App\Http\Controllers\Api\BudgetGroupController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\IncomeController;
 use App\Http\Controllers\Api\IncomeSourceController;
 use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RoleMenuController;
 use App\Http\Controllers\Api\UserController;
@@ -36,4 +39,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('income-sources', IncomeSourceController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('budget-groups', BudgetGroupController::class);
+
+    // Pemasukan
+    Route::get('incomes/calendar', [IncomeController::class, 'calendar']);
+    Route::apiResource('incomes', IncomeController::class);
+
+    // Pengeluaran
+    Route::get('expenses/calendar', [ExpenseController::class, 'calendar']);
+    Route::apiResource('expenses', ExpenseController::class);
+
+    // Laporan
+    Route::get('reports/cash-flow', [ReportController::class, 'cashFlow']);
+    Route::get('reports/budget-comparison', [ReportController::class, 'budgetComparison']);
+    Route::get('reports/category-breakdown', [ReportController::class, 'categoryBreakdown']);
 });

@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use App\Models\Roles;
 use Illuminate\Database\Eloquent\Model;
 
 class Menus extends Model
 {
     protected $table = 'menus';
+
     protected $fillable = [
         'menu_name',
         'menu_path',
