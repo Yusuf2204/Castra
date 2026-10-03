@@ -9,8 +9,14 @@ Aturan wajib untuk implementasi backend Castra.
 - Model Eloquent berada di `app/Models/`.
 - Logic keuangan berada di `app/Services/Finance/`.
 - API Resource berada di `app/Http/Resources/`.
-- Jangan mengubah migrasi lama. Tambahkan migrasi baru untuk kolom/tabel baru.
-- Nama kode, route, kolom, dan model memakai bahasa Inggris.
+- Jangan mengubah migrasi lama. Tambahkan migrasi baru untuk kolom/tabel baru atau rename tabel.
+- Nama tabel keuangan wajib menggunakan prefix standar:
+  - `ms_` untuk Master (`ms_income_sources`, `ms_categories`, `ms_budget_groups`)
+  - `in_` untuk Pemasukan (`in_transactions`)
+  - `out_` untuk Pengeluaran (`out_transactions`)
+  - `rpt_` untuk Laporan/Rekapitulasi (`rpt_monthly_summaries`)
+- Patokan stack teknologi: PHP 8.2+ / 8.3 dan Laravel 12.x. Selalu gunakan sintaks & fitur modern (typed properties, match expressions, constructor promotion, anonymous migrations) dan hindari penambahan library luar yang tidak perlu.
+- Nama kode, route, kolom, dan model memakai bahasa Inggris. Model Eloquent memakai PascalCase dengan properti `protected $table = 'prefix_table_name'`.
 
 ## Aturan Domain Keuangan
 

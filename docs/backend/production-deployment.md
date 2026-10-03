@@ -8,10 +8,10 @@ Seluruh stack dijalankan lewat Docker Compose dari **root proyek**
 
 | Service | Container | Host Port | Keterangan |
 | --- | --- | --- | --- |
-| nginx proxy | `react-cms-proxy` | 80 | Satu-satunya entry publik |
-| backend | `react-cms-backend` | 9001 | Laravel API (PHP-FPM + Nginx + Supervisor) |
-| frontend | `react-cms-frontend` | 9002 | React SPA (Nginx static) |
-| db | `react-cms-db` | 127.0.0.1:3306 | MySQL 8, hanya loopback |
+| nginx proxy | `castra-proxy` | 80 | Satu-satunya entry publik |
+| backend | `castra-backend` | 9001 | Laravel API (PHP-FPM + Nginx + Supervisor) |
+| frontend | `castra-frontend` | 9002 | React SPA (Nginx static) |
+| db | `castra-db` | 127.0.0.1:3306 | MySQL 8, hanya loopback |
 
 Di production cukup buka port 80; port 9001/9002 hanya untuk debugging.
 
@@ -107,7 +107,7 @@ Prune token Sanctum yang kedaluwarsa lewat cron di host:
 ## Logging
 
 - Log Laravel memakai channel `daily` (retensi 30 hari) dan disimpan di volume
-  `react-cms-logs` — tidak hilang saat container di-recreate.
+  `castra-logs` — tidak hilang saat container di-recreate.
 - Pantau ruang disk; ekspor log ke tempat terpusat bila perlu.
 
 ## Verifikasi Setelah Deploy

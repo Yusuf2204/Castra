@@ -1,237 +1,231 @@
 # Frontend Design - Castra
 
-## Fondasi
+## 1. Fondasi & Pendekatan Arsitektur
 
-UI Castra memakai **CoreUI 5 (free)** React Admin Template. Gunakan komponen
-CoreUI, SCSS terpusat, dan pola layout admin existing. Aplikasi ini adalah alat
-operasional harian, jadi tampilan harus padat, jelas, dan mudah dipindai.
+UI Castra mengadopsi arsitektur **Single Page Application (SPA)** berbasis **React 19 + Vite 7 + CoreUI 5 (free)**. Seluruh navigasi, input, dan penyajian data berjalan lancar tanpa reload halaman.
 
-## Prinsip Desain
+Aplikasi dirancang sebagai alat finansial operasional harian yang cepat, padat, dan intuitif dengan membagi sistem ke dalam 4 pilar utama:
+1. **Master** (Data Referensi Dasar)
+2. **Pemasukan** (Pencatatan & Riwayat Dana Masuk)
+3. **Pengeluaran** (Pencatatan & Riwayat Dana Keluar)
+4. **Laporan** (Analitik & Rekapitulasi Keuangan)
+*(Didukung modul Dashboard dan Setup Sistem)*
 
-1. Angka dulu: nominal, budget, sisa, dan status adalah konten utama.
-2. Alur pemasukan harus eksplisit: user melihat dari mana uang masuk dan ke mana
-   uang dialokasikan.
-3. Need/Fun/Saving selalu menjadi struktur visual utama.
-4. Emergency ditampilkan sebagai reserve/sisa rencana, bukan pembagian utama
-   yang menambah total budget.
-5. Status tidak boleh hanya bergantung pada warna; tampilkan label dan tanda.
+---
 
-## Layout Menu
+## 2. Pola Tata Letak Antarmuka (Layout Patterns)
 
-- `Dashboard`: ringkasan periode aktif.
-- `Keuangan`:
-  - `Pemasukan`
-  - `Rincian Transaksi`
-  - `Rencana Bulanan`
-  - `Ringkasan Bulanan`
-- `Master`:
-  - `Sumber Dana`
-  - `Pembagian Budget`
-  - `Kategori`
-- `Setup`: modul sistem existing.
+Aplikasi menggunakan 3 pola layout utama yang konsisten:
 
-Menu tetap berasal dari backend melalui `navigation`.
+### Pola 1: Default Template (Split Layout: Table Kiri + Form Input Kanan)
+Digunakan sebagai template standar untuk modul **Master** dan halaman CRUD umum.
+```text
+┌───────────────────────────────────────┬───────────────────────────────┐
+│              KOLOM KIRI               │          KOLOM KANAN          │
+│       Grid Table Data (col-lg-7/8)    │     Form Input (col-lg-5/4)   │
+├───────────────────────────────────────┼───────────────────────────────┤
+│ [Pencarian & Filter]                  │ [Judul Form: Tambah / Edit]   │
+│ ┌───────────────────────────────────┐ │ Field 1: [                 ]  │
+│ │ Baris 1: Data A    [Edit] [Hapus] │ │ Field 2: [                 ]  │
+│ │ Baris 2: Data B    [Edit] [Hapus] │ │ Field 3: [                 ]  │
+│ │ Baris 3: Data C    [Edit] [Hapus] │ │                               │
+│ └───────────────────────────────────┘ │ [ Batal / Reset ] [ Simpan ]  │
+│ [Paginasi & Total Data]               │                               │
+└───────────────────────────────────────┴───────────────────────────────┘
+```
+- **Prinsip Operasional**:
+  - Kolom kiri menampilkan daftar data secara dinamis dengan fitur pencarian, filter status, dan paginasi.
+  - Kolom kanan selalu menyajikan form input. Pengguna dapat langsung memasukkan data baru tanpa membuka modal atau berpindah halaman.
+  - Saat tombol **Edit** pada baris tabel diklik, formulir di kolom kanan terisi otomatis dengan data yang dipilih (mode edit).
+  - Tombol **Batal/Reset** mengembalikan formulir ke mode tambah data baru.
+  - Pada layar mobile (`< 992px`), layout secara responsif berubah menjadi tumpukan vertikal (Form di atas atau di bawah tabel).
 
-## Dashboard Keuangan
+---
 
-Dashboard mengikuti sheet `Dashboard`.
+### Pola 2: Menu Khusus Transaksi (Konsep Kalender + Modal Input)
+Digunakan khusus untuk modul **Pemasukan** dan **Pengeluaran**.
+```text
+┌───────────────────────────────────────────────────────────────────────┐
+│ [ < ]  Oktober 2026  [ > ]           [Toggle: Tampilan Kalender / Tabel]│
+├───────┬───────┬───────┬───────┬───────┬───────┬───────────────────────┤
+│ SENIN │ SELASA│ RABU  │ KAMIS │ JUMAT │ SABTU │ MINGGU                │
+├───────┼───────┼───────┼───────┼───────┼───────┼───────────────────────┤
+│ 1     │ 2     │ 3     │ 4     │ 5     │ 6     │ 7                     │
+│       │       │•+Rp5jt│       │•-Rp50k│       │                       │
+├───────┼───────┼───────┼───────┼───────┼───────┼───────────────────────┤
+│ 8     │ 9     │ 10    │ 11    │ 12    │ 13    │ 14                    │
+│       │       │ [Klik]───► ┌────────────────────────────────────────┐ │
+│       │       │            │ Modal Form Transaksi (Tgl 10 Okt 2026) │ │
+│       │       │            │ • Nominal: [ Rp...                   ] │ │
+│       │       │            │ • Kategori/Sumber: [ Pilih pos...    ] │ │
+│       │       │            │ • Catatan: [                         ] │ │
+│       │       │            │ [ Batal ]                 [ Simpan ]   │ │
+│       │       │            └────────────────────────────────────────┘ │
+└───────┴───────┴───────┴───────┴───────┴───────┴───────────────────────┘
+```
+- **Prinsip Operasional**:
+  - Menyajikan kalender bulanan penuh.
+  - Setiap sel tanggal memperlihatkan indikator atau total nominal transaksi pada hari tersebut (hijau untuk pemasukan, merah untuk pengeluaran).
+  - **Interaksi Klik Hari**: Pengguna mengklik tanggal tertentu untuk membuka **Modal Form Input** dengan tanggal yang sudah terisi otomatis sesuai sel yang diklik.
+  - Jika pada tanggal tersebut sudah ada riwayat transaksi, modal juga menyajikan daftar transaksi hari itu dengan opsi tambah transaksi baru, edit, atau hapus.
+  - Tersedia opsi toggle view untuk berpindah ke tampilan tabel list standar bagi pengguna yang ingin melihat riwayat berbasis tabular.
 
-Komponen utama:
+---
 
-- Period selector bulan/tahun.
-- Kartu ringkasan:
-  - Total Pemasukan
-  - Total Realisasi Pengeluaran
-  - Sisa Alokasi
-  - Net
-- Kondisi per Pembagian:
-  - Pembagian
-  - Budget
-  - Realisasi
-  - Sisa
-  - Status
-- Estimasi vs Realisasi:
-  - Kategori
-  - Estimasi
-  - Realisasi
-  - Selisih
-  - Persentase
-- Kesimpulan bulanan berbasis status.
-- Transaksi terbaru.
+### Pola 3: Menu Laporan (Top Row Filter Bar + Bottom Row Full 12-Col Table Grid)
+Digunakan khusus untuk modul **Laporan** (Arus Kas, Per Kategori, Realisasi Anggaran, Tren Bulanan).
+```text
+┌───────────────────────────────────────────────────────────────────────┐
+│ ROW ATAS: Filter Bar (Card Penuh)                                     │
+│ [ Periode: Bln/Thn ] [ Rentang Tanggal ] [ Kategori ] [ Terapkan ] [ Export ]│
+├───────────────────────────────────────────────────────────────────────┤
+│ ROW BAWAH: Full Width (12 Column) Data Grid                           │
+│ ┌───────────────────────────────────────────────────────────────────┐ │
+│ │ Kolom 1   │ Kolom 2      │ Kolom 3        │ Kolom 4      │ Kolom 5│ │
+│ ├───────────┼──────────────┼────────────────┼──────────────┼────────┤ │
+│ │ ...       │ ...          │ ...            │ ...          │ ...    │ │
+│ │ ...       │ ...          │ ...            │ ...          │ ...    │ │
+│ └───────────────────────────────────────────────────────────────────┘ │
+│ [Ringkasan Total / KPI Baris Bawah]                                   │
+└───────────────────────────────────────────────────────────────────────┘
+```
+- **Prinsip Operasional**:
+  - **Row Atas**: Panel filter ringkas dan padat untuk menentukan parameter data (Periode, Tanggal Mulai & Akhir, Kategori/Sumber Dana, tombol Terapkan Filter, serta tombol Ekspor PDF/Excel).
+  - **Row Bawah**: Area tabel grid data selebar 12 kolom penuh (`col-12`) agar data pelaporan dapat dibaca secara leluasa tanpa terpotong.
+  - Dilengkapi grafik pendukung (opsional di atas tabel atau dalam collapsible panel) seperti Donut Chart pengeluaran atau Bar Chart arus kas bulanan.
 
-Status:
+---
 
-- `Aman`: badge success
-- `Mendekati Batas`: badge warning
-- `Over Budget`: badge danger
+## 3. Spesifikasi Rinci Antarmuka per Modul
 
-## Pemasukan
+### 3.1 Dashboard
+- **Header**: Pemilih periode aktif (Bulan & Tahun).
+- **KPI Summary Cards (4 Kartu)**:
+  1. Total Saldo / Kas Saat Ini
+  2. Total Pemasukan Bulan Ini
+  3. Total Pengeluaran Bulan Ini
+  4. Arus Kas Bersih (Net Cash Flow: Surplus/Defisit)
+- **Komponen Grafik**:
+  - Chart Pemasukan vs Pengeluaran 6 bulan terakhir.
+  - Donut Chart persentase pengeluaran per kategori bulan aktif.
+- **Tabel Cepat**: 5 Transaksi pengeluaran & pemasukan terakhir.
 
-Halaman untuk menjawab masalah workbook: "bagaimana membagi jika ada pemasukan?"
+---
 
-Elemen UI:
+### 3.2 Modul Master (Menggunakan Pola Split Layout)
 
-- Filter periode bulan/tahun.
-- Kartu total pemasukan periode.
-- Form tambah pemasukan:
-  - tanggal
-  - sumber dana
-  - nominal
-  - catatan
-  - opsi `alokasikan otomatis` aktif secara default
-- Panel hasil alokasi:
-  - Need 50%
-  - Fun 30%
-  - Saving 20%
-  - Emergency/Reserve dari sisa rencana
-- Tabel pemasukan periode.
+#### A. Master Sumber Dana (`/master/income-sources`)
+- **Kolom Kiri (Tabel Data)**:
+  - Kolom: Nama Sumber Dana, Keterangan, Status Aktif (Badge), Aksi (Edit, Hapus/Nonaktifkan).
+  - Search input & filter status aktif.
+- **Kolom Kanan (Form Input)**:
+  - Field: Nama Sumber Dana (contoh: Gaji Pokok, Freelance, Bonus), Deskripsi, Checkbox Status Aktif.
+  - Tombol Simpan & Batal.
 
-Setelah submit sukses, halaman menampilkan allocation preview hasil backend,
-bukan menghitung angka final sendiri.
+#### B. Master Kategori (`/master/categories`)
+- Menggunakan tabs:
+  - **Tab 1: Kategori Pengeluaran**
+  - **Tab 2: Kategori Pemasukan**
+- Di dalam masing-masing tab menerapkan Split Layout:
+  - **Kolom Kiri (Tabel)**: Nama Kategori, Pembagian/Alokasi Budget (khusus expense), Estimasi Default (opsional), Status Aktif, Aksi.
+  - **Kolom Kanan (Form)**: Nama Kategori, Pilihan Pembagian Budget (khusus expense), Estimasi Anggaran Bulanan Default, Switch Status Aktif.
 
-## Rencana Bulanan
+#### C. Master Alokasi Anggaran (`/master/budget-groups`)
+- **Kolom Kiri (Tabel)**: Nama Kelompok Budget (Need, Fun, Saving, Emergency), Kode, Persentase Default (%), Status.
+- **Kolom Kanan (Form)**: Nama Kelompok, Kode, Persentase, Urutan Tampil. Indikator total persentase kelompok utama wajib 100%.
 
-Padanan utama sheet `Estimasi`.
+---
 
-Elemen UI:
+### 3.3 Modul Pemasukan (`/incomes`) - Konsep Kalender & Modal Form
+- **Toolbar Atas**:
+  - Navigator Bulan/Tahun (`<` Bulan Ini `>`).
+  - Total ringkasan pemasukan periode terpilih.
+  - Tombol aksi: "Tambah Pemasukan" (membuka modal form) & Toggle Switch (Kalender / Tabel).
+- **Tampilan Utama (Kalender)**:
+  - Grid kalender 7 hari x minggu.
+  - Sel hari menampilkan tanggal dan chip/badge nominal pemasukan hijau (contoh: `+Rp 4.500.000`).
+  - Klik pada tanggal langsung membuka **Modal Form Pemasukan**:
+    - Tanggal (terisi otomatis sesuai hari yang diklik).
+    - Sumber Dana (dropdown dari Master Sumber Dana).
+    - Nominal (input uang format IDR).
+    - Catatan/Keterangan.
+    - Riwayat transaksi pada tanggal tersebut (jika sudah ada data).
+- **Tampilan Alternatif (Tabel)**:
+  - Grid tabel seluruh pemasukan bulan terpilih dengan paginasi, pencarian, dan tombol aksi per baris.
 
-- Period selector.
-- Summary total pemasukan dan total alokasi.
-- Tabel pembagian budget:
-  - Pembagian
-  - Persentase
-  - Budget
-  - Estimasi kategori
-  - Reserve
-- Tabel estimasi kategori:
-  - Kategori
-  - Pembagian
-  - Estimasi
-  - Realisasi
-  - Sisa
-  - Status
-- Tombol recalculate alokasi.
+---
 
-Editing estimasi kategori dilakukan inline atau modal sederhana. Hindari wizard;
-workflow ini akan sering dipakai.
+### 3.4 Modul Pengeluaran (`/expenses`) - Konsep Kalender & Modal Form
+- **Toolbar Atas**:
+  - Navigator Bulan/Tahun.
+  - Total pengeluaran bulan terpilih & sisa anggaran total.
+  - Tombol aksi: "Tambah Pengeluaran" & Toggle Switch (Kalender / Tabel).
+- **Tampilan Utama (Kalender)**:
+  - Sel hari menampilkan tanggal dan chip/badge nominal pengeluaran merah (contoh: `-Rp 120.000`).
+  - Klik pada tanggal membuka **Modal Form Pengeluaran**:
+    - Tanggal (terisi otomatis).
+    - Kategori Pengeluaran (dropdown dari Master Kategori).
+    - Nominal (input angka positif).
+    - Sumber Dana / Metode Pembayaran (opsional jika mengaitkan ke kas/rekening).
+    - Catatan.
+    - Indikator status sisa budget kategori terpilih.
+- **Tampilan Alternatif (Tabel)**:
+  - Grid tabel seluruh pengeluaran dengan filter kategori, rentang tanggal, status budget (Aman, Mendekati Batas, Over Budget).
 
-## Rincian Transaksi
+---
 
-Padanan sheet `Rincian`.
+### 3.5 Modul Laporan (`/reports/*`) - Pola 12-Col Data Grid
 
-Filter:
+#### A. Laporan Arus Kas (`/reports/cash-flow`)
+- **Row Atas (Filter)**: Pilihan Tahun, Filter Rentang Bulan, Tombol Export Excel / PDF.
+- **Row Bawah (Full 12-Col Table)**:
+  - Kolom: Bulan, Total Pemasukan (+), Total Pengeluaran (-), Arus Kas Bersih (Net), Status (Surplus/Defisit), Persentase Tabungan/Tersisa.
+  - Baris Total / Akumulasi di bagian paling bawah tabel.
 
-- periode bulan/tahun
-- rentang tanggal
-- tipe transaksi
-- kategori
-- pembagian budget
+#### B. Laporan Pengeluaran per Kategori (`/reports/by-category`)
+- **Row Atas (Filter)**: Pilihan Periode Bulan & Tahun, Filter Kelompok Budget.
+- **Row Bawah (Full 12-Col Table & Visualisasi)**:
+  - Visualisasi ringkas Donut/Bar Chart di sisi atas atau kiri tabel.
+  - Tabel 12 kolom: Kategori, Kelompok Budget, Anggaran/Estimasi, Realisasi Aktual, Selisih (Sisa), % Pemakaian, Status (Aman / Mendekati Batas / Over Budget).
 
-Tabel:
+#### C. Laporan Realisasi Anggaran (`/reports/budget-vs-actual`)
+- **Row Atas (Filter)**: Periode Bulan/Tahun, Status Filter (Semua / Over Budget Saja).
+- **Row Bawah (Full 12-Col Table)**:
+  - Tabel lengkap dengan visual progress bar CoreUI di dalam kolom realisasi (misal: Hijau `<80%`, Kuning `80-100%`, Merah `>100%`).
 
-- Tanggal
-- Tipe
-- Kategori
-- Pembagian
-- Budget
-- Nominal
-- Sisa Budget
-- Status
-- Keterangan
-- Aksi
+#### D. Laporan Tren Historis (`/reports/trends`)
+- **Row Atas (Filter)**: Rentang Waktu (3 Bulan, 6 Bulan, 1 Tahun, Kustom).
+- **Row Bawah (Full 12-Col Grid)**:
+  - Grafik tren pengeluaran vs pemasukan multi-garis.
+  - Tabel rincian tren per bulan.
 
-Nominal pemasukan ditampilkan hijau dengan tanda `+`; pengeluaran merah dengan
-tanda `-`. Input nominal tetap angka positif.
+---
 
-## Master Sumber Dana
+## 4. Standar Visual, Warna & Format Data
 
-Tabel:
+### 4.1 Warna Status Transaksi & Finansial
+- **Pemasukan**: Hijau (`text-success` / `bg-success`), format `+Rp X.XXX.XXX`.
+- **Pengeluaran**: Merah (`text-danger` / `bg-danger`), format `-Rp X.XXX.XXX`.
+- **Status Budget**:
+  - `Aman` (`safe`): Badge `success`
+  - `Mendekati Batas` (`near_limit`): Badge `warning`
+  - `Over Budget` (`over_budget`): Badge `danger`
+- **Surplus / Defisit**:
+  - Surplus: `text-success`
+  - Defisit: `text-danger`
 
-- Nama
-- Deskripsi
-- Status aktif
-- Aksi
+### 4.2 Formatting Reusable
+- Mata Uang: `new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })`.
+- Angka pada tabel selalu rata kanan (`text-end`) dengan CSS `font-variant-numeric: tabular-nums`.
+- Format tanggal kirim ke API: `YYYY-MM-DD`.
+- Format tanggal tampilan UI: `DD MMMM YYYY` (locale Indonesia).
 
-Sumber dana yang sudah dipakai transaksi tidak boleh dihapus keras. UI harus
-menawarkan nonaktifkan bila backend menolak delete.
-
-## Master Pembagian Budget
-
-Tabel:
-
-- Nama
-- Kode
-- Persentase
-- Urutan
-- Status
-- Aksi
-
-Default: Need 50%, Fun 30%, Saving 20%, Emergency 0%.
-UI wajib menampilkan indikator total persentase group utama. Simpan dinonaktifkan
-jika total bukan 100%.
-
-## Master Kategori
-
-Tabs:
-
-- Pemasukan
-- Pengeluaran
-
-Tabel kategori pengeluaran:
-
-- Nama
-- Pembagian
-- Estimasi default
-- Status
-- Aksi
-
-Tabel kategori pemasukan:
-
-- Nama
-- Status
-- Aksi
-
-Saat tipe `expense`, field pembagian wajib. Saat tipe `income`, field pembagian
-disembunyikan atau opsional.
-
-## Warna dan Angka
-
-- Pemasukan: success.
-- Pengeluaran: danger.
-- Mendekati batas: warning.
-- Netral: variabel CoreUI.
-- Format uang: `Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' })`.
-- Angka di tabel memakai `text-end` dan `font-variant-numeric: tabular-nums`.
-- Jangan hardcode warna untuk dark mode; gunakan class/variabel CoreUI.
-
-## Ikonografi
-
-Pakai ikon CoreUI:
-
-| Ikon | Penggunaan |
-| --- | --- |
-| `cilChartLine` | Dashboard |
-| `cilMoney` | Pemasukan/transaksi |
-| `cilArrowTop` | Pemasukan |
-| `cilArrowBottom` | Pengeluaran |
-| `cilWallet` | Pembagian budget |
-| `cilTag` | Kategori |
-| `cilCalendar` | Periode |
-| `cilPencil` | Edit |
-| `cilTrash` | Hapus |
-
-Jika ikon tidak tersedia di CoreUI free, pilih ikon CoreUI terdekat.
-
-## Responsivitas
-
-- Mobile: kartu menumpuk, tabel scroll horizontal, filter dalam collapse.
-- Tablet: dua kolom untuk summary, tabel tetap scroll bila sempit.
-- Desktop: summary 4 kartu, tabel penuh, panel alokasi berdampingan.
-
-## Catatan Implementasi
-
-- Modul baru dibuat di `src/views/finance/` dan `src/views/master/`.
-- Route baru ditambahkan di `src/routes.js` dengan `React.lazy`.
-- Semua request memakai `services/api.js`.
-- Jangan hardcode sidebar menu di frontend.
-- Tambahkan helper formatter sebelum membuat banyak komponen nominal.
+### 4.3 Navigasi & Sidebar
+- Navigasi sidebar dinamis bersumber dari payload backend `navigation` di Redux store.
+- Struktur Menu Baru di Sidebar:
+  1. `Dashboard`
+  2. `Master` (`Sumber Dana`, `Kategori`, `Alokasi Anggaran`)
+  3. `Pemasukan`
+  4. `Pengeluaran`
+  5. `Laporan` (`Arus Kas`, `Per Kategori`, `Realisasi Anggaran`, `Tren Bulanan`)
+  6. `Setup` (`Company`, `Users`, `Roles`, `Menus`, `Role Permissions`, `Change Password`)

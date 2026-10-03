@@ -4,26 +4,35 @@ Aturan wajib untuk implementasi frontend Castra.
 
 ## Prinsip Umum
 
-- Gunakan function components + hooks.
-- Gunakan `prop-types` untuk props komponen.
-- Ikuti pola `<View>.js`, `<View>Form.js`, `<View>Table.js`.
+- Patokan stack teknologi: **React 19.x**, **Vite 7.x**, **CoreUI 5.x (@coreui/react 5.9)**, **React Router 7.x**, dan **Redux 5.x**.
+- Gunakan function components + modern React hooks (`useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`). Jangan gunakan class components atau lifecycle usang.
+- Manfaatkan komponen resmi CoreUI 5 (`CCard`, `CRow`, `CCol`, `CTable`, `CModal`, `CButton`, `CBadge`, `CSpinner`, dll.) dan icon `@coreui/icons-react` (`cil...`).
+- Gunakan `prop-types` untuk validasi props komponen.
+- Ikuti pola template:
+  - Default: Split Layout `<View>.js`, `<View>Table.js`, `<View>Form.js` (Master & CRUD standar).
+  - Khusus Transaksi: Calendar View + Modal Form Input (`Incomes`, `Expenses`).
+  - Laporan: Top Row Filter Bar + Bottom Row 12-Col Table Grid (`Reports`).
 - Route di-lazy lewat `React.lazy` di `src/routes.js`.
-- Semua request API lewat `src/services/api.js`.
+- Semua request API lewat instance axios terpusat di `src/services/api.js`.
 - Error field tampil dekat input; feedback umum lewat toast.
 
 ## Organisasi Modul
 
 ```text
-src/views/finance/
+src/views/
+|-- master/
+|   |-- incomeSources/
+|   |-- categories/
+|   `-- budgetGroups/
 |-- incomes/
-|-- transactions/
-|-- monthlyPlans/
-`-- monthlySummaries/
-
-src/views/master/
-|-- incomeSources/
-|-- budgetGroups/
-`-- categories/
+|-- expenses/
+|-- reports/
+|   |-- cashFlow/
+|   |-- byCategory/
+|   |-- budgetVsActual/
+|   `-- monthlyTrends/
+|-- dashboard/
+`-- setup/
 ```
 
 Jangan mencampur halaman master ke `setup`; `setup` dipakai untuk administrasi
