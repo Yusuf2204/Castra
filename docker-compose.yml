@@ -121,6 +121,8 @@ services:
     container_name: castra-frontend
     ports:
       - "${FRONTEND_PORT:-9002}:80"
+    volumes:
+      - ./frontend/build:/usr/share/nginx/html:ro
     networks:
       - castra-network
     restart: unless-stopped
