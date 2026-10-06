@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             CompanySeeder::class,
             AdminUserSeeder::class,
             BudgetGroupSeeder::class,
+            IncomeSourceSeeder::class,
+            CategorySeeder::class,
         ]);
     }
 }
