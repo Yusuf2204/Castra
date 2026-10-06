@@ -67,9 +67,9 @@ Data keuangan setiap akun bersifat **terisolasi aman** (*multi-user isolated*), 
 
 ### Profil & Ganti Kata Sandi
 Untuk menjaga keamanan akun:
-1. Klik menu **Setup** di navigasi kiri, lalu pilih **Change Password** (atau melalui menu profil di pojok kanan atas).
-2. Masukkan **Password Lama**, kemudian ketikkan **Password Baru** (minimal 8 karakter dengan kombinasi aman), dan konfirmasi kembali.
-3. Klik **Simpan / Update Password**.
+1. Klik avatar profil di pojok kanan atas header, lalu pilih **Ubah Password** (atau melalui menu Setup bagi Administrator).
+2. Masukkan **Password Lama**, kemudian ketikkan **Password Baru** (minimal 6 karakter), dan konfirmasi kembali.
+3. Klik **Save Password**. Sistem akan menyimpan password baru dan mengarahkan kembali ke halaman login.
 
 ### Logout / Keluar Akun
 1. Di bagian kanan atas (header navigasi), klik avatar profil pengguna.
@@ -81,8 +81,16 @@ Untuk menjaga keamanan akun:
 ## 3. Navigasi & Tampilan Antarmuka
 
 Antarmuka Castra terbagi menjadi 3 area utama:
-- **Sidebar (Menu Kiri):** Menu navigasi utama yang dapat diciutkan (*collapsed*) untuk kenyamanan layar kecil.
-- **Header (Atas):** Berisi toggle sidebar, indikator breadcrumb halaman saat ini, dan menu profil/logout.
+- **Sidebar (Menu Kiri):** Menu navigasi utama yang disesuaikan secara dinamis berdasarkan hak akses peran (*Role Permissions*):
+  - **Menu Pengguna (User):** Fokus pada operasional keuangan personal:
+    1. **Dashboard** (`/dashboard`)
+    2. **Pemasukan** (`/incomes`)
+    3. **Pengeluaran** (`/expenses`)
+    4. **Laporan** (`/reports`)
+    5. **Master Data** (`/master` ➔ *Sumber Dana, Kategori, Alokasi Anggaran*)
+  - **Menu Administrator (Admin):** Memiliki seluruh modul keuangan di atas ditambah modul administrasi sistem:
+    6. **Setup** (`/setup` ➔ *Users, Roles, Role Permissions, Menus, Company*)
+- **Header (Atas):** Berisi toggle sidebar, indikator breadcrumb halaman saat ini, dan dropdown avatar profil (menampilkan nama akun, link **Ubah Password**, dan **Logout**).
 - **Main Content (Tengah):** Area kerja tempat formulir, tabel data, kalender, diagram grafik, dan laporan ditampilkan.
 
 ---

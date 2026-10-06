@@ -8,14 +8,16 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import { cilLockLocked, cilSettings } from '@coreui/icons'
+import { cilAccountLogout, cilLockLocked } from '@coreui/icons'
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import CIcon from '@coreui/icons-react'
 import api from '../../services/api'
 import avatar8 from './../../assets/images/avatars/8.jpg'
 
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
+  const user = useSelector((state) => state.user)
 
   const handleLogout = async () => {
     try {
@@ -35,18 +37,23 @@ const AppHeaderDropdown = () => {
       </CDropdownToggle>
 
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        <CDropdownHeader className="bg-body-secondary fw-semibold my-2">Settings</CDropdownHeader>
+        <CDropdownHeader className="bg-body-secondary fw-semibold my-2">
+          {user?.name || 'Akun Saya'}
+        </CDropdownHeader>
 
-        <CDropdownItem>
-          <CIcon icon={cilSettings} className="me-2" />
-          Settings
+        <CDropdownItem
+          onClick={() => navigate('/setup/change-password')}
+          style={{ cursor: 'pointer' }}
+        >
+          <CIcon icon={cilLockLocked} className="me-2" />
+          Ubah Password
         </CDropdownItem>
 
         <CDropdownDivider />
 
         <CDropdownItem onClick={handleLogout} style={{ cursor: 'pointer' }}>
-          <CIcon icon={cilLockLocked} className="me-2" />
-          Logout
+          <CIcon icon={cilAccountLogout} className="me-2 text-danger" />
+          <span className="text-danger">Logout</span>
         </CDropdownItem>
       </CDropdownMenu>
     </CDropdown>

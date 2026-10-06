@@ -27,14 +27,47 @@ class MenuSeeder extends Seeder
             ]
         );
 
-        // 2. Master (Financial master data dropdown)
+        // 2. Pemasukan (Incomes)
+        Menus::updateOrCreate(
+            ['menu_path' => '/incomes'],
+            [
+                'menu_name' => 'Pemasukan',
+                'menu_icon' => 'cilArrowTop',
+                'menu_parent_id' => null,
+                'menu_order' => 2,
+            ]
+        );
+
+        // 3. Pengeluaran (Expenses)
+        Menus::updateOrCreate(
+            ['menu_path' => '/expenses'],
+            [
+                'menu_name' => 'Pengeluaran',
+                'menu_icon' => 'cilArrowBottom',
+                'menu_parent_id' => null,
+                'menu_order' => 3,
+            ]
+        );
+
+        // 4. Laporan (Reports)
+        Menus::updateOrCreate(
+            ['menu_path' => '/reports'],
+            [
+                'menu_name' => 'Laporan',
+                'menu_icon' => 'cilChartPie',
+                'menu_parent_id' => null,
+                'menu_order' => 4,
+            ]
+        );
+
+        // 5. Master Data (Financial master data dropdown)
         $master = Menus::updateOrCreate(
             ['menu_path' => '/master'],
             [
-                'menu_name' => 'Master',
+                'menu_name' => 'Master Data',
                 'menu_icon' => 'cilLayers',
                 'menu_parent_id' => null,
-                'menu_order' => 2,
+                'menu_order' => 5,
             ]
         );
 
@@ -65,40 +98,7 @@ class MenuSeeder extends Seeder
             ]
         );
 
-        // 3. Pemasukan (Incomes)
-        Menus::updateOrCreate(
-            ['menu_path' => '/incomes'],
-            [
-                'menu_name' => 'Pemasukan',
-                'menu_icon' => 'cilArrowTop',
-                'menu_parent_id' => null,
-                'menu_order' => 3,
-            ]
-        );
-
-        // 4. Pengeluaran (Expenses)
-        Menus::updateOrCreate(
-            ['menu_path' => '/expenses'],
-            [
-                'menu_name' => 'Pengeluaran',
-                'menu_icon' => 'cilArrowBottom',
-                'menu_parent_id' => null,
-                'menu_order' => 4,
-            ]
-        );
-
-        // 5. Laporan (Reports)
-        Menus::updateOrCreate(
-            ['menu_path' => '/reports'],
-            [
-                'menu_name' => 'Laporan',
-                'menu_icon' => 'cilChartPie',
-                'menu_parent_id' => null,
-                'menu_order' => 5,
-            ]
-        );
-
-        // 6. Setup (System & Administration dropdown)
+        // 6. Setup (System & Administration dropdown - Admin Only)
         $setup = Menus::updateOrCreate(
             ['menu_path' => '/setup'],
             [
@@ -110,11 +110,11 @@ class MenuSeeder extends Seeder
         );
 
         $setupChildren = [
-            ['menu_name' => 'Company', 'menu_path' => '/setup/company', 'menu_order' => 1],
-            ['menu_name' => 'Users', 'menu_path' => '/setup/users', 'menu_order' => 2],
-            ['menu_name' => 'Roles', 'menu_path' => '/setup/roles', 'menu_order' => 3],
+            ['menu_name' => 'Users', 'menu_path' => '/setup/users', 'menu_order' => 1],
+            ['menu_name' => 'Roles', 'menu_path' => '/setup/roles', 'menu_order' => 2],
+            ['menu_name' => 'Role Permissions', 'menu_path' => '/setup/role-permissions', 'menu_order' => 3],
             ['menu_name' => 'Menus', 'menu_path' => '/setup/menus', 'menu_order' => 4],
-            ['menu_name' => 'Role Permissions', 'menu_path' => '/setup/role-permissions', 'menu_order' => 5],
+            ['menu_name' => 'Company', 'menu_path' => '/setup/company', 'menu_order' => 5],
             ['menu_name' => 'Change Password', 'menu_path' => '/setup/change-password', 'menu_order' => 6],
         ];
 

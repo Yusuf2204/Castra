@@ -15,57 +15,41 @@ class RoleMenuSeeder extends Seeder
         $user = Roles::where('role_name', 'user')->first();
 
         // ===== ADMIN → semua menu =====
-        $menus = Menus::all();
+        if ($admin) {
+            $menus = Menus::all();
+            RoleMenus::where('role_id', $admin->id)->delete();
 
-        foreach ($menus as $menu) {
-            RoleMenus::firstOrCreate([
-                'role_id' => $admin->id,
-                'menu_id' => $menu->id,
-            ]);
+            foreach ($menus as $menu) {
+                RoleMenus::firstOrCreate([
+                    'role_id' => $admin->id,
+                    'menu_id' => $menu->id,
+                ]);
+            }
         }
 
-        // ===== USER → limited but structural =====
+        // ===== USER → modul finansial personal (tanpa Setup/Administrasi di sidebar) =====
+        if ($user) {
+            $userMenuPaths = [
+                '/dashboard',
+                '/incomes',
+                '/expenses',
+                '/reports',
+                '/master',
+                '/master/income-sources',
+                '/master/categories',
+                '/master/budget-groups',
+            ];
 
-        // wajib ada dashboard
-        $dashboard = Menus::where('menu_path', '/dashboard')->first();
+            $userMenuIds = Menus::whereIn('menu_path', $userMenuPaths)->pluck('id')->all();
 
-        // parent setup
-        $setup = Menus::where('menu_path', '/setup')->first();
-
-        // child permission
-        $changePassword = Menus::where('menu_path', '/setup/change-password')->first();
-
-        // master & transaksi
-        $master = Menus::where('menu_path', '/master')->first();
-        $incomeSources = Menus::where('menu_path', '/master/income-sources')->first();
-        $categories = Menus::where('menu_path', '/master/categories')->first();
-        $budgetGroups = Menus::where('menu_path', '/master/budget-groups')->first();
-        $incomes = Menus::where('menu_path', '/incomes')->first();
-        $expenses = Menus::where('menu_path', '/expenses')->first();
-        $reports = Menus::where('menu_path', '/reports')->first();
-
-        $userMenus = [
-            $dashboard,
-            $master,
-            $incomeSources,
-            $categories,
-            $budgetGroups,
-            $incomes,
-            $expenses,
-            $reports,
-            $setup,
-            $changePassword,
-        ];
-
-        foreach ($userMenus as $menu) {
-            if (! $menu) {
-                continue;
+            // Sync menu permissions user
+            RoleMenus::where('role_id', $user->id)->delete();
+            foreach ($userMenuIds as $menuId) {
+                RoleMenus::firstOrCreate([
+                    'role_id' => $user->id,
+                    'menu_id' => $menuId,
+                ]);
             }
-
-            RoleMenus::firstOrCreate([
-                'role_id' => $user->id,
-                'menu_id' => $menu->id,
-            ]);
         }
     }
 }
