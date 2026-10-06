@@ -33,8 +33,8 @@ const formatCurrency = (val) => {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(val)
+    maximumFractionDigits: 2,
+  }).format(Number(val))
 }
 
 const formatDateIndonesian = (dateStr) => {
@@ -115,11 +115,13 @@ const IncomeModal = ({
     setSaving(true)
     setErrors({})
 
+    const parseAmount = (val) => (typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val))
+
     const payload = {
       transaction_date: form.transaction_date,
       income_source_id: Number(form.income_source_id),
       category_id: form.category_id ? Number(form.category_id) : null,
-      amount: Number(form.amount),
+      amount: parseAmount(form.amount),
       notes: form.notes ? form.notes.trim() : null,
     }
 
@@ -313,8 +315,8 @@ const IncomeModal = ({
                   <CFormInput
                     type="number"
                     name="amount"
-                    min="1"
-                    step="1000"
+                    min="0.01"
+                    step="any"
                     placeholder="0"
                     value={form.amount}
                     onChange={handleChange}

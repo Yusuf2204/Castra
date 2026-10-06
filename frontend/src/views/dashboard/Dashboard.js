@@ -40,8 +40,8 @@ const formatCurrency = (amount) => {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount || 0)
+    maximumFractionDigits: 2,
+  }).format(Number(amount || 0))
 }
 
 const SummaryCard = ({ color, icon, label, value, subtext, loading }) => (

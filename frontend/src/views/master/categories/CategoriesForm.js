@@ -68,9 +68,11 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
       is_active: form.is_active,
     }
 
+    const parseAmount = (val) => (typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val))
+
     if (type === 'expense') {
       payload.budget_group_id = form.budget_group_id ? Number(form.budget_group_id) : null
-      payload.monthly_estimate = Number(form.monthly_estimate || 0)
+      payload.monthly_estimate = parseAmount(form.monthly_estimate || 0)
     }
 
     try {
@@ -134,7 +136,7 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
                 type="number"
                 name="monthly_estimate"
                 min="0"
-                step="1000"
+                step="any"
                 placeholder="0"
                 value={form.monthly_estimate}
                 onChange={handleChange}

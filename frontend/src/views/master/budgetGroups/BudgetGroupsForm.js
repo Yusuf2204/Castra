@@ -62,10 +62,12 @@ const BudgetGroupsForm = ({ budgetGroup, onReset, onSaved }) => {
     setSaving(true)
     setErrors({})
 
+    const parseAmount = (val) => (typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val))
+
     const payload = {
       code: form.code.trim().toLowerCase(),
       name: form.name.trim(),
-      percentage: Number(form.percentage || 0),
+      percentage: parseAmount(form.percentage || 0),
       sort_order: Number(form.sort_order || 0),
       is_active: form.is_active,
     }
@@ -124,7 +126,7 @@ const BudgetGroupsForm = ({ budgetGroup, onReset, onSaved }) => {
             name="percentage"
             min="0"
             max="100"
-            step="0.01"
+            step="any"
             placeholder="0"
             value={form.percentage}
             onChange={handleChange}

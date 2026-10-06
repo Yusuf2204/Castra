@@ -20,8 +20,8 @@ const formatCurrency = (val) => {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(val)
+    maximumFractionDigits: 2,
+  }).format(Number(val))
 }
 
 const CashFlowReport = ({ year }) => {
