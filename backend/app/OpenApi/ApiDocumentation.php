@@ -19,6 +19,7 @@ use OpenApi\Annotations as OA;
  * @OA\Tag(name="Dashboard - Analytics", description="Ringkasan finansial dan statistik operasional")
  * @OA\Tag(name="Master - Categories", description="Pengelolaan pos kategori transaksi pemasukan dan pengeluaran")
  * @OA\Tag(name="Master - Budget Groups", description="Pengelolaan alokasi amplop anggaran bulanan")
+ * @OA\Tag(name="Master - Budget Periods", description="Pengelolaan siklus anggaran dinamis dan pagu kategori berbasis tanggal gajian")
  * @OA\Tag(name="Master - Income Sources", description="Pengelolaan sumber dana pemasukan per pengguna")
  * @OA\Tag(name="Pemasukan - Transactions", description="Pencatatan dan kalender arus kas masuk")
  * @OA\Tag(name="Pengeluaran - Transactions", description="Pencatatan dan kalender arus kas keluar")
@@ -532,6 +533,65 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="percentage", type="number", format="float", example=50.0),
  *     @OA\Property(property="sort_order", type="integer", example=1),
  *     @OA\Property(property="is_active", type="boolean", example=true)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="BudgetPeriod",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="Siklus Oktober 2026"),
+ *     @OA\Property(property="start_date", type="string", format="date", example="2026-10-05"),
+ *     @OA\Property(property="end_date", type="string", format="date", example="2026-11-04"),
+ *     @OA\Property(property="income_transaction_id", type="integer", nullable=true, example=1),
+ *     @OA\Property(property="total_income_allocated", type="number", format="float", example=4033247.0),
+ *     @OA\Property(property="total_allocated", type="number", format="float", example=3967361.6),
+ *     @OA\Property(property="is_active", type="boolean", example=true),
+ *     @OA\Property(property="notes", type="string", nullable=true, example="Gajian tanggal 5"),
+ *     @OA\Property(property="allocations", type="array", @OA\Items(ref="#/components/schemas/CategoryBudgetAllocation"))
+ * )
+ *
+ * @OA\Schema(
+ *     schema="CategoryBudgetAllocation",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="budget_period_id", type="integer", example=1),
+ *     @OA\Property(property="category_id", type="integer", example=27),
+ *     @OA\Property(property="category_name", type="string", example="Makan"),
+ *     @OA\Property(property="category_type", type="string", example="expense"),
+ *     @OA\Property(property="baseline_estimate", type="number", format="float", example=1240000.0),
+ *     @OA\Property(property="allocated_amount", type="number", format="float", example=1240000.0),
+ *     @OA\Property(property="notes", type="string", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="BudgetPeriodRequest",
+ *     required={"name","start_date","end_date"},
+ *
+ *     @OA\Property(property="name", type="string", example="Siklus Oktober 2026"),
+ *     @OA\Property(property="start_date", type="string", format="date", example="2026-10-05"),
+ *     @OA\Property(property="end_date", type="string", format="date", example="2026-11-04"),
+ *     @OA\Property(property="total_income_allocated", type="number", format="float", example=4033247.0),
+ *     @OA\Property(property="income_transaction_id", type="integer", nullable=true, example=1),
+ *     @OA\Property(property="is_active", type="boolean", example=true),
+ *     @OA\Property(property="notes", type="string", nullable=true, example="Gaji cair tanggal 5"),
+ *     @OA\Property(property="copy_from_period_id", type="integer", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="CategoryBudgetAllocationBatchRequest",
+ *     required={"allocations"},
+ *
+ *     @OA\Property(
+ *         property="allocations",
+ *         type="array",
+ *         @OA\Items(
+ *             type="object",
+ *             required={"category_id","allocated_amount"},
+ *             @OA\Property(property="category_id", type="integer", example=27),
+ *             @OA\Property(property="allocated_amount", type="number", format="float", example=1250000.0),
+ *             @OA\Property(property="notes", type="string", nullable=true, example="Penyesuaian")
+ *         )
+ *     )
  * )
  *
  * @OA\Schema(
@@ -1942,6 +2002,193 @@ class ApiDocumentation
      * )
      */
     public function budgetGroupsItem(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/budget-periods",
+     *     tags={"Master - Budget Periods"},
+     *     summary="List budget periods",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="is_active", in="query", required=false, description="Filter by active status (1 or 0)", @OA\Schema(type="integer", enum={0,1}, example=1)),
+     *     @OA\Parameter(name="search", in="query", required=false, description="Search by period name", @OA\Schema(type="string", example="Oktober")),
+     *     @OA\Parameter(name="page", in="query", required=false, description="Page number", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="per_page", in="query", required=false, description="Items per page", @OA\Schema(type="integer", example=15)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of budget periods",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/BudgetPeriod")),
+     *             @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta"),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     *
+     * @OA\Post(
+     *     path="/budget-periods",
+     *     tags={"Master - Budget Periods"},
+     *     summary="Create a new budget period",
+     *     description="Creates a period and automatically generates allocations for active expense categories.",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/BudgetPeriodRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Budget period created",
+     *
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
+     *             @OA\Property(property="message", type="string", example="Periode anggaran berhasil dibuat"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function budgetPeriodsCollection(): void {}
+
+    /**
+     * @OA\Get(
+     *     path="/budget-periods/{budget_period}",
+     *     tags={"Master - Budget Periods"},
+     *     summary="Get budget period detail",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budget_period", in="path", required=true, description="Budget Period ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget period detail",
+     *
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Put(
+     *     path="/budget-periods/{budget_period}",
+     *     tags={"Master - Budget Periods"},
+     *     summary="Update budget period",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budget_period", in="path", required=true, description="Budget Period ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/BudgetPeriodRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget period updated",
+     *
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
+     *             @OA\Property(property="message", type="string", example="Periode anggaran berhasil diperbarui"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     *
+     * @OA\Delete(
+     *     path="/budget-periods/{budget_period}",
+     *     tags={"Master - Budget Periods"},
+     *     summary="Delete a budget period",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budget_period", in="path", required=true, description="Budget Period ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget period deleted",
+     *
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", nullable=true, example=null),
+     *             @OA\Property(property="message", type="string", example="Periode anggaran berhasil dihapus"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Get(
+     *     path="/budget-periods/{budget_period}/allocations",
+     *     tags={"Master - Budget Periods"},
+     *     summary="Get category allocations for a period",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budget_period", in="path", required=true, description="Budget Period ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of category allocations",
+     *
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/CategoryBudgetAllocation")),
+     *             @OA\Property(property="message", type="string", example="OK"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     *
+     * @OA\Put(
+     *     path="/budget-periods/{budget_period}/allocations",
+     *     tags={"Master - Budget Periods"},
+     *     summary="Batch update category allocations for a period",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(name="budget_period", in="path", required=true, description="Budget Period ID", @OA\Schema(type="integer", example=1)),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/CategoryBudgetAllocationBatchRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Allocations updated",
+     *
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
+     *             @OA\Property(property="message", type="string", example="Alokasi anggaran kategori berhasil disimpan"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function budgetPeriodsItem(): void {}
 
     /**
      * @OA\Get(
