@@ -38,4 +38,9 @@ class Category extends Model
     {
         return $this->belongsTo(BudgetGroup::class, 'budget_group_id');
     }
+
+    public function budgetAllocations()
+    {
+        return $this->hasMany(CategoryBudgetAllocation::class, 'category_id');
+    }
 }

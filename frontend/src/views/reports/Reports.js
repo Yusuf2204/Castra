@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   CRow,
   CCol,
@@ -14,6 +14,7 @@ import { cilReload, cilChartLine, cilBalanceScale, cilChartPie } from '@coreui/i
 import CashFlowReport from './CashFlowReport'
 import BudgetComparisonReport from './BudgetComparisonReport'
 import CategoryBreakdownReport from './CategoryBreakdownReport'
+import api from '../../services/api'
 
 const Reports = () => {
   const today = new Date()
@@ -25,9 +26,32 @@ const Reports = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr)
   const [reloadKey, setReloadKey] = useState(0)
 
+  // Budget comparison period mode: 'period' | 'month'
+  const [budgetMode, setBudgetMode] = useState('period')
+  const [budgetPeriods, setBudgetPeriods] = useState([])
+  const [selectedPeriodId, setSelectedPeriodId] = useState('')
+
   const handleReload = () => {
     setReloadKey((k) => k + 1)
   }
+
+  // Fetch available budget periods for dropdown
+  useEffect(() => {
+    const fetchPeriods = async () => {
+      try {
+        const res = await api.get('/budget-periods')
+        const list = res.data?.data || []
+        setBudgetPeriods(list)
+        if (list.length > 0 && !selectedPeriodId) {
+          const active = list.find((p) => p.is_active) || list[0]
+          setSelectedPeriodId(String(active.id))
+        }
+      } catch {
+        setBudgetPeriods([])
+      }
+    }
+    fetchPeriods()
+  }, [])
 
   return (
     <div className="mb-4">
@@ -66,8 +90,8 @@ const Reports = () => {
             </CCol>
 
             {/* Right: Period Filter Controls */}
-            <CCol lg={5} className="d-flex align-items-center justify-content-lg-end gap-2">
-              {activeTab === 'cash-flow' ? (
+            <CCol lg={6} className="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
+              {activeTab === 'cash-flow' && (
                 <div className="d-flex align-items-center gap-2">
                   <label className="text-nowrap small text-body-secondary fw-semibold">
                     Tahun:
@@ -85,7 +109,57 @@ const Reports = () => {
                     ))}
                   </CFormSelect>
                 </div>
-              ) : (
+              )}
+
+              {activeTab === 'budget-comparison' && (
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                  <CButtonGroup size="sm">
+                    <CButton
+                      color={budgetMode === 'period' ? 'info' : 'outline-secondary'}
+                      onClick={() => setBudgetMode('period')}
+                      size="sm"
+                    >
+                      Siklus Gaji
+                    </CButton>
+                    <CButton
+                      color={budgetMode === 'month' ? 'info' : 'outline-secondary'}
+                      onClick={() => setBudgetMode('month')}
+                      size="sm"
+                    >
+                      Kalender (1-31)
+                    </CButton>
+                  </CButtonGroup>
+
+                  {budgetMode === 'period' ? (
+                    <CFormSelect
+                      size="sm"
+                      value={selectedPeriodId}
+                      onChange={(e) => setSelectedPeriodId(e.target.value)}
+                      style={{ minWidth: '180px', maxWidth: '240px' }}
+                    >
+                      {budgetPeriods.length === 0 ? (
+                        <option value="">(Belum ada siklus)</option>
+                      ) : (
+                        budgetPeriods.map((bp) => (
+                          <option key={bp.id} value={bp.id}>
+                            {bp.name} {bp.is_active ? '★ (Aktif)' : ''}
+                          </option>
+                        ))
+                      )}
+                    </CFormSelect>
+                  ) : (
+                    <CFormInput
+                      type="month"
+                      size="sm"
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      style={{ width: '150px' }}
+                    />
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'category-breakdown' && (
                 <div className="d-flex align-items-center gap-2">
                   <label className="text-nowrap small text-body-secondary fw-semibold">
                     Bulan:
@@ -122,8 +196,9 @@ const Reports = () => {
           )}
           {activeTab === 'budget-comparison' && (
             <BudgetComparisonReport
-              key={`bc-${selectedMonth}-${reloadKey}`}
-              month={selectedMonth}
+              key={`bc-${budgetMode}-${budgetMode === 'period' ? selectedPeriodId : selectedMonth}-${reloadKey}`}
+              month={budgetMode === 'month' ? selectedMonth : null}
+              periodId={budgetMode === 'period' && selectedPeriodId ? Number(selectedPeriodId) : null}
             />
           )}
           {activeTab === 'category-breakdown' && (

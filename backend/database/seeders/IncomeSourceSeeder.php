@@ -57,4 +57,3 @@ class IncomeSourceSeeder extends Seeder
         }
     }
 }
-

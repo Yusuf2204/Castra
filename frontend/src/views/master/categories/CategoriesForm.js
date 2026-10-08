@@ -129,7 +129,12 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
           </CFormSelect>
 
           <div className="mb-3">
-            <label className="form-label">Estimasi Pengeluaran Bulanan</label>
+            <label className="form-label">
+              Estimasi Default Bulanan (Baseline)
+              <small className="text-body-secondary d-block">
+                Plafon acuan awal saat membuat siklus anggaran baru
+              </small>
+            </label>
             <CInputGroup>
               <CInputGroupText>Rp</CInputGroupText>
               <CFormInput

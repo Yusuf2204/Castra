@@ -12,7 +12,10 @@ import {
   CBadge,
   CProgress,
   CProgressBar,
+  CAlert,
 } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilCalendar, cilInfo } from '@coreui/icons'
 import api from '../../services/api'
 import { toastError } from '../../services/toastService'
 
@@ -24,6 +27,15 @@ const formatCurrency = (val) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(Number(val))
+}
+
+const formatDateShort = (val) => {
+  if (!val) return '-'
+  return new Date(val).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 const renderStatusBadge = (status) => {
@@ -39,21 +51,27 @@ const renderStatusBadge = (status) => {
   }
 }
 
-const BudgetComparisonReport = ({ month }) => {
+const BudgetComparisonReport = ({ month, periodId }) => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await api.get('/reports/budget-comparison', { params: { month } })
+      const params = {}
+      if (periodId) {
+        params.period_id = periodId
+      } else if (month) {
+        params.month = month
+      }
+      const res = await api.get('/reports/budget-comparison', { params })
       setData(res.data?.data || null)
     } catch (err) {
       toastError(err.userMessage || 'Gagal memuat laporan realisasi anggaran')
     } finally {
       setLoading(false)
     }
-  }, [month])
+  }, [month, periodId])
 
   useEffect(() => {
     fetchData()
@@ -63,7 +81,7 @@ const BudgetComparisonReport = ({ month }) => {
     return (
       <div className="text-center py-5">
         <CSpinner color="primary" />
-        <div className="mt-2 text-body-secondary">Memuat laporan realisasi anggaran {month}...</div>
+        <div className="mt-2 text-body-secondary">Memuat laporan realisasi anggaran...</div>
       </div>
     )
   }
@@ -76,15 +94,41 @@ const BudgetComparisonReport = ({ month }) => {
     )
   }
 
+  const isPeriodMode = data.period_mode === 'budget_period' && data.period
+
   return (
     <div>
+      {/* Notice info on Mode */}
+      {isPeriodMode ? (
+        <CAlert color="info" className="d-flex align-items-center mb-4 shadow-sm py-2">
+          <CIcon icon={cilCalendar} className="me-2 text-info" size="lg" />
+          <div className="small">
+            Evaluasi Berdasarkan Siklus Gajian: <strong>{data.period.name}</strong> (
+            {formatDateShort(data.period.start_date)} s/d {formatDateShort(data.period.end_date)}).
+            Plafon belanja dan transaksi pengeluaran dihitung spesifik pada rentang tanggal siklus ini.
+          </div>
+        </CAlert>
+      ) : (
+        <CAlert color="secondary" className="d-flex align-items-center mb-4 shadow-sm py-2">
+          <CIcon icon={cilInfo} className="me-2" size="lg" />
+          <div className="small">
+            Evaluasi Berdasarkan Bulan Kalender Standar: <strong>{data.month}</strong> (Tanggal 1 s/d akhir bulan).
+          </div>
+        </CAlert>
+      )}
+
       {/* 4 Summary Cards */}
       <div className="row g-3 mb-4">
         <div className="col-md-3">
           <CCard className="border-start border-start-4 border-start-info h-100 shadow-sm">
             <CCardBody>
-              <div className="text-body-secondary small mb-1">TOTAL ANGGARAN ESTIMASI</div>
+              <div className="text-body-secondary small mb-1">TOTAL PAGU ESTIMASI</div>
               <div className="fs-5 fw-bold text-info">{formatCurrency(data.total_estimated)}</div>
+              {isPeriodMode && (
+                <div className="small text-muted mt-1">
+                  Target Gaji: {formatCurrency(data.period.total_income_allocated)}
+                </div>
+              )}
             </CCardBody>
           </CCard>
         </div>
@@ -94,22 +138,30 @@ const BudgetComparisonReport = ({ month }) => {
             <CCardBody>
               <div className="text-body-secondary small mb-1">TOTAL PENGELUARAN AKTUAL</div>
               <div className="fs-5 fw-bold text-danger">{formatCurrency(data.total_actual)}</div>
+              <div className="small text-muted mt-1">
+                {isPeriodMode ? 'Pengeluaran dalam siklus' : 'Pengeluaran kalender'}
+              </div>
             </CCardBody>
           </CCard>
         </div>
 
         <div className="col-md-3">
           <CCard
-            className={`border-start border-start-4 border-start-${
-              data.total_variance >= 0 ? 'success' : 'danger'
-            } h-100 shadow-sm`}
+            className={`border-start border-start-4 h-100 shadow-sm ${
+              data.total_variance >= 0 ? 'border-start-success' : 'border-start-warning'
+            }`}
           >
             <CCardBody>
-              <div className="text-body-secondary small mb-1">SISA ANGGARAN (VARIANS)</div>
+              <div className="text-body-secondary small mb-1">SISA SALDO ANGGARAN</div>
               <div
-                className={`fs-5 fw-bold text-${data.total_variance >= 0 ? 'success' : 'danger'}`}
+                className={`fs-5 fw-bold ${
+                  data.total_variance >= 0 ? 'text-success' : 'text-danger'
+                }`}
               >
                 {formatCurrency(data.total_variance)}
+              </div>
+              <div className="small text-muted mt-1">
+                {data.total_variance >= 0 ? 'Surplus anggaran' : 'Defisit anggaran'}
               </div>
             </CCardBody>
           </CCard>
@@ -120,6 +172,13 @@ const BudgetComparisonReport = ({ month }) => {
             <CCardBody>
               <div className="text-body-secondary small mb-1">PERSENTASE PEMAKAIAN</div>
               <div className="fs-5 fw-bold text-primary">{data.overall_usage_percentage}%</div>
+              <div className="small text-muted mt-1">
+                {data.overall_usage_percentage > 100
+                  ? 'Over Budget'
+                  : data.overall_usage_percentage >= 80
+                    ? 'Near Limit'
+                    : 'Aman'}
+              </div>
             </CCardBody>
           </CCard>
         </div>
@@ -132,8 +191,10 @@ const BudgetComparisonReport = ({ month }) => {
             <CTableHead className="table-light">
               <CTableRow>
                 <CTableHeaderCell>Kategori Pengeluaran</CTableHeaderCell>
-                <CTableHeaderCell>Kelompok</CTableHeaderCell>
-                <CTableHeaderCell className="text-end">Estimasi (Rp)</CTableHeaderCell>
+                <CTableHeaderCell>Kelompok Amplop</CTableHeaderCell>
+                <CTableHeaderCell className="text-end">
+                  {isPeriodMode ? 'Pagu Siklus Ini' : 'Estimasi (Rp)'}
+                </CTableHeaderCell>
                 <CTableHeaderCell className="text-end">Aktual (Rp)</CTableHeaderCell>
                 <CTableHeaderCell className="text-end">Sisa / Selisih (Rp)</CTableHeaderCell>
                 <CTableHeaderCell width={180}>Pemakaian</CTableHeaderCell>
@@ -156,6 +217,11 @@ const BudgetComparisonReport = ({ month }) => {
                   <CTableRow key={row.category_id}>
                     <CTableDataCell>
                       <strong>{row.category_name}</strong>
+                      {isPeriodMode && row.baseline_estimate !== row.monthly_estimate && (
+                        <div className="small text-muted">
+                          Default: {formatCurrency(row.baseline_estimate)}
+                        </div>
+                      )}
                     </CTableDataCell>
 
                     <CTableDataCell>
@@ -206,7 +272,9 @@ const BudgetComparisonReport = ({ month }) => {
 
             <tfoot>
               <tr className="table-light fw-bold fs-6 border-top border-2">
-                <td colSpan={2}>TOTAL BULAN {month}</td>
+                <td colSpan={2}>
+                  {isPeriodMode ? `TOTAL SIKLUS (${data.period.name})` : `TOTAL BULAN ${data.month}`}
+                </td>
                 <td className="text-end">{formatCurrency(data.total_estimated)}</td>
                 <td className="text-end text-danger">{formatCurrency(data.total_actual)}</td>
                 <td

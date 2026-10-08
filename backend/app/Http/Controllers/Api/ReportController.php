@@ -29,10 +29,12 @@ class ReportController extends Controller
 
     public function budgetComparison(Request $request)
     {
-        $monthStr = $request->input('month', Carbon::now()->format('Y-m'));
+        $monthStr = $request->input('month');
+        $periodId = $request->filled('period_id') ? (int) $request->input('period_id') : null;
         $user = $request->user();
 
-        $data = $this->reportService->getBudgetComparison($user, $monthStr);
+        // If neither is passed, default to current month or active period
+        $data = $this->reportService->getBudgetComparison($user, $monthStr, $periodId);
 
         return response()->json([
             'data' => $data,

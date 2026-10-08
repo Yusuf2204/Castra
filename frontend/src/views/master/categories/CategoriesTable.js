@@ -56,7 +56,7 @@ const CategoriesTable = ({ categories, loading, type, onSelect, onDelete }) => {
         <CTableRow>
           <CTableHeaderCell>Nama</CTableHeaderCell>
           {type === 'expense' && <CTableHeaderCell>Kelompok Anggaran</CTableHeaderCell>}
-          {type === 'expense' && <CTableHeaderCell>Estimasi Bulanan</CTableHeaderCell>}
+          {type === 'expense' && <CTableHeaderCell>Estimasi Default (Baseline)</CTableHeaderCell>}
           <CTableHeaderCell>Status</CTableHeaderCell>
           <CTableHeaderCell>Update Terakhir</CTableHeaderCell>
           <CTableHeaderCell width={100}>Aksi</CTableHeaderCell>

@@ -15,6 +15,7 @@ const ChangePassword = React.lazy(() => import('./views/setup/changePassword/Cha
 const IncomeSources = React.lazy(() => import('./views/master/incomeSources/IncomeSources'))
 const Categories = React.lazy(() => import('./views/master/categories/Categories'))
 const BudgetGroups = React.lazy(() => import('./views/master/budgetGroups/BudgetGroups'))
+const BudgetPeriods = React.lazy(() => import('./views/master/budgetPeriods/BudgetPeriods'))
 
 // Pemasukan
 const Incomes = React.lazy(() => import('./views/incomes/Incomes'))
@@ -41,6 +42,7 @@ const routes = [
   { path: '/master/income-sources', name: 'Sumber Dana', element: IncomeSources },
   { path: '/master/categories', name: 'Kategori', element: Categories },
   { path: '/master/budget-groups', name: 'Alokasi Anggaran', element: BudgetGroups },
+  { path: '/master/budget-periods', name: 'Siklus Anggaran Dinamis', element: BudgetPeriods },
 
   // Transaksi
   { path: '/incomes', name: 'Pemasukan', element: Incomes },

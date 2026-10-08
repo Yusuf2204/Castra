@@ -33,10 +33,11 @@ Menu aplikasi diatur secara hierarkis melalui `menus` dan `role_menus`:
 2. `Master`
    - `Sumber Dana` (`/master/income-sources`)
    - `Kategori` (`/master/categories`)
-   - `Alokasi Anggaran` (`/master/budget-groups`)
+   - `Kelompok Anggaran` (`/master/budget-groups`)
+   - `Siklus Anggaran Dinamis` (`/master/budget-periods`)
 3. `Pemasukan` (`/incomes`) - Tampilan kalender interaktif uang masuk & modal form pencatatan pemasukan.
 4. `Pengeluaran` (`/expenses`) - Tampilan kalender interaktif uang keluar & modal form pencatatan pengeluaran.
-5. `Laporan` (`/reports`) - Arus Kas 12 bulan, Perbandingan Realisasi Anggaran, dan Rincian Beban Kategori.
+5. `Laporan` (`/reports`) - Arus Kas 12 bulan, Perbandingan Realisasi Anggaran (Siklus Gaji / Kalender Bulanan), dan Rincian Beban Kategori.
 6. `Setup`
    - `Company` (`/setup/company`)
    - `Users` (`/setup/users`)
@@ -55,14 +56,16 @@ Menu aplikasi diatur secara hierarkis melalui `menus` dan `role_menus`:
    - Memerlukan `category_id` yang valid milik user aktif dengan tipe `expense`.
    - **TIDAK** memiliki `income_source_id` (pengeluaran murni diklasifikasikan berdasarkan kategori pos belanja).
    - Nominal `amount` selalu bernilai positif di database dan API.
-3. **Kategori & Alokasi Anggaran**:
+3. **Kategori & Estimasi Baseline**:
    - Kategori pengeluaran (`expense`) wajib terhubung ke salah satu `budget_group_id`.
-   - Kategori pemasukan (`income`) tidak memiliki `budget_group_id` (`null`).
-   - Setiap kategori pengeluaran memiliki `monthly_estimate` sebagai acuan batas anggaran bulanan.
-4. **Evaluasi Status Anggaran**:
-   - `Aman` (`safe`): Pemakaian actual <= 80% dari estimasi.
-   - `Mendekati Batas` (`near_limit`): Pemakaian actual antara 80% s.d. 100% dari estimasi.
-   - `Over Budget` (`over_budget`): Pemakaian actual > 100% dari estimasi (melebihi estimasi).
+   - Kolom `monthly_estimate` pada master kategori berfungsi sebagai **Estimasi Default (Baseline/Template)** acuan awal.
+4. **Siklus Anggaran Dinamis (Pay Period Budgeting)**:
+   - Pengguna memiliki siklus anggaran fleksibel (`ms_budget_periods`) berdasarkan tanggal gajian (misal: 5 Okt s/d 4 Nov). Tanggal selesai (*cut-off*) dapat diperpanjang secara dinamis bila gajian berikutnya mundur.
+   - Pagu nominal kategori per periode (`ms_category_budget_allocations`) dapat disesuaikan mengikuti besaran penghasilan/gaji aktual pada siklus tersebut.
+5. **Evaluasi Status Anggaran**:
+   - `Aman` (`safe`): Pemakaian actual <= 80% dari estimasi alokasi.
+   - `Mendekati Batas` (`near_limit`): Pemakaian actual antara 80% s.d. 100% dari estimasi alokasi.
+   - `Over Budget` (`over_budget`): Pemakaian actual > 100% dari estimasi alokasi.
 
 ## Aturan Kerja Agen & Arsitektur
 

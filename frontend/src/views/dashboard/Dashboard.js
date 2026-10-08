@@ -186,9 +186,13 @@ const Dashboard = () => {
         </CCol>
         <CCol sm={6} xl={3}>
           <SummaryCard
-            label="Realisasi Anggaran"
+            label={kpis.active_period ? `Realisasi (${kpis.active_period.name})` : 'Realisasi Anggaran'}
             value={`${budgetPct}%`}
-            subtext={`Estimasi: ${formatCurrency(kpis.total_budget_estimate)}`}
+            subtext={
+              kpis.active_period
+                ? `Pagu Siklus: ${formatCurrency(kpis.total_budget_estimate)}`
+                : `Estimasi: ${formatCurrency(kpis.total_budget_estimate)}`
+            }
             icon={cilChartPie}
             color={budgetColor}
             loading={loading}

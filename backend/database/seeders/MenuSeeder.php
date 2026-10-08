@@ -92,9 +92,18 @@ class MenuSeeder extends Seeder
         Menus::updateOrCreate(
             ['menu_path' => '/master/budget-groups'],
             [
-                'menu_name' => 'Alokasi Anggaran',
+                'menu_name' => 'Kelompok Anggaran',
                 'menu_parent_id' => $master->id,
                 'menu_order' => 3,
+            ]
+        );
+
+        Menus::updateOrCreate(
+            ['menu_path' => '/master/budget-periods'],
+            [
+                'menu_name' => 'Siklus Anggaran',
+                'menu_parent_id' => $master->id,
+                'menu_order' => 4,
             ]
         );
 

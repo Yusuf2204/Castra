@@ -38,6 +38,7 @@ class RoleMenuSeeder extends Seeder
                 '/master/income-sources',
                 '/master/categories',
                 '/master/budget-groups',
+                '/master/budget-periods',
             ];
 
             $userMenuIds = Menus::whereIn('menu_path', $userMenuPaths)->pluck('id')->all();

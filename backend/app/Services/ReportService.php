@@ -81,9 +81,23 @@ class ReportService
         ];
     }
 
-    public function getBudgetComparison(User $user, string $monthStr): array
+    public function getBudgetComparison(User $user, ?string $monthStr = null, ?int $periodId = null): array
     {
-        $date = Carbon::createFromFormat('Y-m', $monthStr);
+        $budgetPeriod = null;
+        if ($periodId) {
+            $budgetPeriod = $user->budgetPeriods()
+                ->with(['allocations'])
+                ->find($periodId);
+        }
+
+        // If no periodId provided, check if user requested month or has active period
+        if (! $budgetPeriod && ! $monthStr) {
+            $budgetPeriod = $user->budgetPeriods()
+                ->where('is_active', true)
+                ->with(['allocations'])
+                ->first();
+        }
+
         $categories = $user->categories()
             ->where('type', 'expense')
             ->with('budgetGroup')
@@ -93,6 +107,83 @@ class ReportService
         $items = [];
         $totalEstimated = 0.0;
         $totalActual = 0.0;
+
+        if ($budgetPeriod) {
+            $allocationsMap = $budgetPeriod->allocations->keyBy('category_id');
+            $startDate = Carbon::parse($budgetPeriod->start_date)->startOfDay();
+            $endDate = Carbon::parse($budgetPeriod->end_date)->endOfDay();
+
+            foreach ($categories as $cat) {
+                $estimate = isset($allocationsMap[$cat->id])
+                    ? (float) $allocationsMap[$cat->id]->allocated_amount
+                    : (float) $cat->monthly_estimate;
+
+                $actual = (float) $user->expenseTransactions()
+                    ->where('category_id', $cat->id)
+                    ->whereBetween('transaction_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                    ->sum('amount');
+
+                $variance = $estimate - $actual;
+
+                $usagePercentage = $estimate > 0
+                    ? round(($actual / $estimate) * 100, 1)
+                    : ($actual > 0 ? 100.0 : 0.0);
+
+                $status = 'safe';
+                if ($estimate > 0 && $actual > $estimate) {
+                    $status = 'over_budget';
+                } elseif ($estimate > 0 && ($actual / $estimate) >= 0.8) {
+                    $status = 'near_limit';
+                } elseif ($estimate == 0 && $actual > 0) {
+                    $status = 'over_budget';
+                }
+
+                $totalEstimated += $estimate;
+                $totalActual += $actual;
+
+                $items[] = [
+                    'category_id' => $cat->id,
+                    'category_name' => $cat->name,
+                    'budget_group' => $cat->budgetGroup ? [
+                        'id' => $cat->budgetGroup->id,
+                        'name' => $cat->budgetGroup->name,
+                        'percentage' => (float) $cat->budgetGroup->percentage,
+                    ] : null,
+                    'baseline_estimate' => (float) $cat->monthly_estimate,
+                    'monthly_estimate' => $estimate,
+                    'actual_expense' => $actual,
+                    'variance' => $variance,
+                    'usage_percentage' => $usagePercentage,
+                    'status' => $status,
+                ];
+            }
+
+            $overallUsage = $totalEstimated > 0
+                ? round(($totalActual / $totalEstimated) * 100, 1)
+                : ($totalActual > 0 ? 100.0 : 0.0);
+
+            return [
+                'period_mode' => 'budget_period',
+                'period' => [
+                    'id' => $budgetPeriod->id,
+                    'name' => $budgetPeriod->name,
+                    'start_date' => $budgetPeriod->start_date->format('Y-m-d'),
+                    'end_date' => $budgetPeriod->end_date->format('Y-m-d'),
+                    'total_income_allocated' => (float) $budgetPeriod->total_income_allocated,
+                    'is_active' => (bool) $budgetPeriod->is_active,
+                ],
+                'month' => $monthStr ?? Carbon::now()->format('Y-m'),
+                'total_estimated' => $totalEstimated,
+                'total_actual' => $totalActual,
+                'total_variance' => $totalEstimated - $totalActual,
+                'overall_usage_percentage' => $overallUsage,
+                'items' => $items,
+            ];
+        }
+
+        // Standard calendar month fallback
+        $effectiveMonthStr = $monthStr ?? Carbon::now()->format('Y-m');
+        $date = Carbon::createFromFormat('Y-m', $effectiveMonthStr);
 
         foreach ($categories as $cat) {
             $estimate = (float) $cat->monthly_estimate;
@@ -128,6 +219,7 @@ class ReportService
                     'name' => $cat->budgetGroup->name,
                     'percentage' => (float) $cat->budgetGroup->percentage,
                 ] : null,
+                'baseline_estimate' => (float) $cat->monthly_estimate,
                 'monthly_estimate' => $estimate,
                 'actual_expense' => $actual,
                 'variance' => $variance,
@@ -141,7 +233,9 @@ class ReportService
             : ($totalActual > 0 ? 100.0 : 0.0);
 
         return [
-            'month' => $monthStr,
+            'period_mode' => 'calendar_month',
+            'period' => null,
+            'month' => $effectiveMonthStr,
             'total_estimated' => $totalEstimated,
             'total_actual' => $totalActual,
             'total_variance' => $totalEstimated - $totalActual,
@@ -244,8 +338,11 @@ class ReportService
         $allTimeExpense = (float) $user->expenseTransactions()->sum('amount');
         $allTimeNet = $allTimeIncome - $allTimeExpense;
 
-        // Budget comparison for current month
-        $budgetComparison = $this->getBudgetComparison($user, $currentMonthStr);
+        // Budget comparison (uses active period if exists, otherwise current month)
+        $activePeriod = $user->budgetPeriods()->where('is_active', true)->first();
+        $budgetComparison = $activePeriod
+            ? $this->getBudgetComparison($user, null, $activePeriod->id)
+            : $this->getBudgetComparison($user, $currentMonthStr);
 
         // Recent 5 transactions
         $recentIncomes = $user->incomeTransactions()
@@ -289,6 +386,8 @@ class ReportService
                 'all_time_net' => $allTimeNet,
                 'total_budget_estimate' => $budgetComparison['total_estimated'],
                 'budget_usage_percentage' => $budgetComparison['overall_usage_percentage'],
+                'period_mode' => $budgetComparison['period_mode'],
+                'active_period' => $budgetComparison['period'] ?? null,
             ],
             'recent_incomes' => $recentIncomes,
             'recent_expenses' => $recentExpenses,
