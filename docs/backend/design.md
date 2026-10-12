@@ -1,216 +1,227 @@
 # Backend Design - Castra
 
-## Prinsip Desain API
+## 1. Prinsip Desain API & Arsitektur
 
-- RESTful dan resource-based.
-- Semua response memakai envelope `{ "data", "message", "errors" }`.
-- Semua endpoint keuangan berada dalam `auth:sanctum`.
-- Semua data keuangan di-scope ke user login.
-- Pemasukan, rencana, alokasi, transaksi, dan summary dipisah jelas.
-- Sheet `Estimasi` menjadi dasar master/rencana; sheet `Rincian` menjadi dasar
-  transaksi; sheet `Dashboard` menjadi dasar agregasi.
+- **RESTful & Resource-Based**: API dirancang terpisah dan modular mengikuti 4 pilar bisnis: **Master**, **Pemasukan**, **Pengeluaran**, dan **Laporan**.
+- **Standar Response Envelope**:
+  ```json
+  {
+    "data": ...,
+    "message": "OK",
+    "errors": null
+  }
+  ```
+- **Error Handling**: Kesalahan validasi HTTP 422 mengembalikan rincian pesan error per-field pada key `errors`.
+- **Stateless & Keamanan**: Seluruh endpoint keuangan dilindungi middleware `auth:sanctum`.
+- **Multi-Tenancy User Scope**: Seluruh operasi query dan manipulasi data keuangan di-scope ketat ke pengguna yang sedang login (`$request->user()`).
+- **Idempotensi**: Operasi agregasi dan perhitungan ulang summary menghasilkan nilai yang konsisten dan idempoten.
 
-## Domain Model
+---
 
-### Sumber Dana
+## 2. Standar Prefix Tabel Database
 
-`income_sources` menyimpan master asal pemasukan.
+Untuk memastikan keterbacaan, keteraturan, dan pemisahan domain yang bersih, penamaan tabel database keuangan wajib menggunakan prefix standar berikut:
 
-Kolom yang disarankan:
-
-- `id`
-- `user_id`
-- `name`
-- `description`
-- `is_active`
-- timestamps
-
-Contoh dari workbook: `Gaji`.
-
-### Pembagian Budget
-
-`budget_groups` menyimpan envelope anggaran.
-
-Kolom yang disarankan:
-
-- `id`
-- `user_id`
-- `code` (`need`, `fun`, `saving`, `emergency`)
-- `name`
-- `percentage`
-- `sort_order`
-- `is_system`
-- `is_active`
-- timestamps
-
-Default:
-
-| Code | Name | Percentage | Catatan |
-| --- | --- | ---: | --- |
-| `need` | Need | 50.00 | Kebutuhan utama |
-| `fun` | Fun | 30.00 | Keinginan/gaya hidup |
-| `saving` | Saving | 20.00 | Tabungan/investasi |
-| `emergency` | Emergency | 0.00 | Reserve dari sisa rencana, bukan tambahan 50/30/20 |
-
-Rule: total persentase group utama aktif harus 100%. Emergency tidak ikut
-validasi 100% kecuali user sengaja mengubahnya menjadi group utama.
-
-### Kategori
-
-Tabel `categories` sudah ada. Tambahkan migrasi baru untuk mendukung:
-
-- `budget_group_id` nullable untuk kategori pemasukan, wajib untuk kategori pengeluaran
-- `monthly_estimate` opsional sebagai default estimasi kategori
-- `is_active`
-
-Kategori pengeluaran dari workbook:
-
-| Kategori | Pembagian | Estimasi awal |
-| --- | --- | ---: |
-| Makan | Need | 1.240.000 |
-| Bensin | Need | 250.000 |
-| Kuota | Need | 100.000 |
-| BPJS | Need | 150.000 |
-| Laundry | Need | 100.000 |
-| skincare | Fun | 200.000 |
-| lainnya | Fun | 500.000 |
-| Jajan | Fun | 300.000 |
-| Saving | Saving | 790.272 |
-
-### Rencana Bulanan
-
-Rencana bulanan menggantikan fungsi utama sheet `Estimasi`.
-
-Tabel yang disarankan:
-
-- `monthly_plans`: `user_id`, `year`, `month`, `status`, `notes`
-- `monthly_plan_incomes`: `monthly_plan_id`, `income_source_id`, `amount`, `received_at`, `notes`
-- `monthly_plan_allocations`: `monthly_plan_id`, `budget_group_id`, `percentage`, `amount`
-- `monthly_plan_items`: `monthly_plan_id`, `category_id`, `budget_group_id`, `estimated_amount`
-
-Unique constraint utama: satu `monthly_plans` per `user_id + year + month`.
-
-### Transaksi
-
-Tabel `transactions` tetap menjadi sumber realisasi aktual:
-
-- pemasukan bernilai positif
-- pengeluaran bernilai negatif
-- `category_id` menunjuk kategori income/expense
-- tambahkan `income_source_id` nullable untuk transaksi pemasukan bila diperlukan
-
-Untuk tampilan seperti `Rincian`, backend mengembalikan field turunan:
-
-- `budget_group`
-- `budget_amount`
-- `realized_amount`
-- `remaining_amount`
-- `budget_status`
-
-## Logic Pemasukan dan Alokasi
-
-Saat user mencatat pemasukan:
-
-1. Validasi `amount > 0`, `income_source_id`, tanggal, dan periode.
-2. Simpan transaksi income dengan `amount` positif.
-3. Upsert `monthly_plan` untuk periode transaksi.
-4. Tambahkan atau update `monthly_plan_incomes`.
-5. Hitung total pemasukan periode.
-6. Hitung `monthly_plan_allocations` dari total pemasukan:
-   - Need = total income x 50%
-   - Fun = total income x 30%
-   - Saving = total income x 20%
-7. Hitung estimasi kategori dari `monthly_plan_items`.
-8. Hitung reserve per pembagian:
-   `allocation.amount - SUM(monthly_plan_items.estimated_amount)`.
-9. Emergency default = total reserve positif dari rencana, terutama sisa Need/Fun/Saving.
-
-Jika ada pemasukan tambahan di periode yang sama, budget periode dihitung ulang
-dari total pemasukan teralokasi.
-
-## Logic Pengeluaran
-
-Saat user mencatat pengeluaran:
-
-1. Validasi kategori bertipe `expense`.
-2. Nominal input selalu positif di API, service menyimpan `amount` negatif.
-3. Ambil `budget_group_id` dari kategori.
-4. Realisasi pembagian = SUM nilai absolut transaksi expense untuk group tersebut.
-5. Sisa budget = alokasi pembagian - realisasi pembagian.
-6. Status:
-   - `over_budget` jika sisa < 0
-   - `near_limit` jika budget > 0 dan sisa / budget <= 0.2
-   - `safe` untuk kondisi lainnya
-
-## Endpoint Keuangan
-
-| Metode | Path | Keterangan |
+| Prefix | Domain | Deskripsi & Contoh Tabel |
 | --- | --- | --- |
-| GET/POST | `/api/income-sources` | List/buat sumber dana |
-| GET/PUT/DELETE | `/api/income-sources/{id}` | Detail/ubah/hapus sumber dana |
-| GET/POST | `/api/budget-groups` | List/buat pembagian budget |
-| GET/PUT/DELETE | `/api/budget-groups/{id}` | Detail/ubah/hapus pembagian |
-| GET/POST | `/api/categories` | List/buat kategori, filter `type` dan `budget_group_id` |
-| GET/PUT/DELETE | `/api/categories/{id}` | Detail/ubah/hapus kategori |
-| GET/POST | `/api/monthly-plans` | List/buat rencana bulanan |
-| GET/PUT | `/api/monthly-plans/{id}` | Detail/ubah rencana bulanan |
-| POST | `/api/monthly-plans/{id}/allocate` | Hitung ulang alokasi dari pemasukan |
-| GET/POST | `/api/transactions` | List/buat transaksi |
-| GET/PUT/DELETE | `/api/transactions/{id}` | Detail/ubah/hapus transaksi |
-| GET | `/api/monthly-summaries` | Summary periode |
-| POST | `/api/monthly-summaries/recalculate` | Recalculate summary periode |
-| GET | `/api/finance-dashboard` | Dashboard dari rencana + transaksi |
+| **`ms_`** | **Master** | Data referensi dasar aplikasi (`ms_income_sources`, `ms_categories`, `ms_budget_groups`) |
+| **`in_`** | **Pemasukan** | Entitas & transaksi dana masuk (`in_transactions`, `in_incomes`) |
+| **`out_`** | **Pengeluaran** | Entitas & transaksi dana keluar (`out_transactions`, `out_expenses`) |
+| **`rpt_`** | **Laporan / Rekap** | Data ringkasan, agregasi, & reporting (`rpt_monthly_summaries`) |
+| *(Tanpa Prefix / Core)* | **Sistem & Admin** | Tabel bawaan framework & otentikasi (`users`, `roles`, `menus`, `role_menus`, `companies`) |
 
-## Service Layer
+---
 
-```text
-app/Services/
-|-- NavigationService.php
-`-- Finance/
-    |-- AllocationService.php
-    |-- BudgetStatusService.php
-    |-- MonthlyPlanService.php
-    |-- MonthlySummaryService.php
-    `-- TransactionService.php
+## 3. Spesifikasi Skema Database
+
+### 3.1 Domain Master (`ms_`)
+
+#### A. Master Sumber Dana (`ms_income_sources`)
+Menyimpan asal atau sumber dana pemasukan (contoh: Gaji, Freelance, Bonus, Dividen).
+```sql
+CREATE TABLE ms_income_sources (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_ms_income_sources_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_ms_income_sources_user_name (user_id, name)
+);
 ```
 
-Tanggung jawab:
+#### B. Master Kategori (`ms_categories`)
+Menyimpan kategori pengeluaran maupun pemasukan.
+```sql
+CREATE TABLE ms_categories (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    type ENUM('income', 'expense') NOT NULL,
+    budget_group_id BIGINT UNSIGNED NULL,
+    monthly_estimate DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_ms_categories_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ms_categories_budget_group FOREIGN KEY (budget_group_id) REFERENCES ms_budget_groups(id) ON DELETE SET NULL,
+    UNIQUE KEY uk_ms_categories_user_type_name (user_id, type, name)
+);
+```
+*Catatan: Kolom `budget_group_id` wajib diisi jika `type = 'expense'`, dan opsional/null jika `type = 'income'`.*
 
-- `AllocationService`: menghitung 50/30/20 dan reserve/Emergency.
-- `BudgetStatusService`: menghitung sisa dan status budget.
-- `MonthlyPlanService`: CRUD rencana, item estimasi, dan sinkronisasi dari master.
-- `TransactionService`: create/update/delete transaksi dan trigger recalculate.
-- `MonthlySummaryService`: agregasi income, expense, net.
+#### C. Master Kelompok Anggaran (`ms_budget_groups`)
+Menyimpan amplop atau pembagian alokasi budget bulanan (Need, Fun, Saving, Emergency).
+```sql
+CREATE TABLE ms_budget_groups (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    percentage DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
+    sort_order INT NOT NULL DEFAULT 0,
+    is_system BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_ms_budget_groups_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_ms_budget_groups_user_code (user_id, code)
+);
+```
 
-## Dashboard Aggregation
+---
 
-Dashboard mengikuti sheet `Dashboard`:
+### 3.2 Domain Pemasukan (`in_`)
 
-- Total alokasi = total pemasukan periode atau total allocation utama.
-- Total realisasi = total expense absolut periode.
-- Sisa alokasi = total alokasi - total realisasi.
-- Kondisi per pembagian = budget group, budget, realisasi, sisa, status.
-- Estimasi vs realisasi = kategori, estimasi, realisasi, selisih, persentase.
-- Kesimpulan bulanan dibuat dari status pembagian.
+#### Transaksi Pemasukan (`in_transactions`)
+Menyimpan setiap riwayat uang masuk secara mandiri.
+```sql
+CREATE TABLE in_transactions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    income_source_id BIGINT UNSIGNED NOT NULL,
+    category_id BIGINT UNSIGNED NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    transaction_date DATE NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_in_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_in_transactions_source FOREIGN KEY (income_source_id) REFERENCES ms_income_sources(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_in_transactions_category FOREIGN KEY (category_id) REFERENCES ms_categories(id) ON DELETE SET NULL,
+    INDEX idx_in_transactions_user_date (user_id, transaction_date)
+);
+```
+*Aturan: Nilai `amount` selalu bernilai positif.*
 
-## Menu Seeder
+---
 
-Tambahkan menu idempoten:
+### 3.3 Domain Pengeluaran (`out_`)
 
-- `Dashboard` -> `/dashboard`
-- `Keuangan` -> parent untuk `Pemasukan`, `Rincian Transaksi`,
-  `Rencana Bulanan`, `Ringkasan Bulanan`
-- `Master` -> parent untuk `Sumber Dana`, `Pembagian Budget`, `Kategori`
-- `Setup` -> menu sistem existing
+#### Transaksi Pengeluaran (`out_transactions`)
+Menyimpan setiap riwayat uang keluar secara mandiri.
+```sql
+CREATE TABLE out_transactions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    category_id BIGINT UNSIGNED NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    transaction_date DATE NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_out_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_out_transactions_category FOREIGN KEY (category_id) REFERENCES ms_categories(id) ON DELETE RESTRICT,
+    INDEX idx_out_transactions_user_date (user_id, transaction_date)
+);
+```
+*Aturan: Nilai input di API selalu angka positif, disimpan sebagai nilai positif di tabel `out_transactions` (karena sudah berada dalam konteks transaksi pengeluaran `out_`).*
 
-Seeder tidak boleh membuat duplikasi saat dijalankan ulang.
+---
 
-## Keamanan dan Kualitas
+### 3.4 Domain Laporan & Agregasi (`rpt_`)
 
-- Gunakan policy/scope query berbasis user untuk semua model keuangan.
-- Validasi `year`, `month`, tanggal, nominal, dan relasi antar master.
-- Cegah hapus master yang masih dipakai transaksi/rencana; return 422.
-- Endpoint list memakai paginasi.
-- Test minimal: alokasi 50/30/20, pemasukan tambahan dalam bulan yang sama,
-  status budget, scope user, dan recalculate summary.
-- Semua endpoint baru wajib memiliki anotasi OpenAPI.
+#### Ringkasan Bulanan (`rpt_monthly_summaries`)
+Menyimpan rekapitulasi performa finansial per bulan/tahun untuk mempercepat query dashboard dan pelaporan.
+```sql
+CREATE TABLE rpt_monthly_summaries (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    year SMALLINT UNSIGNED NOT NULL,
+    month TINYINT UNSIGNED NOT NULL,
+    total_income DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    total_expense DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    net_balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_rpt_monthly_summaries_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_rpt_monthly_summaries_user_period (user_id, year, month)
+);
+```
+
+---
+
+## 4. Endpoints API
+
+Semua endpoint berada dalam grup middleware `auth:sanctum`.
+
+### 4.1 Master Endpoints (`/api/master/*`)
+| Metode | Path | Deskripsi |
+| --- | --- | --- |
+| GET / POST | `/api/income-sources` | List & Buat Sumber Dana |
+| GET / PUT / DELETE | `/api/income-sources/{id}` | Detail, Ubah, Hapus Sumber Dana |
+| GET / POST | `/api/categories` | List (filter `type`) & Buat Kategori |
+| GET / PUT / DELETE | `/api/categories/{id}` | Detail, Ubah, Hapus Kategori |
+| GET / POST | `/api/budget-groups` | List & Buat Kelompok Anggaran |
+| GET / PUT / DELETE | `/api/budget-groups/{id}` | Detail, Ubah, Hapus Kelompok Anggaran |
+
+### 4.2 Pemasukan Endpoints (`/api/incomes/*`)
+| Metode | Path | Deskripsi |
+| --- | --- | --- |
+| GET | `/api/incomes` | List riwayat pemasukan (filter periode bulan/tahun, tanggal, sumber dana) |
+| POST | `/api/incomes` | Catat pemasukan baru |
+| GET | `/api/incomes/{id}` | Detail transaksi pemasukan |
+| PUT | `/api/incomes/{id}` | Perbarui transaksi pemasukan |
+| DELETE | `/api/incomes/{id}` | Hapus transaksi pemasukan |
+| GET | `/api/incomes/calendar` | Agregasi data pemasukan per tanggal untuk tampilan kalender |
+
+### 4.3 Pengeluaran Endpoints (`/api/expenses/*`)
+| Metode | Path | Deskripsi |
+| --- | --- | --- |
+| GET | `/api/expenses` | List riwayat pengeluaran (filter periode, tanggal, kategori) |
+| POST | `/api/expenses` | Catat pengeluaran baru |
+| GET | `/api/expenses/{id}` | Detail transaksi pengeluaran |
+| PUT | `/api/expenses/{id}` | Perbarui transaksi pengeluaran |
+| DELETE | `/api/expenses/{id}` | Hapus transaksi pengeluaran |
+| GET | `/api/expenses/calendar` | Agregasi data pengeluaran per tanggal untuk tampilan kalender |
+
+### 4.4 Laporan Endpoints (`/api/reports/*`)
+| Metode | Path | Deskripsi |
+| --- | --- | --- |
+| GET | `/api/reports/cash-flow` | Laporan arus kas bulanan (Pemasukan vs Pengeluaran & Net) |
+| GET | `/api/reports/category-breakdown` | Rincian pengeluaran per kategori (nominal, persentase, vs budget) |
+| GET | `/api/reports/budget-vs-actual` | Evaluasi realisasi belanja terhadap anggaran |
+| GET | `/api/reports/trends` | Data tren multi-bulan untuk visualisasi grafik |
+| GET | `/api/finance-dashboard` | Ringkasan KPI dashboard utama (saldo, total masuk, total keluar) |
+
+---
+
+## 5. Service Layer
+
+Arsitektur logika bisnis di backend:
+```text
+app/Services/Finance/
+├── Master/
+│   ├── IncomeSourceService.php
+│   ├── CategoryService.php
+│   └── BudgetGroupService.php
+├── IncomeService.php
+├── ExpenseService.php
+└── ReportService.php
+```
+
+- **`IncomeService`**: Mengelola transaksi pemasukan, memicu kalkulasi ulang `rpt_monthly_summaries`.
+- **`ExpenseService`**: Mengelola transaksi pengeluaran, memvalidasi sisa anggaran kategori, memicu kalkulasi ulang `rpt_monthly_summaries`.
+- **`ReportService`**: Menghasilkan data analitik agregat untuk arus kas, breakdown kategori, dan tren.

@@ -18,7 +18,7 @@ return [
                 /*
                  * Edit to include full URL in ui for assets
                  */
-                'use_absolute_path' => env('L5_SWAGGER_USE_ABSOLUTE_PATH', true),
+                'use_absolute_path' => env('L5_SWAGGER_USE_ABSOLUTE_PATH', false),
 
                 /*
                 * Edit to set path where swagger ui assets should be stored
@@ -132,7 +132,7 @@ return [
              *
              * @see \OpenApi\scan
              */
-            'analyser' => new \App\OpenApi\Analysers\DocBlockReflectionAnalyser(),
+            'analyser' => new \App\OpenApi\Analysers\DocBlockReflectionAnalyser,
 
             /**
              * analysis: defaults to a new \OpenApi\Analysis .

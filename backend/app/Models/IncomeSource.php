@@ -10,6 +10,8 @@ class IncomeSource extends Model
     /** @use HasFactory<\Database\Factories\IncomeSourceFactory> */
     use HasFactory;
 
+    protected $table = 'ms_income_sources';
+
     protected $fillable = [
         'user_id',
         'name',

@@ -27,7 +27,7 @@ class IncomeSourceTest extends TestCase
             ->assertJsonPath('data.is_active', true)
             ->assertJsonPath('message', 'Income source created');
 
-        $this->assertDatabaseHas('income_sources', [
+        $this->assertDatabaseHas('ms_income_sources', [
             'user_id' => $user->id,
             'name' => 'Gaji',
         ]);
@@ -129,7 +129,7 @@ class IncomeSourceTest extends TestCase
         $response = $this->deleteJson("/api/income-sources/{$incomeSource->id}");
 
         $response->assertStatus(200);
-        $this->assertDatabaseMissing('income_sources', ['id' => $incomeSource->id]);
+        $this->assertDatabaseMissing('ms_income_sources', ['id' => $incomeSource->id]);
     }
 
     public function test_search_filter_matches_name_or_description(): void

@@ -53,7 +53,7 @@ const Changepassword = () => {
       // auto logout after 1.5s
       setTimeout(() => {
         localStorage.removeItem('token')
-        window.location.href = '/login'
+        window.location.href = '/#/login'
       }, 1500)
     } catch (err) {
       setErrors(err.validationErrors || {})

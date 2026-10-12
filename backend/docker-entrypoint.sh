@@ -82,10 +82,15 @@ if [ "${L5_SWAGGER_GENERATE_ALWAYS:-false}" = "true" ] || [ ! -f storage/api-doc
   echo "✓ swagger docs ready"
 fi
 
-# ── optimize caches ─────────────────────────────────────────
-echo "→ optimizing caches…"
-php artisan optimize
-echo "✓ caches optimized"
+# ── optimize caches (only in production) ─────────────────────
+if [ "${APP_ENV:-production}" = "production" ]; then
+  echo "→ optimizing caches for production…"
+  php artisan optimize
+  echo "✓ caches optimized"
+else
+  echo "→ clearing caches for development…"
+  php artisan optimize:clear
+fi
 
 # ── artisan commands above ran as root — hand storage back ──
 chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true

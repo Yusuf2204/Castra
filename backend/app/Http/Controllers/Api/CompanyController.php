@@ -13,7 +13,7 @@ class CompanyController extends Controller
         return response()->json([
             'data' => Company::first(),
             'message' => 'OK',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 
@@ -33,7 +33,7 @@ class CompanyController extends Controller
         return response()->json([
             'data' => $company,
             'message' => 'Updated',
-            'errors' => null
+            'errors' => null,
         ]);
     }
 }

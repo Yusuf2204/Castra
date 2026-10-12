@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return response()->json([
             'data' => User::with('role')->get(),
             'message' => 'OK',
@@ -18,12 +19,13 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $data = $request->validate([
-            'name'     => 'required|string',
-            'email'    => 'required|email|unique:users',
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'role_id'  => 'required|exists:roles,id',
+            'role_id' => 'required|exists:roles,id',
         ]);
 
         $data['password'] = Hash::make($data['password']);
@@ -37,7 +39,8 @@ class UserController extends Controller
         ], 201);
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         return response()->json([
             'data' => User::with('role')->findOrFail($id),
             'message' => 'OK',
@@ -45,17 +48,18 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         $user = User::findOrFail($id);
 
         $data = $request->validate([
-            'name'     => 'required|string',
-            'email'    => 'required|email|unique:users,email,' . $id,
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users,email,'.$id,
             'password' => 'nullable|min:6',
-            'role_id'  => 'nullable|exists:roles,id',
+            'role_id' => 'nullable|exists:roles,id',
         ]);
 
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
             unset($data['password']);
@@ -70,7 +74,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function destroy($id) {
+    public function destroy($id)
+    {
         User::findOrFail($id)->delete();
 
         return response()->json([
@@ -90,7 +95,7 @@ class UserController extends Controller
 
         $user = Auth::user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'data' => null,
                 'message' => 'Current password is incorrect',

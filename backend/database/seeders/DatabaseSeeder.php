@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             RoleMenuSeeder::class,
             CompanySeeder::class,
             AdminUserSeeder::class,
+            BudgetGroupSeeder::class,
+            IncomeSourceSeeder::class,
+            CategorySeeder::class,
         ]);
     }
 }

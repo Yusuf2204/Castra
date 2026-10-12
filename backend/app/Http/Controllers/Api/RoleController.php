@@ -37,7 +37,7 @@ class RoleController extends Controller
         $role = Roles::findOrFail($id);
 
         $data = $request->validate([
-            'role_name' => 'required|string|unique:roles,role_name,' . $id,
+            'role_name' => 'required|string|unique:roles,role_name,'.$id,
         ]);
 
         $role->update($data);
