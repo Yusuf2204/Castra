@@ -1,225 +1,115 @@
-# Castra
+# Castra - Solusi Pencatatan & Perencanaan Keuangan Pribadi
 
-Castra adalah aplikasi pencatatan dan perencanaan keuangan pribadi modern berbasis **Laravel 12** dan **React 19**. Aplikasi ini dirancang untuk memberikan visibilitas penuh terhadap arus kas pribadi melalui 4 pilar fungsional: **Master**, **Pemasukan**, **Pengeluaran**, dan **Laporan**.
+**Castra** adalah aplikasi manajemen dan perencanaan keuangan pribadi modern yang dirancang untuk membantu Anda memantau, merencanakan, dan mengendalikan arus kas harian secara cerdas, visual, dan mudah digunakan.
 
----
-
-## 4 Pilar Fungsional Keuangan
-
-1. **Master (`ms_`)**:
-   - **Sumber Dana (`ms_income_sources`)**: Kelola asal dana masuk (Gaji, Freelance, Bonus, Dividen, dll.) atau rekening/dompet.
-   - **Kategori (`ms_categories`)**: Pengelompokan pos transaksi untuk pemasukan (`income`) maupun pengeluaran (`expense`). Kategori pengeluaran dilengkapi dengan estimasi batas anggaran bulanan (`monthly_estimate`).
-   - **Alokasi Anggaran (`ms_budget_groups`)**: Amplop alokasi anggaran bulanan (Need, Fun, Saving, Emergency).
-2. **Pemasukan (`in_`)**:
-   - Pencatatan dan riwayat transaksi dana masuk (`in_transactions`).
-   - Tampilan kalender interaktif: klik tanggal untuk membuka form modal input transaksi uang masuk.
-   - Agregasi total pemasukan periode bulanan dan navigasi bulan/tahun.
-3. **Pengeluaran (`out_`)**:
-   - Pencatatan dan riwayat transaksi dana keluar (`out_transactions`) murni diklasifikasikan berdasarkan kategori pos pengeluaran.
-   - Monitoring batas anggaran bulanan dengan indikator status (*Aman*, *Mendekati Batas*, *Over Budget*).
-   - Tampilan kalender interaktif harian dengan indikator nominal pengeluaran dan opsi beralih ke tabel tabular.
-4. **Laporan (`rpt_`)**:
-   - **Arus Kas (Cash Flow)**: Rekapitulasi bulanan 12 bulan (Pemasukan, Pengeluaran, Arus Kas Bersih, dan Saldo Kumulatif).
-   - **Perbandingan Realisasi Anggaran**: Monitoring persentase serapan belanja terhadap estimasi anggaran per kategori.
-   - **Rincian Pengeluaran**: Distribusi pengeluaran per kelompok alokasi (*Need*, *Fun*, *Saving*) dan per pos kategori.
+Dengan Castra, Anda dapat dengan mudah mengetahui ke mana setiap rupiah dialokasikan, mencegah "kebocoran halus" pada pengeluaran bulanan, dan memastikan target tabungan tercapai sesuai rencana.
 
 ---
 
-## Daftar Endpoint REST API Utama
+## ✨ Fitur Unggulan
 
-Seluruh endpoint keuangan dilindungi dengan Bearer token (Laravel Sanctum) dan di-scope ke pengguna yang sedang terautentikasi:
+### 📊 1. Dashboard Finansial Pintar
+- **Ringkasan Seketika**: Pantau total saldo, total pemasukan, dan total pengeluaran bulan berjalan dalam satu layar ringkas.
+- **Indikator Kesehatan Finansial**: Metrik persentase pengeluaran terhadap pemasukan untuk menjaga keuangan tetap sehat.
+- **Aktivitas Terkini**: Daftar transaksi terbaru yang mudah dipantau tanpa harus membuka halaman lain.
 
-| Modul | Method | Endpoint | Deskripsi |
-|---|---|---|---|
-| **Autentikasi** | `POST` | `/api/login` | Login & generate token Sanctum |
-| | `POST` | `/api/logout` | Revoke token aktif |
-| | `GET` | `/api/user` | Profil pengguna aktif |
-| **Dashboard** | `GET` | `/api/dashboard-summary` | KPI finansial bulanan, saldo kumulatif & transaksi terkini |
-| **Master** | `GET, POST` | `/api/income-sources` | CRUD Sumber Dana |
-| | `GET, PUT, DEL`| `/api/income-sources/{id}` | Detail, Update, Hapus Sumber Dana |
-| | `GET, POST` | `/api/categories` | CRUD Kategori (filter: type, is_active) |
-| | `GET, PUT, DEL`| `/api/categories/{id}` | Detail, Update, Hapus Kategori |
-| | `GET, POST` | `/api/budget-groups` | CRUD Kelompok Alokasi Anggaran |
-| | `GET, PUT, DEL`| `/api/budget-groups/{id}` | Detail, Update, Hapus Kelompok Anggaran |
-| **Pemasukan** | `GET, POST` | `/api/incomes` | CRUD Transaksi Pemasukan (filter: month, search) |
-| | `GET, PUT, DEL`| `/api/incomes/{id}` | Detail, Update, Hapus Pemasukan |
-| | `GET` | `/api/incomes/calendar` | Ringkasan harian kalender pemasukan per bulan |
-| **Pengeluaran** | `GET, POST` | `/api/expenses` | CRUD Transaksi Pengeluaran (filter: month, search) |
-| | `GET, PUT, DEL`| `/api/expenses/{id}` | Detail, Update, Hapus Pengeluaran |
-| | `GET` | `/api/expenses/calendar` | Ringkasan harian kalender pengeluaran per bulan |
-| **Laporan** | `GET` | `/api/reports/cash-flow` | Rekapitulasi arus kas 12 bulan per tahun |
-| | `GET` | `/api/reports/budget-comparison` | Evaluasi estimasi vs realisasi per bulan |
-| | `GET` | `/api/reports/category-breakdown` | Komposisi pengeluaran per kelompok anggaran |
+### 💰 2. Pencatatan Pemasukan Fleksibel
+- **Sumber Dana Terkelola**: Catat pemasukan dari berbagai sumber, seperti gaji bulanan, bonus, proyek freelance, investasi, atau bisnis sampingan.
+- **Tampilan Kalender Interaktif**: Lihat pemasukan Anda dalam bentuk kalender bulanan. Cukup klik pada tanggal tertentu untuk melihat rincian atau menambah transaksi baru secara langsung.
 
----
+### 💳 3. Pengendalian Pengeluaran & Pagu Anggaran
+- **Pos Belanja Terorganisir**: Klasifikasikan pengeluaran harian ke dalam berbagai kategori kebutuhan (makanan, transportasi, tagihan, hiburan, dll.).
+- **Peringatan Pagu Otomatis**: Setiap kategori pengeluaran dilengkapi indikator status visual:
+  - 🟢 **Aman**: Pengeluaran masih jauh di bawah batas rencana.
+  - 🟡 **Mendekati Batas**: Pengeluaran telah mencapai 80% atau lebih dari anggaran yang ditetapkan.
+  - 🔴 **Over Budget**: Pengeluaran telah melampaui batas anggaran yang direncanakan.
+- **Mode Tampilan Ganda**: Beralih dengan mudah antara tampilan tabel daftar transaksi atau tampilan kalender harian.
 
-## Fitur Sistem & Fondasi
+### 📈 4. Laporan & Evaluasi Lengkap
+- **Arus Kas Tahunan (*Cash Flow*)**: Laporan pergerakan kas masuk dan kas keluar selama 12 bulan beserta saldo kumulatif.
+- **Realisasi Anggaran Bulanan**: Evaluasi seberapa disiplin rencana belanja Anda terhadap kenyataan pengeluaran per kategori.
+- **Rincian Komposisi Belanja**: Analisis proporsi pengeluaran berdasarkan kelompok pos anggaran untuk evaluasi gaya hidup.
 
-- **Autentikasi Aman**: Bearer token stateless menggunakan Laravel Sanctum 4.
-- **Manajemen Akses**: Pengelolaan Pengguna, Role, dan Menu dinamis berbasis hak akses (*Role Permissions*).
-- **Pengaturan Perusahaan/Profil**: Nama instansi/aplikasi, logo, dan favicon dinamis.
-- **Pola Desain Antarmuka (SPA UI/UX)**:
-  - *Split Layout*: Tabel data di sisi kiri, formulir input/edit di sisi kanan (Master Data).
-  - *Calendar & Modal Form*: Khusus transaksi harian Pemasukan dan Pengeluaran.
-  - *Full 12-Column Grid*: Row atas untuk filter bar & sub-navigasi, row bawah 12 kolom penuh untuk tabel laporan.
-- **Dokumentasi API**: Swagger / OpenAPI 3.0 terintegrasi.
-- **Deployment Terisolasi**: Docker Compose multi-container dengan prefix `castra-*`.
+### 🗓️ 5. Siklus & Kelompok Anggaran Fleksibel
+- **Siklus Anggaran Berbasis Tanggal Gajian**: Keuangan tidak harus dimulai dari tanggal 1 hingga akhir bulan. Anda dapat mengatur siklus anggaran yang fleksibel mengikuti tanggal gajian Anda (misalnya tanggal 25 hingga tanggal 24 bulan berikutnya).
+- **Alokasi Anggaran**: Kelompokkan pos belanja sesuai formula perencanaan keuangan Anda (seperti Kebutuhan Pokok, Keinginan, Tabungan/Investasi, dan Dana Darurat).
+
+### 👤 6. Profil Pengguna & Personalisasi
+- **Foto Profil Kustom**: Sesuaikan foto profil akun dengan fitur pemotong gambar (*image cropper*) lingkaran yang rapi.
+- **Keamanan Akun**: Ubah kata sandi dan perbarui informasi akun kapan saja dengan mudah.
 
 ---
 
-## Stack Teknologi (Baseline)
+## 🚀 Cara Menjalankan Aplikasi (Mulai Cepat)
 
-| Bagian | Teknologi |
-| --- | --- |
-| **Backend** | Laravel 12, PHP 8.3+, Laravel Sanctum 4, Eloquent ORM |
-| **Frontend** | React 19.2, Vite 7.3, CoreUI 5.5 (React 5.9), Redux 5, React Router 7 |
-| **Database** | MySQL 8.0 (Prefix: `ms_`, `in_`, `out_`, `rpt_`) |
-| **API Docs** | L5 Swagger / OpenAPI |
-| **Testing & Quality** | PHPUnit 11 (57 tests / 220 assertions), Laravel Pint, ESLint 9, Prettier |
-| **Deployment** | Docker Compose v2, Nginx Reverse Proxy |
+Aplikasi Castra sudah dikemas menggunakan **Docker**, sehingga Anda tidak perlu menginstal database atau konfigurasi server yang rumit di komputer Anda.
 
----
+### Persyaratan:
+- Komputer dengan **Docker** dan **Docker Compose** terpasang.
 
-## Struktur Proyek
+### Langkah-langkah:
 
-```text
-castra/
-├── backend/                  Laravel 12 REST API & Swagger
-├── frontend/                 React 19 SPA (CoreUI 5)
-├── nginx/                    Konfigurasi Nginx reverse proxy
-├── docs/                     Dokumentasi teknis & arsitektur
-│   ├── prd/                  Dokumen PRD & roadmap perencanaan (Tahap 1 - 6)
-│   ├── backend/              Panduan arsitektur & aturan backend
-│   └── frontend/             Panduan arsitektur & aturan frontend
-├── docker-compose.yml        Orkestrasi container stack Castra
-├── .env                      Konfigurasi environment Docker
-├── agent.md                  Panduan agen & spesifikasi domain
-└── README.md                 Dokumentasi utama proyek
-```
+1. **Jalankan Aplikasi:**
+   Buka terminal di folder proyek Castra, lalu jalankan:
+   ```bash
+   docker compose up -d
+   ```
 
----
+2. **Buka Aplikasi di Browser:**
+   - **Aplikasi Web**: [http://localhost](http://localhost) (atau [http://localhost:9002](http://localhost:9002))
+   - **Dokumentasi API (Swagger)**: [http://localhost:9001](http://localhost:9001)
 
-## Persyaratan Sistem
+3. **Masuk Menggunakan Akun Bawaan:**
+   - **Email**: `admin@example.com`
+   - **Kata Sandi**: `adminpassword123`
 
-### Development Lokal
-- PHP 8.2 atau 8.3+
-- Composer 2.x
-- Node.js 20 atau 22+
-- npm 10+
-- MySQL 8.0+
-
-### Deployment Docker
-- Docker Engine 24+
-- Docker Compose v2
-
----
-
-## Deployment Menggunakan Docker
-
-Stack Castra dijalankan melalui Docker Compose dengan 4 layanan utama:
-
-```text
-Internet
-    │
-    ▼
-Nginx Reverse Proxy [castra-proxy] (port 80)
-    │
-    ├── /       ──► Frontend Container [castra-frontend] (port 9002)
-    │
-    └── /api/*  ──► Backend Container [castra-backend] (port 9001)
-                           │
-                           ▼
-                    Database MySQL [castra-db] (port 3306: internal)
-```
-
-### Konfigurasi Environment Docker
-
-Sesuaikan berkas `.env` di root direktori proyek:
-```dotenv
-APP_NAME=Castra
-APP_URL=http://localhost
-NGINX_PORT=80
-BACKEND_PORT=9001
-FRONTEND_PORT=9002
-
-DB_DATABASE=castra
-DB_USERNAME=castra
-DB_PASSWORD=secret
-MYSQL_ROOT_PASSWORD=rootsecret
-
-ADMIN_NAME=Administrator
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=adminpassword123
-```
-
-### Perintah Docker Compose
-
+Untuk menghentikan aplikasi jika sudah selesai digunakan:
 ```bash
-# Build dan jalankan seluruh container
-docker compose up -d --build
-
-# Periksa status container
-docker compose ps
-
-# Pantau logs
-docker compose logs -f backend
-docker compose logs -f frontend
-docker compose logs -f nginx
-
-# Jalankan database seeder
-docker exec castra-backend php artisan db:seed
-
-# Hentikan stack
 docker compose down
 ```
 
-### Rincian Service dan Port Docker
-
-| Service | Container Name | Host Port | Internal Port | Keterangan |
-| --- | --- | --- | --- | --- |
-| **Nginx Reverse Proxy** | `castra-proxy` | `80` | `80` | Entry point utama aplikasi |
-| **Backend API** | `castra-backend` | `9001` | `80` | Laravel 12 API |
-| **Frontend SPA** | `castra-frontend` | `9002` | `80` | React 19 Nginx Static |
-| **Database** | `castra-db` | `127.0.0.1:3306` | `3306` | MySQL 8.0 (loopback host) |
-
 ---
 
-## Akses Layanan
+## 🌐 Akses Layanan & Port
 
-| Layanan | Mode Docker | Mode Dev Lokal |
+| Layanan | Alamat URL | Keterangan |
 | --- | --- | --- |
-| **Aplikasi Utama** | `http://localhost` | `http://localhost:3000` |
-| **API Base URL** | `http://localhost/api` | `http://127.0.0.1:8000/api` |
-| **Swagger UI** | `http://localhost/api/documentation` | `http://127.0.0.1:8000/api/documentation` |
+| **Aplikasi Web Castra** | `http://localhost` | Antarmuka pengguna utama (Frontend React) |
+| **Backend API & Swagger** | `http://localhost:9001` | Dokumentasi REST API interaktif (OpenAPI) |
+| **Direct Frontend** | `http://localhost:9002` | Akses langsung ke container frontend |
 
 ---
 
-## Pengujian & Kualitas Kode
+## 🛠️ Informasi untuk Pengembang (Developer Corner)
 
-```bash
-# Backend test (PHPUnit)
-docker exec castra-backend php artisan test
+Bagi pengembang yang ingin berkontribusi atau memodifikasi kode Castra:
 
-# Format kode backend (Laravel Pint)
-docker exec castra-backend ./vendor/bin/pint
+### Stack Teknologi:
+- **Frontend**: React 19, CoreUI 5, Redux Toolkit, React Router 7, Vite 7.
+- **Backend**: Laravel 12, PHP 8.3+, Laravel Sanctum (Autentikasi Bearer Token), L5-Swagger.
+- **Database**: MySQL 8.0.
+- **Infrastruktur**: Nginx Reverse Proxy, Docker Compose.
 
-# Frontend lint & build
-cd frontend && npm run lint -- --fix && npm run build
-docker cp frontend/build/. castra-frontend:/usr/share/nginx/html/
+### Struktur Proyek:
+```text
+castra/
+├── frontend/             # Kode antarmuka React 19 SPA
+├── backend/              # Kode API backend Laravel 12
+├── nginx/                # Konfigurasi reverse proxy
+├── docs/                 # Dokumentasi PRD, arsitektur, dan aturan kode
+├── docker-compose.yml    # Konfigurasi orkestrasi container
+└── README.md             # Panduan utama aplikasi
 ```
 
+### Panduan Teknis Lanjutan:
+- Dokumentasi teknis frontend: silakan baca [frontend/README.md](frontend/README.md).
+- Dokumentasi teknis backend: silakan baca [backend/README.md](backend/README.md).
+- Menjalankan tes otomatis backend:
+  ```bash
+  docker exec castra-backend php artisan test
+  ```
+
 ---
 
-## Dokumentasi Terkait
-
-- [Perencanaan Perubahan Konsep (PRD 01)](docs/prd/2026-10-03-01-planning-perubahan-konsep.md)
-- [PRD Modul Master Data (PRD 02)](docs/prd/2026-10-03-02-prd-restrukturisasi-master-data.md)
-- [PRD Modul Pemasukan (PRD 03)](docs/prd/2026-10-03-03-prd-modul-pemasukan.md)
-- [PRD Modul Pengeluaran (PRD 04)](docs/prd/2026-10-03-04-prd-modul-pengeluaran.md)
-- [PRD Modul Laporan & Dashboard (PRD 05)](docs/prd/2026-10-03-05-prd-modul-laporan-dan-dashboard.md)
-- [PRD Finalisasi & Dokumentasi (PRD 06)](docs/prd/2026-10-03-06-prd-finalisasi-navigasi-seeder-dokumentasi.md)
-- [Backend Design & Database Schema](docs/backend/design.md)
-- [Backend Coding Rules](docs/backend/rules.md)
-- [Frontend UI/UX Design](docs/frontend/design.md)
-- [Frontend Coding Rules](docs/frontend/rules.md)
-- [Prosedur Deployment Production](docs/backend/production-deployment.md)
+## 📄 Lisensi
+Hak Cipta © 2026 Tim Castra. Seluruh hak cipta dilindungi undang-undang.
