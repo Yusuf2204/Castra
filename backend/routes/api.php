@@ -46,10 +46,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Pemasukan
     Route::get('incomes/calendar', [IncomeController::class, 'calendar']);
+    Route::post('incomes/scan-receipt', [IncomeController::class, 'scanReceipt']);
     Route::apiResource('incomes', IncomeController::class);
 
     // Pengeluaran
     Route::get('expenses/calendar', [ExpenseController::class, 'calendar']);
+    Route::post('expenses/scan-receipt', [ExpenseController::class, 'scanReceipt']);
     Route::apiResource('expenses', ExpenseController::class);
 
     // Laporan

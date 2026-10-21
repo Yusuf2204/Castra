@@ -13,3 +13,11 @@ export const toastSuccess = (message, title = 'Success') => {
 export const toastError = (message, title = 'Error') => {
   showToast({ color: 'danger', title, message })
 }
+
+export const toastWarning = (message, title = 'Peringatan') => {
+  showToast({ color: 'warning', title, message })
+}
+
+export const toastInfo = (message, title = 'Informasi') => {
+  showToast({ color: 'info', title, message })
+}

@@ -3113,6 +3113,122 @@
                 ]
             }
         },
+        "/incomes/scan-receipt": {
+            "post": {
+                "tags": [
+                    "Pemasukan - Transactions"
+                ],
+                "summary": "Scan and parse income transfer proof / receipt via OCR",
+                "operationId": "f7d2694bf15123f386f1402dafa53e11",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "receipt"
+                                ],
+                                "properties": {
+                                    "receipt": {
+                                        "description": "Proof of transfer/income image file (jpeg, png, webp)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Income proof parsed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5000000
+                                                },
+                                                "transaction_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-10-21"
+                                                },
+                                                "merchant": {
+                                                    "type": "string",
+                                                    "example": "PT TEKNOLOGI NUSANTARA"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "PT TEKNOLOGI NUSANTARA"
+                                                },
+                                                "suggested_income_source_id": {
+                                                    "type": "integer",
+                                                    "example": 1,
+                                                    "nullable": true
+                                                },
+                                                "suggested_income_source_name": {
+                                                    "type": "string",
+                                                    "example": "Gaji",
+                                                    "nullable": true
+                                                },
+                                                "suggested_category_id": {
+                                                    "type": "integer",
+                                                    "example": 11,
+                                                    "nullable": true
+                                                },
+                                                "suggested_category_name": {
+                                                    "type": "string",
+                                                    "example": "Gaji Pokok",
+                                                    "nullable": true
+                                                },
+                                                "raw_text": {
+                                                    "type": "string",
+                                                    "example": "TRANSFER BERHASIL\\nNOMINAL : Rp 5.000.000"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Bukti pemasukan berhasil dipindai"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/incomes/calendar": {
             "get": {
                 "tags": [
@@ -3565,6 +3681,105 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/expenses/scan-receipt": {
+            "post": {
+                "tags": [
+                    "Pengeluaran - Transactions"
+                ],
+                "summary": "Scan and parse receipt image via OCR",
+                "operationId": "7345efd10376aba740b0e015473fb94e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "receipt"
+                                ],
+                                "properties": {
+                                    "receipt": {
+                                        "description": "Receipt image file (jpeg, png, webp)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Receipt parsed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 36000
+                                                },
+                                                "transaction_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-10-21"
+                                                },
+                                                "merchant": {
+                                                    "type": "string",
+                                                    "example": "KOPI KENANGAN"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "KOPI KENANGAN - Belanja"
+                                                },
+                                                "suggested_category_id": {
+                                                    "type": "integer",
+                                                    "example": 1,
+                                                    "nullable": true
+                                                },
+                                                "suggested_category_name": {
+                                                    "type": "string",
+                                                    "example": "Makanan & Minuman",
+                                                    "nullable": true
+                                                },
+                                                "raw_text": {
+                                                    "type": "string",
+                                                    "example": "KOPI KENANGAN\\nTOTAL : 36.000"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nota berhasil dipindai"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [

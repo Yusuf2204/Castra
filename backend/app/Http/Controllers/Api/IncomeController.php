@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IncomeTransactionResource;
 use App\Models\IncomeTransaction;
+use App\Services\ReceiptOcrService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -250,6 +251,25 @@ class IncomeController extends Controller
         return response()->json([
             'data' => null,
             'message' => 'Transaksi pemasukan berhasil dihapus',
+            'errors' => null,
+        ]);
+    }
+
+    /**
+     * Scan an uploaded proof of income / receipt using Tesseract OCR.
+     */
+    public function scanReceipt(Request $request, ReceiptOcrService $ocrService)
+    {
+        $request->validate([
+            'receipt' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+        ]);
+
+        $file = $request->file('receipt');
+        $parsed = $ocrService->scanIncome($file, $request->user());
+
+        return response()->json([
+            'data' => $parsed,
+            'message' => 'Bukti pemasukan berhasil dipindai',
             'errors' => null,
         ]);
     }
