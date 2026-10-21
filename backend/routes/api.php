@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('role-menus/{role}', [RoleMenuController::class, 'show']);
     Route::post('role-menus/{role}', [RoleMenuController::class, 'store']);
     Route::post('change-password', [UserController::class, 'changePassword']);
+    Route::put('profile', [UserController::class, 'updateProfile']);
     Route::put('company', [CompanyController::class, 'update']);
 
     // Master Keuangan

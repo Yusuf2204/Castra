@@ -245,7 +245,7 @@ const BudgetPeriods = () => {
       <CAlert color="info" className="d-flex align-items-center mb-4 shadow-sm">
         <CIcon icon={cilCalendar} className="flex-shrink-0 me-3" size="xl" />
         <div>
-          <div className="fw-bold">Konsep Anggaran Berbasis Siklus Gajian (Pay Period)</div>
+          <div className="fw-bold">Anggaran Berbasis Siklus Gajian</div>
           <small>
             Tanggal gajian Anda bisa bergeser setiap bulannya. Tentukan rentang tanggal siklus di sini dan sesuaikan batas nominal estimasi pengeluaran per kategori secara fleksibel mengikuti penghasilan utama Anda.
           </small>
@@ -428,7 +428,7 @@ const BudgetPeriods = () => {
                               <div className="fw-semibold text-body">{a.category_name}</div>
                               {a.baseline_estimate !== a.allocated_amount && (
                                 <small className="text-body-secondary d-block">
-                                  Default: {formatCurrency(a.baseline_estimate)}
+                                  Pagu Standar: {formatCurrency(a.baseline_estimate)}
                                 </small>
                               )}
                             </CTableDataCell>
@@ -569,8 +569,8 @@ const BudgetPeriods = () => {
             <CTableHead>
               <CTableRow>
                 <CTableHeaderCell>Nama Kategori</CTableHeaderCell>
-                <CTableHeaderCell>Kelompok Amplop</CTableHeaderCell>
-                <CTableHeaderCell>Default Baseline</CTableHeaderCell>
+                <CTableHeaderCell>Kelompok Anggaran</CTableHeaderCell>
+                <CTableHeaderCell>Pagu Standar</CTableHeaderCell>
                 <CTableHeaderCell style={{ width: '220px' }}>Pagu Siklus Ini</CTableHeaderCell>
               </CTableRow>
             </CTableHead>

@@ -20,18 +20,10 @@ import CIcon from '@coreui/icons-react'
 import {
   cilArrowBottom,
   cilArrowTop,
-  cilBuilding,
   cilChartPie,
-  cilCheckCircle,
-  cilListRich,
-  cilPeople,
   cilReload,
-  cilShieldAlt,
-  cilUser,
   cilWallet,
-  cilWarning,
 } from '@coreui/icons'
-import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import api from '../../services/api'
 
@@ -60,15 +52,7 @@ const SummaryCard = ({ color, icon, label, value, subtext, loading }) => (
 )
 
 const Dashboard = () => {
-  const user = useSelector((state) => state.user)
-  const company = useSelector((state) => state.company)
   const [data, setData] = useState({
-    system: {
-      total_users: 0,
-      total_roles: 0,
-      total_menus: 0,
-      active_role: null,
-    },
     finance: {
       month: '',
       kpis: {
@@ -86,8 +70,6 @@ const Dashboard = () => {
     },
   })
   const [loading, setLoading] = useState(true)
-  const [apiOnline, setApiOnline] = useState(false)
-  const [lastUpdated, setLastUpdated] = useState(null)
 
   const loadDashboard = useCallback(async () => {
     setLoading(true)
@@ -97,12 +79,6 @@ const Dashboard = () => {
       const resData = response.data.data
 
       setData({
-        system: resData.system || {
-          total_users: resData.total_users || 0,
-          total_roles: resData.total_roles || 0,
-          total_menus: resData.total_menus || 0,
-          active_role: resData.active_role || null,
-        },
         finance: resData.finance || {
           month: '',
           kpis: {
@@ -119,10 +95,8 @@ const Dashboard = () => {
           recent_expenses: [],
         },
       })
-      setApiOnline(true)
-      setLastUpdated(new Date())
     } catch {
-      setApiOnline(false)
+      // ignore
     } finally {
       setLoading(false)
     }
@@ -306,95 +280,6 @@ const Dashboard = () => {
                   )}
                 </CTableBody>
               </CTable>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-
-      {/* Row 3: Operational & System Status */}
-      <CRow className="g-3">
-        <CCol lg={7}>
-          <CCard className="h-100 shadow-sm border-0">
-            <CCardHeader className="bg-transparent fw-semibold">
-              Current Session & Profile
-            </CCardHeader>
-            <CCardBody>
-              <CRow className="g-4">
-                <CCol sm={6}>
-                  <div className="d-flex align-items-center">
-                    <CIcon icon={cilUser} size="xl" className="text-primary me-3" />
-                    <div>
-                      <div className="text-body-secondary small">Active User</div>
-                      <div className="fw-semibold">{user?.name || '-'}</div>
-                      <div className="small text-body-secondary">{user?.email || '-'}</div>
-                    </div>
-                  </div>
-                </CCol>
-                <CCol sm={6}>
-                  <div className="d-flex align-items-center">
-                    <CIcon icon={cilShieldAlt} size="xl" className="text-info me-3" />
-                    <div>
-                      <div className="text-body-secondary small">Active Role</div>
-                      <div className="fw-semibold">
-                        {loading ? <CSpinner size="sm" /> : data.system.active_role || '-'}
-                      </div>
-                    </div>
-                  </div>
-                </CCol>
-                <CCol sm={6}>
-                  <div className="d-flex align-items-center">
-                    <CIcon icon={cilBuilding} size="xl" className="text-success me-3" />
-                    <div>
-                      <div className="text-body-secondary small">Company</div>
-                      <div className="fw-semibold">{company?.comp_name || '-'}</div>
-                    </div>
-                  </div>
-                </CCol>
-                <CCol sm={6}>
-                  <div className="d-flex align-items-center">
-                    <CIcon icon={cilListRich} size="xl" className="text-warning me-3" />
-                    <div>
-                      <div className="text-body-secondary small">Navigasi Laporan</div>
-                      <Link
-                        to="/reports"
-                        className="btn btn-sm btn-link p-0 fw-semibold text-decoration-none"
-                      >
-                        Buka Halaman Laporan Keuangan &rarr;
-                      </Link>
-                    </div>
-                  </div>
-                </CCol>
-              </CRow>
-            </CCardBody>
-          </CCard>
-        </CCol>
-
-        <CCol lg={5}>
-          <CCard className="h-100 shadow-sm border-0">
-            <CCardHeader className="bg-transparent fw-semibold">System Status</CCardHeader>
-            <CCardBody>
-              <div className="d-flex align-items-center mb-3">
-                <CIcon
-                  icon={apiOnline ? cilCheckCircle : cilWarning}
-                  size="xl"
-                  className={`${apiOnline ? 'text-success' : 'text-danger'} me-3`}
-                />
-                <div>
-                  <div className="text-body-secondary small">API Status</div>
-                  <div className="fw-semibold">
-                    {loading ? 'Checking...' : apiOnline ? 'Operational' : 'Unavailable'}
-                  </div>
-                </div>
-              </div>
-              <div className="small text-body-secondary">
-                Last updated:{' '}
-                {lastUpdated
-                  ? new Intl.DateTimeFormat('id-ID', {
-                      dateStyle: 'medium',
-                      timeStyle: 'medium',
-                    }).format(lastUpdated)
-                  : '-'}
-              </div>
             </CCardBody>
           </CCard>
         </CCol>
