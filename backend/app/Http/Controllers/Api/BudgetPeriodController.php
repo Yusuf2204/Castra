@@ -232,7 +232,7 @@ class BudgetPeriodController extends Controller
                 'integer',
                 'exists:ms_categories,id,user_id,'.$user->id.',type,expense',
             ],
-            'allocations.*.allocated_amount' => ['required', 'numeric', 'min:0'],
+            'allocations.*.allocated_amount' => ['required', 'numeric', 'min:0', 'max:9999999999999.99'],
             'allocations.*.notes' => ['nullable', 'string', 'max:255'],
         ]);
 
