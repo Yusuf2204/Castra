@@ -94,7 +94,7 @@ const CategoryBreakdownReport = ({ month }) => {
         </CCardHeader>
         <CCardBody className="p-0">
           <CTable hover responsive align="middle" className="mb-0">
-            <CTableHead className="table-light">
+            <CTableHead>
               <CTableRow>
                 <CTableHeaderCell width={60}>#</CTableHeaderCell>
                 <CTableHeaderCell>Kategori Pengeluaran</CTableHeaderCell>
@@ -132,7 +132,7 @@ const CategoryBreakdownReport = ({ month }) => {
             </CTableBody>
 
             <tfoot>
-              <tr className="table-light fw-bold fs-6 border-top border-2">
+              <tr className="fw-bold fs-6 border-top border-2">
                 <td colSpan={3}>TOTAL PENGELUARAN BULAN {month}</td>
                 <td className="text-end text-danger">{formatCurrency(data.total_expense)}</td>
                 <td>100%</td>

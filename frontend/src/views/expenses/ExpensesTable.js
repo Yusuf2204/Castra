@@ -53,7 +53,7 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
 
   return (
     <CTable hover responsive align="middle">
-      <CTableHead className="table-light">
+      <CTableHead>
         <CTableRow>
           <CTableHeaderCell>Tanggal</CTableHeaderCell>
           <CTableHeaderCell>Kategori</CTableHeaderCell>

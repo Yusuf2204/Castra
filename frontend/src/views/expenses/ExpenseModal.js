@@ -182,7 +182,7 @@ const ExpenseModal = ({
           <div className="mb-4">
             <h6 className="fw-bold mb-2">Riwayat Pengeluaran Hari Ini ({dailyItems.length})</h6>
             <CTable hover responsive small className="border">
-              <CTableHead className="table-light">
+              <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell>Kategori</CTableHeaderCell>
                   <CTableHeaderCell>Kelompok</CTableHeaderCell>

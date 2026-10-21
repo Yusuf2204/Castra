@@ -132,6 +132,11 @@ body {
   color: var(--cui-body-color);
 }
 
+/* Calendar cell hover effect compatible with light and dark themes */
+.hover-bg-light:hover {
+  background-color: var(--cui-tertiary-bg);
+}
+
 @include color-mode(dark) {
   body {
     background-color: var(--cui-dark-bg-subtle);

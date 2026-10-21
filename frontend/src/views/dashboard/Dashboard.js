@@ -216,7 +216,7 @@ const Dashboard = () => {
             </CCardHeader>
             <CCardBody className="p-0">
               <CTable responsive hover className="mb-0 align-middle">
-                <CTableHead className="table-light">
+                <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell>Tanggal</CTableHeaderCell>
                     <CTableHeaderCell>Sumber / Kategori</CTableHeaderCell>
@@ -232,7 +232,7 @@ const Dashboard = () => {
                     </CTableRow>
                   ) : data.finance.recent_incomes?.length === 0 ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={3} className="text-center py-4 text-muted">
+                      <CTableDataCell colSpan={3} className="text-center py-4 text-body-secondary">
                         Belum ada transaksi pemasukan
                       </CTableDataCell>
                     </CTableRow>
@@ -270,7 +270,7 @@ const Dashboard = () => {
             </CCardHeader>
             <CCardBody className="p-0">
               <CTable responsive hover className="mb-0 align-middle">
-                <CTableHead className="table-light">
+                <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell>Tanggal</CTableHeaderCell>
                     <CTableHeaderCell>Kategori / Alokasi</CTableHeaderCell>
@@ -286,7 +286,7 @@ const Dashboard = () => {
                     </CTableRow>
                   ) : data.finance.recent_expenses?.length === 0 ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={3} className="text-center py-4 text-muted">
+                      <CTableDataCell colSpan={3} className="text-center py-4 text-body-secondary">
                         Belum ada transaksi pengeluaran
                       </CTableDataCell>
                     </CTableRow>

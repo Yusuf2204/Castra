@@ -103,7 +103,7 @@ const CashFlowReport = ({ year }) => {
       <CCard className="shadow-sm">
         <CCardBody className="p-0">
           <CTable hover responsive align="middle" className="mb-0">
-            <CTableHead className="table-light">
+            <CTableHead>
               <CTableRow>
                 <CTableHeaderCell>Bulan</CTableHeaderCell>
                 <CTableHeaderCell className="text-end">Pemasukan (Rp)</CTableHeaderCell>
@@ -134,7 +134,7 @@ const CashFlowReport = ({ year }) => {
                     {formatCurrency(row.net_balance)}
                   </CTableDataCell>
                   <CTableDataCell
-                    className={`text-end fw-bold ${row.cumulative_balance >= 0 ? 'text-dark' : 'text-danger'}`}
+                    className={`text-end fw-bold ${row.cumulative_balance >= 0 ? 'text-body' : 'text-danger'}`}
                   >
                     {formatCurrency(row.cumulative_balance)}
                   </CTableDataCell>
@@ -152,7 +152,7 @@ const CashFlowReport = ({ year }) => {
             </CTableBody>
 
             <tfoot>
-              <tr className="table-light fw-bold fs-6 border-top border-2">
+              <tr className="fw-bold fs-6 border-top border-2">
                 <td>TOTAL {year}</td>
                 <td className="text-end text-success">{formatCurrency(data.total_income_year)}</td>
                 <td className="text-end text-danger">{formatCurrency(data.total_expense_year)}</td>
