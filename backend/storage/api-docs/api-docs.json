@@ -2367,6 +2367,484 @@
                 ]
             }
         },
+        "/budget-periods": {
+            "get": {
+                "tags": [
+                    "Master - Budget Periods"
+                ],
+                "summary": "List budget periods",
+                "operationId": "f5bf6fa2bab1dd01293a2b48a9efc854",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status (1 or 0)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1,
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by period name",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Oktober"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of budget periods",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BudgetPeriod"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Master - Budget Periods"
+                ],
+                "summary": "Create a new budget period",
+                "description": "Creates a period and automatically generates allocations for active expense categories.",
+                "operationId": "ea876dd75b3bd20a5ca83a839ca21b80",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BudgetPeriodRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Budget period created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BudgetPeriod"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Periode anggaran berhasil dibuat"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/budget-periods/{budget_period}": {
+            "get": {
+                "tags": [
+                    "Master - Budget Periods"
+                ],
+                "summary": "Get budget period detail",
+                "operationId": "44d1bfe6b1d85e411142692c9d7e0c6f",
+                "parameters": [
+                    {
+                        "name": "budget_period",
+                        "in": "path",
+                        "description": "Budget Period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Budget period detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BudgetPeriod"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Master - Budget Periods"
+                ],
+                "summary": "Update budget period",
+                "operationId": "e58e2dc00d29d01b2b47010f59dd0e5b",
+                "parameters": [
+                    {
+                        "name": "budget_period",
+                        "in": "path",
+                        "description": "Budget Period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BudgetPeriodRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Budget period updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BudgetPeriod"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Periode anggaran berhasil diperbarui"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Master - Budget Periods"
+                ],
+                "summary": "Delete a budget period",
+                "operationId": "829dbd03a3714df404e77fc3fe49b1a1",
+                "parameters": [
+                    {
+                        "name": "budget_period",
+                        "in": "path",
+                        "description": "Budget Period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Budget period deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Periode anggaran berhasil dihapus"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/budget-periods/{budget_period}/allocations": {
+            "get": {
+                "tags": [
+                    "Master - Budget Periods"
+                ],
+                "summary": "Get category allocations for a period",
+                "operationId": "5554fc6d5497b7680e82c8a8a498c807",
+                "parameters": [
+                    {
+                        "name": "budget_period",
+                        "in": "path",
+                        "description": "Budget Period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of category allocations",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CategoryBudgetAllocation"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Master - Budget Periods"
+                ],
+                "summary": "Batch update category allocations for a period",
+                "operationId": "b6a470c227a38635bc3a17bc94c7c34d",
+                "parameters": [
+                    {
+                        "name": "budget_period",
+                        "in": "path",
+                        "description": "Budget Period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CategoryBudgetAllocationBatchRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Allocations updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BudgetPeriod"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alokasi anggaran kategori berhasil disimpan"
+                                        },
+                                        "errors": {
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/incomes": {
             "get": {
                 "tags": [
@@ -4733,6 +5211,181 @@
                 },
                 "type": "object"
             },
+            "BudgetPeriod": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Siklus Oktober 2026"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-10-05"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-11-04"
+                    },
+                    "income_transaction_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "total_income_allocated": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4033247
+                    },
+                    "total_allocated": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 3967361.6
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Gajian tanggal 5",
+                        "nullable": true
+                    },
+                    "allocations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CategoryBudgetAllocation"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "CategoryBudgetAllocation": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "budget_period_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "category_id": {
+                        "type": "integer",
+                        "example": 27
+                    },
+                    "category_name": {
+                        "type": "string",
+                        "example": "Makan"
+                    },
+                    "category_type": {
+                        "type": "string",
+                        "example": "expense"
+                    },
+                    "baseline_estimate": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1240000
+                    },
+                    "allocated_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1240000
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "BudgetPeriodRequest": {
+                "required": [
+                    "name",
+                    "start_date",
+                    "end_date"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Siklus Oktober 2026"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-10-05"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-11-04"
+                    },
+                    "total_income_allocated": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4033247
+                    },
+                    "income_transaction_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Gaji cair tanggal 5",
+                        "nullable": true
+                    },
+                    "copy_from_period_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "CategoryBudgetAllocationBatchRequest": {
+                "required": [
+                    "allocations"
+                ],
+                "properties": {
+                    "allocations": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "category_id",
+                                "allocated_amount"
+                            ],
+                            "properties": {
+                                "category_id": {
+                                    "type": "integer",
+                                    "example": 27
+                                },
+                                "allocated_amount": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 1250000
+                                },
+                                "notes": {
+                                    "type": "string",
+                                    "example": "Penyesuaian",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "Category": {
                 "properties": {
                     "id": {
@@ -4981,6 +5634,10 @@
         {
             "name": "Master - Budget Groups",
             "description": "Pengelolaan alokasi amplop anggaran bulanan"
+        },
+        {
+            "name": "Master - Budget Periods",
+            "description": "Pengelolaan siklus anggaran dinamis dan pagu kategori berbasis tanggal gajian"
         },
         {
             "name": "Master - Income Sources",

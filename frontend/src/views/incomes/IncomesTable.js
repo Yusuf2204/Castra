@@ -53,7 +53,7 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
 
   return (
     <CTable hover responsive align="middle">
-      <CTableHead className="table-light">
+      <CTableHead>
         <CTableRow>
           <CTableHeaderCell>Tanggal</CTableHeaderCell>
           <CTableHeaderCell>Sumber Dana</CTableHeaderCell>

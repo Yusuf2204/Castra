@@ -125,7 +125,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
               <div className="text-body-secondary small mb-1">TOTAL PAGU ESTIMASI</div>
               <div className="fs-5 fw-bold text-info">{formatCurrency(data.total_estimated)}</div>
               {isPeriodMode && (
-                <div className="small text-muted mt-1">
+                <div className="small text-body-secondary mt-1">
                   Target Gaji: {formatCurrency(data.period.total_income_allocated)}
                 </div>
               )}
@@ -138,7 +138,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
             <CCardBody>
               <div className="text-body-secondary small mb-1">TOTAL PENGELUARAN AKTUAL</div>
               <div className="fs-5 fw-bold text-danger">{formatCurrency(data.total_actual)}</div>
-              <div className="small text-muted mt-1">
+              <div className="small text-body-secondary mt-1">
                 {isPeriodMode ? 'Pengeluaran dalam siklus' : 'Pengeluaran kalender'}
               </div>
             </CCardBody>
@@ -160,7 +160,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
               >
                 {formatCurrency(data.total_variance)}
               </div>
-              <div className="small text-muted mt-1">
+              <div className="small text-body-secondary mt-1">
                 {data.total_variance >= 0 ? 'Surplus anggaran' : 'Defisit anggaran'}
               </div>
             </CCardBody>
@@ -172,7 +172,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
             <CCardBody>
               <div className="text-body-secondary small mb-1">PERSENTASE PEMAKAIAN</div>
               <div className="fs-5 fw-bold text-primary">{data.overall_usage_percentage}%</div>
-              <div className="small text-muted mt-1">
+              <div className="small text-body-secondary mt-1">
                 {data.overall_usage_percentage > 100
                   ? 'Over Budget'
                   : data.overall_usage_percentage >= 80
@@ -188,7 +188,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
       <CCard className="shadow-sm">
         <CCardBody className="p-0">
           <CTable hover responsive align="middle" className="mb-0">
-            <CTableHead className="table-light">
+            <CTableHead>
               <CTableRow>
                 <CTableHeaderCell>Kategori Pengeluaran</CTableHeaderCell>
                 <CTableHeaderCell>Kelompok Amplop</CTableHeaderCell>
@@ -218,7 +218,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
                     <CTableDataCell>
                       <strong>{row.category_name}</strong>
                       {isPeriodMode && row.baseline_estimate !== row.monthly_estimate && (
-                        <div className="small text-muted">
+                        <div className="small text-body-secondary">
                           Default: {formatCurrency(row.baseline_estimate)}
                         </div>
                       )}
@@ -271,7 +271,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
             </CTableBody>
 
             <tfoot>
-              <tr className="table-light fw-bold fs-6 border-top border-2">
+              <tr className="fw-bold fs-6 border-top border-2">
                 <td colSpan={2}>
                   {isPeriodMode ? `TOTAL SIKLUS (${data.period.name})` : `TOTAL BULAN ${data.month}`}
                 </td>

@@ -281,7 +281,7 @@ const BudgetPeriods = () => {
                 </div>
               ) : (
                 <CTable hover responsive align="middle">
-                  <CTableHead className="table-light">
+                  <CTableHead>
                     <CTableRow>
                       <CTableHeaderCell>Nama & Rentang</CTableHeaderCell>
                       <CTableHeaderCell>Gaji Dialokasikan</CTableHeaderCell>

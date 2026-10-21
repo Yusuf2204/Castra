@@ -186,7 +186,7 @@ const IncomeModal = ({
           <div className="mb-4">
             <h6 className="fw-bold mb-2">Riwayat Transaksi Hari Ini ({dailyItems.length})</h6>
             <CTable hover responsive small className="border">
-              <CTableHead className="table-light">
+              <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell>Sumber Dana</CTableHeaderCell>
                   <CTableHeaderCell>Kategori</CTableHeaderCell>
