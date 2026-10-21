@@ -130,7 +130,7 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
 
           <div className="mb-3">
             <label className="form-label">
-              Estimasi Default Bulanan (Baseline)
+              Estimasi Pagu Bulanan Standar
               <small className="text-body-secondary d-block">
                 Plafon acuan awal saat membuat siklus anggaran baru
               </small>

@@ -17,7 +17,7 @@ const Company = () => {
 
   return (
     <CCard>
-      <CCardHeader>Company Settings</CCardHeader>
+      <CCardHeader>Pengaturan Entitas / Usaha</CCardHeader>
       <CCardBody>
         <CompanyForm company={company} />
       </CCardBody>

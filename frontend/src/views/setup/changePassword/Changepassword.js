@@ -17,16 +17,16 @@ const Changepassword = () => {
     e.preventDefault()
     const nextErrors = {}
 
-    if (!currentPassword) nextErrors.current_password = ['Current password is required.']
-    if (!newPassword) nextErrors.new_password = ['New password is required.']
-    if (!confirmPassword) nextErrors.confirm_password = ['Password confirmation is required.']
+    if (!currentPassword) nextErrors.current_password = ['Kata sandi saat ini wajib diisi.']
+    if (!newPassword) nextErrors.new_password = ['Kata sandi baru wajib diisi.']
+    if (!confirmPassword) nextErrors.confirm_password = ['Konfirmasi kata sandi wajib diisi.']
 
     if (newPassword && newPassword.length < 6) {
-      nextErrors.new_password = ['New password must be at least 6 characters.']
+      nextErrors.new_password = ['Kata sandi baru minimal 6 karakter.']
     }
 
     if (newPassword !== confirmPassword) {
-      nextErrors.confirm_password = ['Password confirmation does not match.']
+      nextErrors.confirm_password = ['Konfirmasi kata sandi tidak cocok.']
     }
 
     if (Object.keys(nextErrors).length) {
@@ -44,7 +44,7 @@ const Changepassword = () => {
         confirm_password: confirmPassword,
       })
 
-      toastSuccess('Password changed. Please login again.')
+      toastSuccess('Kata sandi berhasil diubah. Silakan login kembali.')
 
       setCurrentPassword('')
       setNewPassword('')
@@ -64,14 +64,14 @@ const Changepassword = () => {
 
   return (
     <CCard>
-      <CCardHeader>Change Password</CCardHeader>
+      <CCardHeader>Ubah Kata Sandi</CCardHeader>
       <CCardBody>
         <CForm onSubmit={handleSubmit}>
           <CFormInput label="Email" value={user?.email || ''} readOnly className="mb-3" />
 
           <CFormInput
             type="password"
-            label="Current Password"
+            label="Kata Sandi Saat Ini"
             value={currentPassword}
             onChange={(e) => {
               setErrors({ ...errors, current_password: null })
@@ -85,7 +85,7 @@ const Changepassword = () => {
 
           <CFormInput
             type="password"
-            label="New Password"
+            label="Kata Sandi Baru"
             value={newPassword}
             onChange={(e) => {
               setErrors({ ...errors, new_password: null })
@@ -99,7 +99,7 @@ const Changepassword = () => {
 
           <CFormInput
             type="password"
-            label="Confirm Password"
+            label="Konfirmasi Kata Sandi Baru"
             value={confirmPassword}
             onChange={(e) => {
               setErrors({ ...errors, confirm_password: null })
@@ -115,10 +115,10 @@ const Changepassword = () => {
             {loading ? (
               <>
                 <CSpinner size="sm" className="me-2" />
-                Saving...
+                Menyimpan...
               </>
             ) : (
-              'Save Password'
+              'Simpan Kata Sandi'
             )}
           </CButton>
         </CForm>

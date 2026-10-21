@@ -92,8 +92,8 @@ else
   php artisan optimize:clear
 fi
 
-# ── artisan commands above ran as root — hand storage back ──
-chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+# ── artisan commands above ran as root — hand storage & nginx back ──
+chown -R www-data:www-data storage bootstrap/cache /var/lib/nginx /run/nginx 2>/dev/null || true
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Backend is ready — starting services"

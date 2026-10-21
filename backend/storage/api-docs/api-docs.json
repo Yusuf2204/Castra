@@ -644,6 +644,84 @@
                 ]
             }
         },
+        "/profile": {
+            "put": {
+                "tags": [
+                    "Setup - Profile"
+                ],
+                "summary": "Update authenticated user profile",
+                "operationId": "f4501adf3aea047309b7fe1e5bf7a842",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileRequest"
+                            },
+                            "example": {
+                                "name": "Administrator",
+                                "email": "admin@example.com",
+                                "avatar": "data:image/webp;base64,..."
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdateProfileResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 1,
+                                        "name": "Administrator",
+                                        "email": "admin@example.com",
+                                        "avatar": "data:image/webp;base64,...",
+                                        "role_id": 1,
+                                        "role": {
+                                            "id": 1,
+                                            "role_name": "admin"
+                                        }
+                                    },
+                                    "message": "Profil berhasil diperbarui",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "The email has already been taken.",
+                                    "errors": {
+                                        "email": [
+                                            "The email has already been taken."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/roles": {
             "get": {
                 "tags": [
@@ -3866,7 +3944,7 @@
                 "tags": [
                     "Laporan - Reports"
                 ],
-                "summary": "Get monthly 50/30/20 budget envelope comparison",
+                "summary": "Get monthly 50/30/20 budget group comparison",
                 "operationId": "9889ad7f438a45d690bbb6dad717b5cc",
                 "parameters": [
                     {
@@ -4199,6 +4277,11 @@
                         "type": "string",
                         "format": "email",
                         "example": "admin@gmail.com"
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "example": "data:image/webp;base64,...",
+                        "nullable": true
                     },
                     "role_id": {
                         "type": "integer",
@@ -4636,6 +4719,46 @@
                     "message": {
                         "type": "string",
                         "example": "Password updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileRequest": {
+                "required": [
+                    "name",
+                    "email"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Administrator"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@example.com"
+                    },
+                    "avatar": {
+                        "description": "Base64 data URL gambar profil avatar",
+                        "type": "string",
+                        "example": "data:image/webp;base64,...",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/AuthUser"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Profil berhasil diperbarui"
                     },
                     "errors": {
                         "example": null,
@@ -5633,11 +5756,11 @@
         },
         {
             "name": "Master - Budget Groups",
-            "description": "Pengelolaan alokasi amplop anggaran bulanan"
+            "description": "Pengelolaan alokasi kelompok anggaran bulanan"
         },
         {
             "name": "Master - Budget Periods",
-            "description": "Pengelolaan siklus anggaran dinamis dan pagu kategori berbasis tanggal gajian"
+            "description": "Pengelolaan siklus anggaran dan pagu kategori berbasis tanggal gajian"
         },
         {
             "name": "Master - Income Sources",
@@ -5660,6 +5783,10 @@
             "description": "Autentikasi dan token Bearer Sanctum"
         },
         {
+            "name": "Setup - Profile",
+            "description": "Pengelolaan profil dan foto akun pengguna"
+        },
+        {
             "name": "Setup - Users",
             "description": "Manajemen akun pengguna"
         },
@@ -5669,7 +5796,7 @@
         },
         {
             "name": "Setup - Menus",
-            "description": "Manajemen menu navigasi dinamis"
+            "description": "Manajemen menu navigasi aplikasi"
         },
         {
             "name": "Setup - Role Permissions",

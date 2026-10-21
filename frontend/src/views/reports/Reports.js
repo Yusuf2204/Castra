@@ -119,14 +119,14 @@ const Reports = () => {
                       onClick={() => setBudgetMode('period')}
                       size="sm"
                     >
-                      Siklus Gaji
+                      Siklus Anggaran
                     </CButton>
                     <CButton
                       color={budgetMode === 'month' ? 'info' : 'outline-secondary'}
                       onClick={() => setBudgetMode('month')}
                       size="sm"
                     >
-                      Kalender (1-31)
+                      Bulan Kalender
                     </CButton>
                   </CButtonGroup>
 

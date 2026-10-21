@@ -3,6 +3,9 @@ import React from 'react'
 // Dashboard
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
+// Profile
+const Profile = React.lazy(() => import('./views/profile/Profile'))
+
 // Setup
 const Company = React.lazy(() => import('./views/setup/company/Company'))
 const Users = React.lazy(() => import('./views/setup/users/Users'))
@@ -42,7 +45,7 @@ const routes = [
   { path: '/master/income-sources', name: 'Sumber Dana', element: IncomeSources },
   { path: '/master/categories', name: 'Kategori', element: Categories },
   { path: '/master/budget-groups', name: 'Alokasi Anggaran', element: BudgetGroups },
-  { path: '/master/budget-periods', name: 'Siklus Anggaran Dinamis', element: BudgetPeriods },
+  { path: '/master/budget-periods', name: 'Siklus Anggaran', element: BudgetPeriods },
 
   // Transaksi
   { path: '/incomes', name: 'Pemasukan', element: Incomes },
@@ -50,6 +53,9 @@ const routes = [
 
   // Laporan
   { path: '/reports', name: 'Laporan', element: Reports },
+
+  // Profile
+  { path: '/profile', name: 'Profil Saya', element: Profile },
 ]
 
 export default routes

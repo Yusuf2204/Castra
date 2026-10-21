@@ -80,7 +80,7 @@ const CompanyForm = ({ company }) => {
     <CForm onSubmit={handleSubmit}>
       {/* COMPANY NAME */}
       <CFormInput
-        label="Company Name"
+        label="Nama Entitas / Usaha"
         name="comp_name"
         value={form.comp_name}
         onChange={handleChange}
@@ -92,7 +92,7 @@ const CompanyForm = ({ company }) => {
 
       {/* APP TITLE */}
       <CFormInput
-        label="App Title (Browser Tab)"
+        label="Judul Aplikasi (Tab Browser)"
         name="app_title"
         value={form.app_title}
         onChange={handleChange}
@@ -105,7 +105,7 @@ const CompanyForm = ({ company }) => {
       {/* LOGO UPLOAD */}
       <CFormInput
         type="file"
-        label="Company Logo"
+        label="Logo Aplikasi"
         accept="image/*"
         className="mb-2"
         disabled={saving}
@@ -127,7 +127,7 @@ const CompanyForm = ({ company }) => {
       {/* FAVICON UPLOAD */}
       <CFormInput
         type="file"
-        label="Favicon"
+        label="Favicon (Ikon Tab)"
         accept="image/*"
         className="mb-2"
         disabled={saving}
@@ -150,10 +150,10 @@ const CompanyForm = ({ company }) => {
           {saving ? (
             <>
               <CSpinner size="sm" className="me-2" />
-              Saving...
+              Menyimpan...
             </>
           ) : (
-            'Save Company Settings'
+            'Simpan Pengaturan'
           )}
         </CButton>
       </div>

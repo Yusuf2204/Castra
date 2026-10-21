@@ -68,7 +68,7 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 
 # ── nginx config ─────────────────────────────────────────────
 COPY nginx-backend.conf /etc/nginx/http.d/default.conf
-RUN mkdir -p /run/nginx && chown -R www-data:www-data /run/nginx
+RUN mkdir -p /run/nginx && chown -R www-data:www-data /run/nginx /var/lib/nginx
 RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf
 
 # ── supervisor config ────────────────────────────────────────

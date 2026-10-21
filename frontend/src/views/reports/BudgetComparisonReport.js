@@ -191,7 +191,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
             <CTableHead>
               <CTableRow>
                 <CTableHeaderCell>Kategori Pengeluaran</CTableHeaderCell>
-                <CTableHeaderCell>Kelompok Amplop</CTableHeaderCell>
+                <CTableHeaderCell>Kelompok Anggaran</CTableHeaderCell>
                 <CTableHeaderCell className="text-end">
                   {isPeriodMode ? 'Pagu Siklus Ini' : 'Estimasi (Rp)'}
                 </CTableHeaderCell>
@@ -219,7 +219,7 @@ const BudgetComparisonReport = ({ month, periodId }) => {
                       <strong>{row.category_name}</strong>
                       {isPeriodMode && row.baseline_estimate !== row.monthly_estimate && (
                         <div className="small text-body-secondary">
-                          Default: {formatCurrency(row.baseline_estimate)}
+                          Pagu Standar: {formatCurrency(row.baseline_estimate)}
                         </div>
                       )}
                     </CTableDataCell>

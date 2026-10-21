@@ -85,6 +85,30 @@ class UserController extends Controller
         ]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
+            'avatar' => 'nullable|string',
+        ]);
+
+        if (array_key_exists('avatar', $data) && empty($data['avatar'])) {
+            $data['avatar'] = null;
+        }
+
+        $user->update($data);
+
+        return response()->json([
+            'data' => $user->fresh(['role']),
+            'message' => 'Profil berhasil diperbarui',
+            'errors' => null,
+        ]);
+    }
+
     public function changePassword(Request $request)
     {
         $request->validate([

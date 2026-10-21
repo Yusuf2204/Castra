@@ -18,16 +18,17 @@ use OpenApi\Annotations as OA;
  *
  * @OA\Tag(name="Dashboard - Analytics", description="Ringkasan finansial dan statistik operasional")
  * @OA\Tag(name="Master - Categories", description="Pengelolaan pos kategori transaksi pemasukan dan pengeluaran")
- * @OA\Tag(name="Master - Budget Groups", description="Pengelolaan alokasi amplop anggaran bulanan")
- * @OA\Tag(name="Master - Budget Periods", description="Pengelolaan siklus anggaran dinamis dan pagu kategori berbasis tanggal gajian")
+ * @OA\Tag(name="Master - Budget Groups", description="Pengelolaan alokasi kelompok anggaran bulanan")
+ * @OA\Tag(name="Master - Budget Periods", description="Pengelolaan siklus anggaran dan pagu kategori berbasis tanggal gajian")
  * @OA\Tag(name="Master - Income Sources", description="Pengelolaan sumber dana pemasukan per pengguna")
  * @OA\Tag(name="Pemasukan - Transactions", description="Pencatatan dan kalender arus kas masuk")
  * @OA\Tag(name="Pengeluaran - Transactions", description="Pencatatan dan kalender arus kas keluar")
  * @OA\Tag(name="Laporan - Reports", description="Laporan arus kas, realisasi anggaran, dan breakdown beban kategori")
  * @OA\Tag(name="Setup - Auth", description="Autentikasi dan token Bearer Sanctum")
+ * @OA\Tag(name="Setup - Profile", description="Pengelolaan profil dan foto akun pengguna")
  * @OA\Tag(name="Setup - Users", description="Manajemen akun pengguna")
  * @OA\Tag(name="Setup - Roles", description="Manajemen role pengguna")
- * @OA\Tag(name="Setup - Menus", description="Manajemen menu navigasi dinamis")
+ * @OA\Tag(name="Setup - Menus", description="Manajemen menu navigasi aplikasi")
  * @OA\Tag(name="Setup - Role Permissions", description="Pengaturan hak akses menu per role")
  * @OA\Tag(name="Setup - Company", description="Pengaturan profil dan identitas aplikasi")
  *
@@ -77,6 +78,7 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Admin"),
  *     @OA\Property(property="email", type="string", format="email", example="admin@gmail.com"),
+ *     @OA\Property(property="avatar", type="string", nullable=true, example="data:image/webp;base64,..."),
  *     @OA\Property(property="role_id", type="integer", nullable=true, example=1)
  * )
  *
@@ -272,6 +274,23 @@ use OpenApi\Annotations as OA;
  *
  *     @OA\Property(property="data", type="boolean", example=true),
  *     @OA\Property(property="message", type="string", example="Password updated"),
+ *     @OA\Property(property="errors", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="UpdateProfileRequest",
+ *     required={"name","email"},
+ *
+ *     @OA\Property(property="name", type="string", example="Administrator"),
+ *     @OA\Property(property="email", type="string", format="email", example="admin@example.com"),
+ *     @OA\Property(property="avatar", type="string", nullable=true, description="Base64 data URL gambar profil avatar", example="data:image/webp;base64,...")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="UpdateProfileResponse",
+ *
+ *     @OA\Property(property="data", ref="#/components/schemas/AuthUser"),
+ *     @OA\Property(property="message", type="string", example="Profil berhasil diperbarui"),
  *     @OA\Property(property="errors", nullable=true, example=null)
  * )
  *
@@ -1076,6 +1095,61 @@ class ApiDocumentation
      * )
      */
     public function changePassword(): void {}
+
+    /**
+     * @OA\Put(
+     *     path="/profile",
+     *     tags={"Setup - Profile"},
+     *     summary="Update authenticated user profile",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/UpdateProfileRequest",
+     *             example={"name":"Administrator","email":"admin@example.com","avatar":"data:image/webp;base64,..."}
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated",
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/UpdateProfileResponse",
+     *             example={
+     *                 "data": {
+     *                     "id": 1,
+     *                     "name": "Administrator",
+     *                     "email": "admin@example.com",
+     *                     "avatar": "data:image/webp;base64,...",
+     *                     "role_id": 1,
+     *                     "role": {"id": 1, "role_name": "admin"}
+     *                 },
+     *                 "message": "Profil berhasil diperbarui",
+     *                 "errors": null
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/ValidationErrorResponse",
+     *             example={
+     *                 "data": null,
+     *                 "message": "The email has already been taken.",
+     *                 "errors": {"email": {"The email has already been taken."}}
+     *             }
+     *         )
+     *     )
+     * )
+     */
+    public function updateProfile(): void {}
 
     /**
      * @OA\Get(
@@ -2595,7 +2669,7 @@ class ApiDocumentation
      * @OA\Get(
      *     path="/reports/budget-comparison",
      *     tags={"Laporan - Reports"},
-     *     summary="Get monthly 50/30/20 budget envelope comparison",
+     *     summary="Get monthly 50/30/20 budget group comparison",
      *     security={{"bearerAuth":{}}},
      *
      *     @OA\Parameter(name="month", in="query", required=false, description="Month in YYYY-MM format", @OA\Schema(type="string", example="2026-10")),
