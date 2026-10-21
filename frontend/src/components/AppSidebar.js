@@ -12,6 +12,7 @@ import {
 
 import { AppSidebarNav } from './AppSidebarNav'
 import { buildSidebarNavigation } from '../services/sidebarService'
+import defaultLogo from '../assets/images/logos/castra_logo_white.svg'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
@@ -33,16 +34,21 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="border-bottom">
-        <CSidebarBrand to="/" className="fw-bold text-white">
+        <CSidebarBrand to="/" className="fw-bold text-white py-2">
           {company?.comp_logo ? (
             <img
               src={company.comp_logo}
-              alt="Company Logo"
-              height="32"
-              style={{ objectFit: 'contain' }}
+              alt={company?.comp_name || 'Castra'}
+              height="36"
+              style={{ objectFit: 'contain', maxWidth: '100%' }}
             />
           ) : (
-            company?.comp_name || 'CMS'
+            <img
+              src={defaultLogo}
+              alt="Castra"
+              height="36"
+              style={{ objectFit: 'contain', maxWidth: '100%' }}
+            />
           )}
         </CSidebarBrand>
 
