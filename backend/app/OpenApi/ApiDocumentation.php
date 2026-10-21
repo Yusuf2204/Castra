@@ -77,6 +77,7 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Admin"),
  *     @OA\Property(property="email", type="string", format="email", example="admin@gmail.com"),
+ *     @OA\Property(property="avatar", type="string", nullable=true, example="data:image/webp;base64,..."),
  *     @OA\Property(property="role_id", type="integer", nullable=true, example=1)
  * )
  *
@@ -272,6 +273,23 @@ use OpenApi\Annotations as OA;
  *
  *     @OA\Property(property="data", type="boolean", example=true),
  *     @OA\Property(property="message", type="string", example="Password updated"),
+ *     @OA\Property(property="errors", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="UpdateProfileRequest",
+ *     required={"name","email"},
+ *
+ *     @OA\Property(property="name", type="string", example="Administrator"),
+ *     @OA\Property(property="email", type="string", format="email", example="admin@example.com"),
+ *     @OA\Property(property="avatar", type="string", nullable=true, description="Base64 data URL gambar profil avatar", example="data:image/webp;base64,...")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="UpdateProfileResponse",
+ *
+ *     @OA\Property(property="data", ref="#/components/schemas/AuthUser"),
+ *     @OA\Property(property="message", type="string", example="Profil berhasil diperbarui"),
  *     @OA\Property(property="errors", nullable=true, example=null)
  * )
  *
@@ -1076,6 +1094,61 @@ class ApiDocumentation
      * )
      */
     public function changePassword(): void {}
+
+    /**
+     * @OA\Put(
+     *     path="/profile",
+     *     tags={"Setup - Users"},
+     *     summary="Update authenticated user profile (nama, email, avatar)",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/UpdateProfileRequest",
+     *             example={"name":"Administrator","email":"admin@example.com","avatar":"data:image/webp;base64,..."}
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated",
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/UpdateProfileResponse",
+     *             example={
+     *                 "data": {
+     *                     "id": 1,
+     *                     "name": "Administrator",
+     *                     "email": "admin@example.com",
+     *                     "avatar": "data:image/webp;base64,...",
+     *                     "role_id": 1,
+     *                     "role": {"id": 1, "role_name": "admin"}
+     *                 },
+     *                 "message": "Profil berhasil diperbarui",
+     *                 "errors": null
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/ValidationErrorResponse",
+     *             example={
+     *                 "data": null,
+     *                 "message": "The email has already been taken.",
+     *                 "errors": {"email": {"The email has already been taken."}}
+     *             }
+     *         )
+     *     )
+     * )
+     */
+    public function updateProfile(): void {}
 
     /**
      * @OA\Get(

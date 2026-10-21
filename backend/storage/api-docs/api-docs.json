@@ -644,6 +644,84 @@
                 ]
             }
         },
+        "/profile": {
+            "put": {
+                "tags": [
+                    "Setup - Users"
+                ],
+                "summary": "Update authenticated user profile (nama, email, avatar)",
+                "operationId": "f4501adf3aea047309b7fe1e5bf7a842",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileRequest"
+                            },
+                            "example": {
+                                "name": "Administrator",
+                                "email": "admin@example.com",
+                                "avatar": "data:image/webp;base64,..."
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdateProfileResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": 1,
+                                        "name": "Administrator",
+                                        "email": "admin@example.com",
+                                        "avatar": "data:image/webp;base64,...",
+                                        "role_id": 1,
+                                        "role": {
+                                            "id": 1,
+                                            "role_name": "admin"
+                                        }
+                                    },
+                                    "message": "Profil berhasil diperbarui",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                },
+                                "example": {
+                                    "data": null,
+                                    "message": "The email has already been taken.",
+                                    "errors": {
+                                        "email": [
+                                            "The email has already been taken."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/roles": {
             "get": {
                 "tags": [
@@ -4200,6 +4278,11 @@
                         "format": "email",
                         "example": "admin@gmail.com"
                     },
+                    "avatar": {
+                        "type": "string",
+                        "example": "data:image/webp;base64,...",
+                        "nullable": true
+                    },
                     "role_id": {
                         "type": "integer",
                         "example": 1,
@@ -4636,6 +4719,46 @@
                     "message": {
                         "type": "string",
                         "example": "Password updated"
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileRequest": {
+                "required": [
+                    "name",
+                    "email"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Administrator"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@example.com"
+                    },
+                    "avatar": {
+                        "description": "Base64 data URL gambar profil avatar",
+                        "type": "string",
+                        "example": "data:image/webp;base64,...",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/AuthUser"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Profil berhasil diperbarui"
                     },
                     "errors": {
                         "example": null,
