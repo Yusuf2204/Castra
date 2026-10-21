@@ -90,7 +90,7 @@ class CategoryController extends Controller
                 Rule::requiredIf($request->input('type') === 'expense'),
                 Rule::exists('ms_budget_groups', 'id')->where('user_id', $userId),
             ],
-            'monthly_estimate' => ['nullable', 'numeric', 'min:0'],
+            'monthly_estimate' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
@@ -140,7 +140,7 @@ class CategoryController extends Controller
                 Rule::requiredIf($type === 'expense'),
                 Rule::exists('ms_budget_groups', 'id')->where('user_id', $userId),
             ],
-            'monthly_estimate' => ['nullable', 'numeric', 'min:0'],
+            'monthly_estimate' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'is_active' => ['required', 'boolean'],
         ]);
 

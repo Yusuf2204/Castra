@@ -161,7 +161,7 @@ class IncomeController extends Controller
                 }),
             ],
             'transaction_date' => ['required', 'date_format:Y-m-d'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -221,7 +221,7 @@ class IncomeController extends Controller
                 }),
             ],
             'transaction_date' => ['sometimes', 'required', 'date_format:Y-m-d'],
-            'amount' => ['sometimes', 'required', 'numeric', 'min:0.01'],
+            'amount' => ['sometimes', 'required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
