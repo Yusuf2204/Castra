@@ -1,201 +1,136 @@
-# React CMS Frontend
+# Castra - Frontend Application
 
-Frontend React CMS adalah single-page application untuk mengelola pengguna,
-roles, menu dan permission, pengaturan perusahaan, serta dashboard operasional.
-Antarmuka dibangun dengan React, Vite, Redux, dan CoreUI.
+Antarmuka web modern (*Single Page Application*) untuk **Castra**, platform pencatatan dan perencanaan keuangan pribadi. Dibangun menggunakan **React 19**, **CoreUI 5**, **Vite**, dan **Redux Toolkit**.
 
-## Persyaratan
+---
 
-- Node.js 20 atau lebih baru
-- npm
-- Backend React CMS yang aktif
+## 🎨 Fitur Antarmuka Pengguna
 
-## Instalasi
+- **Dashboard Finansial Responsif**: Ringkasan KPI keuangan bulanan, saldo kumulatif, serta daftar transaksi terkini.
+- **Kalender Transaksi Interaktif**:
+  - Kalender harian untuk modul **Pemasukan** dan **Pengeluaran**.
+  - Klik tanggal untuk melihat rincian transaksi atau membuka modal formulir penambahan data.
+  - Toggle cepat antara tampilan kalender visual dan tabel data tabular.
+- **Master Data dengan Split Layout**:
+  - Kolom kiri untuk daftar tabel data dengan pagination dan filter pencarian.
+  - Kolom kanan untuk formulir tambah/edit yang cepat dan intuitif.
+  - Mendukung Sumber Pemasukan, Kategori Transaksi, Kelompok Anggaran, dan Siklus Anggaran.
+- **Laporan Visual & Komprehensif**:
+  - Laporan Arus Kas 12 bulan (*Cash Flow*).
+  - Laporan Realisasi Anggaran dengan indikator status (*Aman*, *Mendekati Batas*, *Over Budget*).
+  - Laporan Rincian Beban Kategori per kelompok alokasi.
+- **Profil Pengguna & Avatar**:
+  - Formulir profil pribadi (Nama, Email, dan Foto Profil).
+  - Modal pemotong gambar (*Avatar Circular Cropper*) interaktif dengan format output WebP/Base64.
+  - Formulir penggantian kata sandi dengan verifikasi sandi saat ini.
+- **Manajemen Hak Akses & Pengaturan**:
+  - Pengelolaan Pengguna (*Users*) dan Peran (*Roles*).
+  - Pengaturan Hak Akses Menu (*Role Permissions*).
+  - Pengaturan Identitas Perusahaan/Aplikasi (*Company Settings*).
 
-```bash
-npm ci
+---
+
+## 📂 Struktur Direktori `src/`
+
+```text
+frontend/src/
+├── assets/             # Gambar, ikon, dan berkas statis
+├── components/         # Komponen global yang dapat digunakan kembali
+│   ├── header/         # AppHeader, AppHeaderDropdown, breadcrumbs
+│   ├── AppFooter.js    # Komponen footer aplikasi
+│   ├── AppSidebar.js   # Navigasi sidebar dinamis sesuai role
+│   ├── AppToastProvider.js # Provider notifikasi toast global
+│   └── AvatarCropModal.js  # Modal interaktif crop foto profil lingkaran
+├── layout/             # Layout utama aplikasi (DefaultLayout)
+├── scss/               # Styling kustom CoreUI & SCSS aplikasi
+├── services/           # Service API client (Axios), interceptor, dan toast
+│   ├── api.js          # Konfigurasi Axios & error interceptor
+│   ├── authService.js  # Penanganan token dan sesi login
+│   ├── sidebarService.js # Pemetaan ikon menu dinamis
+│   └── toastService.js # Helper pemicu notifikasi toast
+├── store/              # Redux store untuk state global aplikasi
+├── views/              # Halaman-halaman tampilan aplikasi
+│   ├── dashboard/      # Halaman dashboard finansial
+│   ├── incomes/        # Modul Pemasukan (Kalender & Tabel)
+│   ├── expenses/       # Modul Pengeluaran (Kalender & Tabel)
+│   ├── reports/        # Laporan Arus Kas, Realisasi Anggaran, Kategori
+│   ├── master/         # Master Data (Sumber Dana, Kategori, Anggaran)
+│   ├── profile/        # Pengaturan profil pengguna & foto
+│   ├── setup/          # Manajemen Pengguna, Peran, Menu, Perusahaan
+│   └── pages/          # Halaman publik (Login, 404, 500)
+├── App.js              # Komponen utama aplikasi & routing
+├── index.js            # Entry point React DOM
+├── routes.js           # Konfigurasi mapping route URL ke komponen view
+└── _nav.js             # Struktur default navigasi sidebar
 ```
 
-Jika `package-lock.json` belum tersedia, gunakan:
+---
 
+## 💻 Panduan Pengembangan Lokal
+
+### Persyaratan:
+- **Node.js** versi 20 atau 22+
+- **npm** versi 10+
+- Backend Castra yang sedang berjalan (port 9001 via Docker atau port 8000 lokal).
+
+### 1. Instalasi Dependensi:
 ```bash
 npm install
 ```
 
-## Konfigurasi API
-
-Alamat API dikonfigurasi di `src/services/api.js`. Base URL menggunakan `/api`
-agar deployment tetap portabel di berbagai environment.
-
-```js
-// src/services/api.js
-const api = axios.create({
-  baseURL: '/api',
-})
-```
-
-### Saat Development Lokal
-
-Vite development server secara otomatis mem-proxy request `/api` ke backend
-lokal. Konfigurasi proxy ada di `vite.config.mjs`:
-
-```js
+### 2. Konfigurasi Proxy API:
+Saat pengembangan lokal, Vite secara otomatis meneruskan permintaan `/api` ke backend melalui konfigurasi di `vite.config.mjs`:
+```javascript
 server: {
   port: 3000,
   proxy: {
     '/api': {
-      target: 'http://localhost:8000',
+      target: 'http://localhost:9001', // atau http://127.0.0.1:8000
       changeOrigin: true,
     },
   },
-},
+}
 ```
 
-### Saat Deploy dengan Docker
-
-Tidak diperlukan konfigurasi tambahan — Nginx reverse proxy akan meneruskan
-request `/api` ke backend container secara otomatis.
-
-## Menjalankan Development Server
-
+### 3. Menjalankan Server Pengembangan:
 ```bash
 npm start
 ```
+Buka browser di [http://localhost:3000](http://localhost:3000).
 
-Aplikasi tersedia di `http://localhost:3000`.
+---
 
-## Perintah Tersedia
+## 🔨 Perintah yang Tersedia
 
-| Perintah | Fungsi |
+| Perintah | Deskripsi |
 | --- | --- |
-| `npm start` | Menjalankan Vite development server |
-| `npm run build` | Membuat production build |
-| `npm run lint` | Menjalankan ESLint |
-| `npm run preview` | Meninjau hasil production build |
-| `npm run serve` | Menjalankan Vite preview server |
-
-## Struktur Utama
-
-```text
-src/
-├── assets/       Aset dan styling aplikasi
-├── components/   Komponen yang digunakan lintas halaman
-├── layout/       App header, sidebar, footer, dan content layout
-├── services/     API client, interceptor, dan service domain
-├── store/        Redux store dan state global
-├── views/
-│   ├── dashboard/
-│   ├── pages/
-│   └── setup/
-├── App.js
-├── index.js
-└── routes.js
-```
-
-## Autentikasi dan Bootstrap
-
-Setelah login, token disimpan oleh frontend dan digunakan sebagai bearer token.
-Data sesi dipulihkan melalui endpoint `/me`, yang menjadi sumber data user,
-company, serta navigasi sesuai role.
-
-API interceptor menangani respons umum:
-
-- `401`: sesi dibersihkan dan user diarahkan ke login.
-- `403`: user diarahkan ke halaman forbidden.
-- `404`: halaman atau resource tidak ditemukan.
-- `422`: error validasi ditampilkan pada field terkait.
-- `500`: error ditampilkan melalui toast.
-
-## Navigasi Dinamis
-
-Sidebar dibentuk dari menu yang diberikan backend berdasarkan permission role.
-Ikon menu dipetakan melalui allowlist di:
-
-```text
-src/services/sidebarService.js
-```
-
-Jika menambahkan nama ikon baru dari backend, pastikan ikon tersebut juga
-tersedia pada allowlist frontend.
-
-## UI dan Form
-
-Frontend menyediakan:
-
-- Toast notification global
-- Loading state dan disabled submit
-- Inline validation dari respons backend
-- Protected routes
-- Halaman forbidden dan not found
-- Company branding untuk title, logo, dan favicon
-- Upload gambar company dalam format Base64
+| `npm start` | Menjalankan server pengembangan Vite di port 3000 dengan Hot Module Replacement (HMR) |
+| `npm run build` | Melakukan kompilasi aset production ke folder `build/` |
+| `npm run lint` | Menjalankan pemeriksaan kualitas kode dengan ESLint |
+| `npm run preview` | Meninjau hasil kompilasi build production secara lokal |
 
 ---
 
-## Deployment Docker
+## 🐳 Deployment Menggunakan Docker
 
-Frontend dibangun dengan **multi-stage Docker build**: Node.js 22 untuk build,
-Nginx Alpine untuk runtime.
+Frontend Castra dikemas menggunakan **multi-stage build**:
+1. **Stage 1 (Build)**: Menggunakan image Node.js 22 untuk menginstal dependensi dan membangun bundel React ke folder `build/`.
+2. **Stage 2 (Runtime)**: Menggunakan image Nginx Alpine yang sangat ringan dan aman untuk menyajikan berkas statis dengan dukungan SPA fallback (`index.html`), gzip compression, dan security headers.
 
-### Struktur File
-
-```text
-frontend/
-├── Dockerfile       # Multi-stage: Node 22 build → Nginx Alpine runtime
-├── nginx.conf       # Nginx config untuk SPA (static + fallback)
-└── .dockerignore
-```
-
-### Build
-
+Untuk memperbarui build frontend di container yang sedang berjalan:
 ```bash
-# dari root proyek
+# Kompilasi ulang dan update container frontend
 docker compose build frontend
+docker compose up -d frontend
 ```
-
-Proses build:
-1. `npm ci` — install dependencies
-2. `npm run build` — produksi React build ke `build/`
-3. Copy hasil build ke Nginx Alpine
-4. Sajikan melalui Nginx di port 80 dengan SPA fallback
-
-### Konfigurasi Nginx Internal
-
-Nginx di dalam container frontend menangani:
-
-- SPA fallback: semua route yang tidak cocok diarahkan ke `index.html`
-- Gzip compression untuk aset statis
-- Cache header untuk aset di `/assets/`
-- Security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`)
 
 ---
 
-## Build Production
+## 🔐 Penanganan Autentikasi & Interceptor
 
-```bash
-npm ci
-npm run lint
-npm run build
-```
-
-Hasil build berada di folder:
-
-```text
-build/
-```
-
-Deploy isi folder tersebut menggunakan web server yang mendukung SPA fallback
-ke `index.html`. Untuk deployment Docker, proses build sudah ditangani otomatis
-oleh Dockerfile.
-
-## Verifikasi Sebelum Release
-
-```bash
-npm run lint
-npm run build
-```
-
-Setelah deploy, periksa login, pemulihan sesi, menu berdasarkan role, CRUD setup,
-company branding, halaman error, dan logout.
-
-Dokumentasi instalasi proyek lengkap tersedia di [README root](../README.md).
+- **Penyimpanan Token**: Token Bearer Sanctum disimpan di browser setelah login berhasil dan disisipkan otomatis ke header setiap permintaan API (`Authorization: Bearer <token>`).
+- **Respon Error Global**:
+  - `401 Unauthorized`: Menghapus sesi lokal dan mengarahkan pengguna kembali ke halaman login.
+  - `403 Forbidden`: Mengarahkan pengguna ke halaman akses ditolak.
+  - `422 Unprocessable Content`: Menampilkan pesan validasi pada field formulir terkait.
+  - `500 Server Error`: Menampilkan pesan kesalahan melalui toast notification di pojok kanan atas.

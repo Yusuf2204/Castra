@@ -1,233 +1,146 @@
-# React CMS Backend
+# Castra - Backend API Service
 
-Backend React CMS adalah REST API berbasis Laravel 12. Modul utamanya mencakup
-autentikasi Sanctum, users, roles, menu dan permission, company settings,
-dashboard summary, serta dokumentasi OpenAPI.
-
-## Persyaratan
-
-- PHP 8.2 atau lebih baru
-- Composer 2
-- Ekstensi PHP yang dibutuhkan Laravel
-- MySQL, MariaDB, atau SQLite
+Layanan RESTful API modern untuk **Castra**, platform pencatatan dan perencanaan keuangan pribadi. Dibangun menggunakan **Laravel 12** dan **PHP 8.3+** dengan standar keamanan token **Laravel Sanctum**.
 
 ---
 
-## Instalasi Lokal
+## 🏛️ Modul & Kapabilitas API
 
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-```
+Layanan API Castra mencakup pilar modul finansial dan tata kelola akun:
 
-Konfigurasikan database di `.env`. Contoh MySQL:
+### 1. Autentikasi & Profil Pengguna (`/api/`)
+- `POST /api/login`: Autentikasi pengguna dan penerbitan token Bearer Sanctum.
+- `POST /api/logout`: Pencabutan token aktif.
+- `GET /api/user`: Pengambilan data pengguna aktif dan profil perusahaan.
+- `PUT /api/profile`: Pembaruan nama, email, dan foto profil pengguna (avatar WebP/Base64).
+- `PUT /api/change-password`: Penggantian kata sandi akun dengan validasi sandi saat ini.
 
-```dotenv
-APP_URL=http://127.0.0.1:8000
+### 2. Modul Master Data (`/api/`)
+- **Sumber Pemasukan (`/api/income-sources`)**: Pengelolaan sumber dana masuk (gaji, bisnis, bonus, investasi) yang terisolasi per pengguna.
+- **Kategori Transaksi (`/api/categories`)**: Pengelompokan pos transaksi untuk pemasukan dan pengeluaran, dilengkapi batas estimasi bulanan.
+- **Kelompok Anggaran (`/api/budget-groups`)**: Alokasi pos anggaran (Kebutuhan Pokok, Keinginan, Tabungan, Dana Darurat).
+- **Siklus Anggaran (`/api/budget-periods`)**: Siklus anggaran fleksibel berbasis tanggal gajian dengan pembuatan alokasi kategori otomatis (*auto-generated allocation*).
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=react_cms
-DB_USERNAME=root
-DB_PASSWORD=
-```
+### 3. Modul Transaksi Finansial (`/api/`)
+- **Pemasukan (`/api/incomes`)**: Pencatatan transaksi dana masuk, filter bulan/pencarian, dan endpoint ringkasan kalender harian (`/api/incomes/calendar`).
+- **Pengeluaran (`/api/expenses`)**: Pencatatan transaksi belanja, monitoring batas anggaran dengan evaluasi status (*Aman*, *Mendekati Batas*, *Over Budget*), serta endpoint kalender harian (`/api/expenses/calendar`).
 
-Untuk membuat akun administrator melalui seeder, isi:
+### 4. Modul Laporan & Dashboard (`/api/`)
+- **Dashboard Summary (`/api/dashboard-summary`)**: Ringkasan KPI finansial bulanan, saldo kumulatif, dan transaksi terkini.
+- **Arus Kas Tahunan (`/api/reports/cash-flow`)**: Rekapitulasi pergerakan arus kas 12 bulan per tahun.
+- **Realisasi Anggaran (`/api/reports/budget-comparison`)**: Evaluasi serapan pengeluaran terhadap alokasi anggaran periode aktif.
+- **Rincian Kategori (`/api/reports/category-breakdown`)**: Komposisi pengeluaran per kelompok alokasi anggaran.
 
-```dotenv
-ADMIN_NAME=Administrator
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=change-this-password
-```
-
-`ADMIN_PASSWORD` harus memiliki minimal 12 karakter. Jalankan migrasi dan seeder:
-
-```bash
-php artisan migrate --seed
-```
-
-Jika variabel admin belum diisi saat proses seed pertama, isi variabel tersebut
-kemudian jalankan:
-
-```bash
-php artisan db:seed --class=AdminUserSeeder
-```
-
-### Menjalankan API
-
-```bash
-php artisan serve
-```
-
-Alamat development:
-
-- API: `http://127.0.0.1:8000/api`
-- Swagger: `http://127.0.0.1:8000`
-- Swagger alternatif: `http://127.0.0.1:8000/api/documentation`
-
-Route `/` sengaja diarahkan ke Swagger UI, bukan halaman welcome Laravel.
+### 5. Modul Setup & Administrasi (`/api/`)
+- **Pengguna & Peran (`/api/users`, `/api/roles`)**: Manajemen akun pengguna dan tingkatan wewenang (*roles*).
+- **Menu & Hak Akses (`/api/menus`, `/api/role-permissions`)**: Manajemen struktur menu aplikasi dan hak akses navigasi dinamis per peran.
+- **Profil Perusahaan (`/api/company`)**: Konfigurasi identitas aplikasi, nama perusahaan, logo, dan favicon.
 
 ---
 
-## Deployment Docker
-
-Backend berjalan dalam container dengan **PHP 8.3 FPM + Nginx + Supervisor**.
-Semua konfigurasi diambil dari environment variable yang disuplai oleh
-`docker-compose.yml`.
-
-### Struktur File
+## 📂 Struktur Direktori Utama
 
 ```text
-backend/
-├── Dockerfile              # PHP 8.3 FPM + Nginx + Supervisor
-├── docker-entrypoint.sh    # Startup: keygen, migrate, swagger, optimize
-├── nginx-backend.conf      # Internal nginx untuk Laravel
-├── supervisor.conf         # Menjalankan nginx + php-fpm
-└── .dockerignore
+backend/app/
+├── Http/
+│   ├── Controllers/
+│   │   └── Api/                # Controller REST API seluruh modul
+│   │       ├── AuthController.php
+│   │       ├── UserController.php
+│   │       ├── CategoryController.php
+│   │       ├── BudgetGroupController.php
+│   │       ├── BudgetPeriodController.php
+│   │       ├── IncomeController.php
+│   │       ├── ExpenseController.php
+│   │       └── ReportController.php
+│   ├── Requests/               # Validasi request formulir API
+│   └── Resources/              # Transformasi format respon JSON
+├── Models/                     # Eloquent ORM Models
+├── OpenApi/
+│   └── ApiDocumentation.php    # Anotasi Swagger / OpenAPI 3.0
+├── Services/                   # Business logic (ReportService, dll.)
+└── database/
+    ├── migrations/             # Skema tabel database
+    └── seeders/                # Seeder data awal & akun admin
 ```
 
-### Build
+---
+
+## 📖 Dokumentasi Swagger OpenAPI Interaktif
+
+Dokumentasi RESTful API terintegrasi menggunakan L5-Swagger (OpenAPI 3.0):
+
+- **Alamat URL**: [http://localhost:9001](http://localhost:9001) atau [http://localhost:9001/api/documentation](http://localhost:9001/api/documentation)
+- Anda dapat menguji langsung setiap endpoint melalui fitur **"Try it out"** dengan memasukkan Bearer token dari endpoint `/login`.
+
+Untuk memperbarui berkas OpenAPI setelah melakukan perubahan anotasi:
+```bash
+docker exec castra-backend php artisan l5-swagger:generate
+```
+
+---
+
+## 💻 Panduan Instalasi Lokal (Non-Docker)
+
+### Persyaratan:
+- **PHP** versi 8.2 atau 8.3+
+- **Composer** versi 2.x
+- Ekstensi PHP: `pdo_mysql`, `mbstring`, `openssl`, `xml`, `ctype`, `json`, `curl`, `gd`
+- Database **MySQL** 8.0+
+
+### Langkah-langkah:
+1. **Instal dependensi Composer:**
+   ```bash
+   composer install
+   ```
+2. **Salin environment file dan buat app key:**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+3. **Konfigurasikan database pada berkas `.env`:**
+   ```dotenv
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=castra
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+4. **Jalankan migrasi dan seeder awal:**
+   ```bash
+   php artisan migrate --seed
+   ```
+5. **Jalankan server pengembangan:**
+   ```bash
+   php artisan serve --port=8000
+   ```
+
+---
+
+## 🐳 Deployment Menggunakan Docker
+
+Backend berjalan di dalam container Docker yang dioptimasi dengan arsitektur **PHP 8.3 FPM + Nginx + Supervisor**:
+- **FastCGI Memory Buffers**: Nginx backend dikonfigurasi dengan alokasi buffer RAM yang memadai (128k/256k) untuk mencegah penulisan file temporer disk pada respon besar seperti aset Swagger.
+- **Gzip Compression**: Kompresi otomatis diaktifkan untuk respon JSON dan aset web.
+- **Supervisor**: Memastikan service PHP-FPM dan Nginx internal tetap aktif.
 
 ```bash
-# dari root proyek
+# Build ulang container backend jika ada perubahan konfigurasi
 docker compose build backend
-```
-
-### Environment Variables
-
-Semua variabel berikut disuplai dari `docker-compose.yml` (dibaca dari `.env` root):
-
-| Variable | Default | Keterangan |
-| --- | --- | --- |
-| `APP_KEY` | (auto-generate) | Application key |
-| `APP_ENV` | `production` | Environment |
-| `APP_DEBUG` | `false` | Debug mode |
-| `APP_URL` | `http://localhost` | Base URL aplikasi |
-| `DB_HOST` | — | Host database eksternal |
-| `DB_PORT` | `3306` | Port database |
-| `DB_DATABASE` | — | Nama database |
-| `DB_USERNAME` | — | User database |
-| `DB_PASSWORD` | — | Password database |
-| `ADMIN_PASSWORD` | — | Password admin (min 12 karakter) |
-| `SANCTUM_EXPIRATION` | `480` | Masa berlaku token (menit) |
-| `CORS_ALLOWED_ORIGINS` | — | Origin yang diizinkan |
-
-### Proses Startup
-
-Saat container pertama kali berjalan, entrypoint akan:
-
-1. Generate `APP_KEY` jika belum diset
-2. Menunggu koneksi database siap
-3. Menjalankan `php artisan migrate --force`
-4. Generate dokumentasi Swagger
-5. Optimasi cache (config, route, view)
-6. Menjalankan nginx dan php-fpm via Supervisor
-
-### Logs
-
-Log Laravel disimpan di volume `react-cms-logs` dan selamat dari restart container.
-
-```bash
-docker compose logs -f backend
+docker compose up -d backend
 ```
 
 ---
 
-## Dokumentasi Swagger
+## 🧪 Pengujian Otomatis & Standar Kualitas
 
-Generate ulang dokumentasi setelah mengubah annotation OpenAPI:
-
-```bash
-php artisan l5-swagger:generate
-```
-
-Dokumen JSON dihasilkan di:
-
-```text
-storage/api-docs/api-docs.json
-```
-
-Alur pengujian endpoint terproteksi:
-
-1. Jalankan `POST /api/login`.
-2. Salin token dari response.
-3. Klik **Authorize** di Swagger.
-4. Masukkan bearer token.
-5. Jalankan endpoint terproteksi.
-
-Server OpenAPI dibentuk dari `APP_URL` dengan prefix `/api`, sehingga URL dapat
-menyesuaikan environment local, staging, dan production.
-
-## Endpoint Utama
-
-| Modul | Endpoint |
-| --- | --- |
-| Auth | `POST /login`, `GET /me`, `POST /logout` |
-| Dashboard | `GET /dashboard-summary` |
-| Users | `GET`, `POST`, `PUT`, `DELETE /users` |
-| Password | `POST /change-password` |
-| Roles | `GET`, `POST`, `PUT`, `DELETE /roles` |
-| Menus | `GET`, `POST`, `PUT`, `DELETE /menus`, `GET /menus-tree` |
-| Permissions | `GET`, `POST /role-menus/{role}` |
-| Company | `GET /company`, `PUT /company` |
-
-`POST /login` dan `GET /company` bersifat publik. Endpoint lain menggunakan
-middleware `auth:sanctum`.
-
-## Respons API
-
-API menggunakan bentuk respons umum:
-
-```json
-{
-  "data": {},
-  "message": "Operation successful",
-  "errors": null
-}
-```
-
-Kesalahan validasi menggunakan `errors` per field:
-
-```json
-{
-  "data": null,
-  "message": "Validation failed",
-  "errors": {
-    "email": [
-      "The email field is required."
-    ]
-  }
-}
-```
-
-## Pengujian
+Aplikasi dilengkapi pengujian otomatis (*Unit & Feature Tests*) yang komprehensif menggunakan PHPUnit:
 
 ```bash
-php artisan test
+# Menjalankan seluruh test suite (61 tests)
+docker exec castra-backend php artisan test
+
+# Melakukan formatting kode PHP sesuai standar PSR-12 (Laravel Pint)
+docker exec castra-backend ./vendor/bin/pint
 ```
-
-Untuk memeriksa daftar route:
-
-```bash
-php artisan route:list
-```
-
-## CORS dan Sanctum
-
-Origin frontend dikonfigurasi melalui `.env`. Untuk production:
-
-- Batasi origin hanya ke domain frontend.
-- Gunakan HTTPS.
-- Jangan commit token atau secret.
-- Atur masa berlaku dan prefix token sesuai kebijakan sistem.
-- Gunakan `APP_DEBUG=false` dan `APP_ENV=production`.
-
-Lihat `.env.production.example` untuk template konfigurasi.
-
-## Deployment
-
-Panduan lengkap mengenai environment, cache, database, scheduler, backup,
-logging, dan rollback tersedia di
-[../docs/backend/production-deployment.md](../docs/backend/production-deployment.md).
