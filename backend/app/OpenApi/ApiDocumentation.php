@@ -2332,6 +2332,51 @@ class ApiDocumentation
     public function incomesCollection(): void {}
 
     /**
+     * @OA\Post(
+     *     path="/incomes/scan-receipt",
+     *     tags={"Pemasukan - Transactions"},
+     *     summary="Scan and parse income transfer proof / receipt via OCR",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"receipt"},
+     *                 @OA\Property(property="receipt", type="string", format="binary", description="Proof of transfer/income image file (jpeg, png, webp)")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income proof parsed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="amount", type="number", format="float", example=5000000),
+     *                 @OA\Property(property="transaction_date", type="string", format="date", example="2026-10-21"),
+     *                 @OA\Property(property="merchant", type="string", example="PT TEKNOLOGI NUSANTARA"),
+     *                 @OA\Property(property="notes", type="string", example="PT TEKNOLOGI NUSANTARA"),
+     *                 @OA\Property(property="suggested_income_source_id", type="integer", nullable=true, example=1),
+     *                 @OA\Property(property="suggested_income_source_name", type="string", nullable=true, example="Gaji"),
+     *                 @OA\Property(property="suggested_category_id", type="integer", nullable=true, example=11),
+     *                 @OA\Property(property="suggested_category_name", type="string", nullable=true, example="Gaji Pokok"),
+     *                 @OA\Property(property="raw_text", type="string", example="TRANSFER BERHASIL\nNOMINAL : Rp 5.000.000")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Bukti pemasukan berhasil dipindai"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function scanIncomeProof(): void {}
+
+    /**
      * @OA\Get(
      *     path="/incomes/calendar",
      *     tags={"Pemasukan - Transactions"},
@@ -2514,6 +2559,49 @@ class ApiDocumentation
      * )
      */
     public function expensesCollection(): void {}
+
+    /**
+     * @OA\Post(
+     *     path="/expenses/scan-receipt",
+     *     tags={"Pengeluaran - Transactions"},
+     *     summary="Scan and parse receipt image via OCR",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"receipt"},
+     *                 @OA\Property(property="receipt", type="string", format="binary", description="Receipt image file (jpeg, png, webp)")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Receipt parsed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="amount", type="number", format="float", example=36000),
+     *                 @OA\Property(property="transaction_date", type="string", format="date", example="2026-10-21"),
+     *                 @OA\Property(property="merchant", type="string", example="KOPI KENANGAN"),
+     *                 @OA\Property(property="notes", type="string", example="KOPI KENANGAN - Belanja"),
+     *                 @OA\Property(property="suggested_category_id", type="integer", nullable=true, example=1),
+     *                 @OA\Property(property="suggested_category_name", type="string", nullable=true, example="Makanan & Minuman"),
+     *                 @OA\Property(property="raw_text", type="string", example="KOPI KENANGAN\nTOTAL : 36.000")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Nota berhasil dipindai"),
+     *             @OA\Property(property="errors", nullable=true, example=null)
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function scanReceipt(): void {}
 
     /**
      * @OA\Get(

@@ -11,7 +11,10 @@ RUN apk add --no-cache \
     curl \
     unzip \
     nginx \
-    supervisor
+    supervisor \
+    tesseract-ocr \
+    tesseract-ocr-data-ind \
+    tesseract-ocr-data-eng
 
 # ── PHP extensions ──────────────────────────────────────────
 # Compile against -dev headers, then remove them to keep the
