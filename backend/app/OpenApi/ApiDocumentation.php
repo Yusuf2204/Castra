@@ -18,16 +18,17 @@ use OpenApi\Annotations as OA;
  *
  * @OA\Tag(name="Dashboard - Analytics", description="Ringkasan finansial dan statistik operasional")
  * @OA\Tag(name="Master - Categories", description="Pengelolaan pos kategori transaksi pemasukan dan pengeluaran")
- * @OA\Tag(name="Master - Budget Groups", description="Pengelolaan alokasi amplop anggaran bulanan")
- * @OA\Tag(name="Master - Budget Periods", description="Pengelolaan siklus anggaran dinamis dan pagu kategori berbasis tanggal gajian")
+ * @OA\Tag(name="Master - Budget Groups", description="Pengelolaan alokasi kelompok anggaran bulanan")
+ * @OA\Tag(name="Master - Budget Periods", description="Pengelolaan siklus anggaran dan pagu kategori berbasis tanggal gajian")
  * @OA\Tag(name="Master - Income Sources", description="Pengelolaan sumber dana pemasukan per pengguna")
  * @OA\Tag(name="Pemasukan - Transactions", description="Pencatatan dan kalender arus kas masuk")
  * @OA\Tag(name="Pengeluaran - Transactions", description="Pencatatan dan kalender arus kas keluar")
  * @OA\Tag(name="Laporan - Reports", description="Laporan arus kas, realisasi anggaran, dan breakdown beban kategori")
  * @OA\Tag(name="Setup - Auth", description="Autentikasi dan token Bearer Sanctum")
+ * @OA\Tag(name="Setup - Profile", description="Pengelolaan profil dan foto akun pengguna")
  * @OA\Tag(name="Setup - Users", description="Manajemen akun pengguna")
  * @OA\Tag(name="Setup - Roles", description="Manajemen role pengguna")
- * @OA\Tag(name="Setup - Menus", description="Manajemen menu navigasi dinamis")
+ * @OA\Tag(name="Setup - Menus", description="Manajemen menu navigasi aplikasi")
  * @OA\Tag(name="Setup - Role Permissions", description="Pengaturan hak akses menu per role")
  * @OA\Tag(name="Setup - Company", description="Pengaturan profil dan identitas aplikasi")
  *
@@ -1098,8 +1099,8 @@ class ApiDocumentation
     /**
      * @OA\Put(
      *     path="/profile",
-     *     tags={"Setup - Users"},
-     *     summary="Update authenticated user profile (nama, email, avatar)",
+     *     tags={"Setup - Profile"},
+     *     summary="Update authenticated user profile",
      *     security={{"bearerAuth":{}}},
      *
      *     @OA\RequestBody(
@@ -2668,7 +2669,7 @@ class ApiDocumentation
      * @OA\Get(
      *     path="/reports/budget-comparison",
      *     tags={"Laporan - Reports"},
-     *     summary="Get monthly 50/30/20 budget envelope comparison",
+     *     summary="Get monthly 50/30/20 budget group comparison",
      *     security={{"bearerAuth":{}}},
      *
      *     @OA\Parameter(name="month", in="query", required=false, description="Month in YYYY-MM format", @OA\Schema(type="string", example="2026-10")),

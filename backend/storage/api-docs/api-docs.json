@@ -647,9 +647,9 @@
         "/profile": {
             "put": {
                 "tags": [
-                    "Setup - Users"
+                    "Setup - Profile"
                 ],
-                "summary": "Update authenticated user profile (nama, email, avatar)",
+                "summary": "Update authenticated user profile",
                 "operationId": "f4501adf3aea047309b7fe1e5bf7a842",
                 "requestBody": {
                     "required": true,
@@ -3944,7 +3944,7 @@
                 "tags": [
                     "Laporan - Reports"
                 ],
-                "summary": "Get monthly 50/30/20 budget envelope comparison",
+                "summary": "Get monthly 50/30/20 budget group comparison",
                 "operationId": "9889ad7f438a45d690bbb6dad717b5cc",
                 "parameters": [
                     {
@@ -5756,11 +5756,11 @@
         },
         {
             "name": "Master - Budget Groups",
-            "description": "Pengelolaan alokasi amplop anggaran bulanan"
+            "description": "Pengelolaan alokasi kelompok anggaran bulanan"
         },
         {
             "name": "Master - Budget Periods",
-            "description": "Pengelolaan siklus anggaran dinamis dan pagu kategori berbasis tanggal gajian"
+            "description": "Pengelolaan siklus anggaran dan pagu kategori berbasis tanggal gajian"
         },
         {
             "name": "Master - Income Sources",
@@ -5783,6 +5783,10 @@
             "description": "Autentikasi dan token Bearer Sanctum"
         },
         {
+            "name": "Setup - Profile",
+            "description": "Pengelolaan profil dan foto akun pengguna"
+        },
+        {
             "name": "Setup - Users",
             "description": "Manajemen akun pengguna"
         },
@@ -5792,7 +5796,7 @@
         },
         {
             "name": "Setup - Menus",
-            "description": "Manajemen menu navigasi dinamis"
+            "description": "Manajemen menu navigasi aplikasi"
         },
         {
             "name": "Setup - Role Permissions",
