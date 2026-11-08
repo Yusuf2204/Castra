@@ -16,7 +16,8 @@ import {
   CModalFooter,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilImage } from '@coreui/icons'
+import { cilPencil, cilTrash, cilImage, cilPrint } from '@coreui/icons'
+import VoucherModal from '../../components/vouchers/VoucherModal'
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return 'Rp 0'
@@ -40,6 +41,8 @@ const formatDateShort = (value) => {
 
 const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
   const [previewImage, setPreviewImage] = useState(null)
+  const [selectedVoucher, setSelectedVoucher] = useState(null)
+  const [showVoucherModal, setShowVoucherModal] = useState(false)
 
   if (loading) {
     return (
@@ -140,6 +143,20 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
               <CTableDataCell>
                 <CButton
                   size="sm"
+                  color="primary"
+                  variant="ghost"
+                  title="Cetak Voucher BKK"
+                  className="me-1 text-primary"
+                  onClick={() => {
+                    setSelectedVoucher(item)
+                    setShowVoucherModal(true)
+                  }}
+                >
+                  <CIcon icon={cilPrint} />
+                </CButton>
+
+                <CButton
+                  size="sm"
                   color="secondary"
                   variant="ghost"
                   title="Edit"
@@ -188,6 +205,14 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Voucher Print Modal */}
+      <VoucherModal
+        visible={showVoucherModal}
+        onClose={() => setShowVoucherModal(false)}
+        transaction={selectedVoucher}
+        type="expense"
+      />
     </>
   )
 }

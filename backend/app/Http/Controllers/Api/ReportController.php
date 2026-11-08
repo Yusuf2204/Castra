@@ -56,4 +56,26 @@ class ReportController extends Controller
             'errors' => null,
         ]);
     }
+
+    public function accountStatement(Request $request)
+    {
+        $request->validate([
+            'account_id' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $user = $request->user();
+        $accountId = (int) $request->input('account_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $data = $this->reportService->getAccountStatement($user, $accountId, $startDate, $endDate);
+
+        return response()->json([
+            'data' => $data,
+            'message' => 'OK',
+            'errors' => null,
+        ]);
+    }
 }

@@ -33,10 +33,12 @@ import {
   cilXCircle,
   cilInfo,
   cilCheck,
+  cilPrint,
 } from '@coreui/icons'
 import api from '../../services/api'
 import { toastSuccess, toastError, toastWarning } from '../../services/toastService'
 import { getFieldError } from '../../utils/formErrors'
+import VoucherModal from '../../components/vouchers/VoucherModal'
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return 'Rp 0'
@@ -99,6 +101,8 @@ const ExpenseModal = ({
   const [deletingId, setDeletingId] = useState(null)
   const [errors, setErrors] = useState({})
   const [accounts, setAccounts] = useState([])
+  const [voucherItem, setVoucherItem] = useState(null)
+  const [showVoucherModal, setShowVoucherModal] = useState(false)
 
   const fileInputRef = useRef(null)
 
@@ -482,6 +486,19 @@ const ExpenseModal = ({
                         )}
                       </CTableDataCell>
                       <CTableDataCell>
+                        <CButton
+                          size="sm"
+                          color="primary"
+                          variant="ghost"
+                          title="Cetak Voucher BKK"
+                          onClick={() => {
+                            setVoucherItem(item)
+                            setShowVoucherModal(true)
+                          }}
+                          className="p-1 me-1 text-primary"
+                        >
+                          <CIcon icon={cilPrint} />
+                        </CButton>
                         <CButton
                           size="sm"
                           color="secondary"
@@ -992,6 +1009,14 @@ const ExpenseModal = ({
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Voucher Print Modal */}
+      <VoucherModal
+        visible={showVoucherModal}
+        onClose={() => setShowVoucherModal(false)}
+        transaction={voucherItem}
+        type="expense"
+      />
     </>
   )
 }

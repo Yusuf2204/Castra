@@ -241,4 +241,45 @@ class ReportTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('data.total_income_year', fn ($val) => (float) $val === 0.0);
     }
+
+    public function test_account_statement_returns_petty_cash_book_ledger_with_running_balance(): void
+    {
+        $account = \App\Models\Account::create([
+            'user_id' => $this->user->id,
+            'name' => 'Kas Kecil Kantor',
+            'type' => 'petty_cash',
+            'initial_balance' => 500000.0,
+            'current_balance' => 500000.0,
+            'is_active' => true,
+        ]);
+
+        IncomeTransaction::create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'income_source_id' => $this->incomeSource->id,
+            'amount' => 1500000.0,
+            'transaction_date' => '2026-11-01',
+            'voucher_no' => 'BKM-202611-0001',
+        ]);
+
+        ExpenseTransaction::create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'category_id' => $this->catMakan->id,
+            'amount' => 200000.0,
+            'transaction_date' => '2026-11-03',
+            'voucher_no' => 'BKK-202611-0001',
+            'payee' => 'Catering Berkah',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/reports/account-statement?account_id={$account->id}&start_date=2026-11-01&end_date=2026-11-30");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.opening_balance', fn ($val) => (float) $val === 500000.0)
+            ->assertJsonPath('data.total_in', fn ($val) => (float) $val === 1500000.0)
+            ->assertJsonPath('data.total_out', fn ($val) => (float) $val === 200000.0)
+            ->assertJsonPath('data.closing_balance', fn ($val) => (float) $val === 1800000.0)
+            ->assertJsonCount(2, 'data.transactions');
+    }
 }

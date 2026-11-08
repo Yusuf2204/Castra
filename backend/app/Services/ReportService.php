@@ -411,4 +411,175 @@ class ReportService
             'recent_expenses' => $recentExpenses,
         ];
     }
+
+    public function getAccountStatement(User $user, int $accountId, ?string $startDate = null, ?string $endDate = null): array
+    {
+        $account = $user->accounts()->findOrFail($accountId);
+
+        $now = Carbon::now();
+        $startDate = $startDate ?: $now->startOfMonth()->format('Y-m-d');
+        $endDate = $endDate ?: $now->endOfMonth()->format('Y-m-d');
+
+        // Opening balance calculation before $startDate
+        $priorIncomes = (float) $user->incomeTransactions()
+            ->where('account_id', $accountId)
+            ->where('transaction_date', '<', $startDate)
+            ->sum('amount');
+
+        $priorExpenses = (float) $user->expenseTransactions()
+            ->where('account_id', $accountId)
+            ->where('transaction_date', '<', $startDate)
+            ->sum('amount');
+
+        $priorTransfersIn = (float) $user->fundTransfers()
+            ->where('to_account_id', $accountId)
+            ->where('transfer_date', '<', $startDate)
+            ->sum('amount');
+
+        $priorTransfersOut = (float) $user->fundTransfers()
+            ->where('from_account_id', $accountId)
+            ->where('transfer_date', '<', $startDate)
+            ->sum('amount');
+
+        $openingBalance = (float) $account->initial_balance + $priorIncomes - $priorExpenses + $priorTransfersIn - $priorTransfersOut;
+
+        // Transactions within date range
+        $incomes = $user->incomeTransactions()
+            ->where('account_id', $accountId)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->with(['incomeSource', 'category'])
+            ->get();
+
+        $expenses = $user->expenseTransactions()
+            ->where('account_id', $accountId)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->with(['category'])
+            ->get();
+
+        $transfersIn = $user->fundTransfers()
+            ->where('to_account_id', $accountId)
+            ->whereBetween('transfer_date', [$startDate, $endDate])
+            ->with(['fromAccount'])
+            ->get();
+
+        $transfersOut = $user->fundTransfers()
+            ->where('from_account_id', $accountId)
+            ->whereBetween('transfer_date', [$startDate, $endDate])
+            ->with(['toAccount'])
+            ->get();
+
+        $merged = [];
+
+        foreach ($incomes as $inc) {
+            $date = $inc->transaction_date?->format('Y-m-d') ?? (string) $inc->transaction_date;
+            $merged[] = [
+                'id' => $inc->id,
+                'source_type' => 'income',
+                'date' => $date,
+                'voucher_no' => $inc->voucher_no,
+                'type' => 'Masuk',
+                'category' => $inc->category?->name ?? 'Pemasukan',
+                'description' => $inc->notes ?: ($inc->incomeSource?->name ?? 'Penerimaan Dana'),
+                'payee' => $inc->incomeSource?->name ?? '-',
+                'amount_in' => (float) $inc->amount,
+                'amount_out' => 0.0,
+                'attachment_url' => $inc->attachment_url,
+            ];
+        }
+
+        foreach ($expenses as $exp) {
+            $date = $exp->transaction_date?->format('Y-m-d') ?? (string) $exp->transaction_date;
+            $merged[] = [
+                'id' => $exp->id,
+                'source_type' => 'expense',
+                'date' => $date,
+                'voucher_no' => $exp->voucher_no,
+                'type' => 'Keluar',
+                'category' => $exp->category?->name ?? 'Pengeluaran',
+                'description' => $exp->notes ?: ($exp->category?->name ?? 'Pengeluaran Kas'),
+                'payee' => $exp->payee ?: '-',
+                'amount_in' => 0.0,
+                'amount_out' => (float) $exp->amount,
+                'attachment_url' => $exp->attachment_url,
+            ];
+        }
+
+        foreach ($transfersIn as $trf) {
+            $date = $trf->transfer_date?->format('Y-m-d') ?? (string) $trf->transfer_date;
+            $merged[] = [
+                'id' => $trf->id,
+                'source_type' => 'transfer_in',
+                'date' => $date,
+                'voucher_no' => $trf->reference_no,
+                'type' => 'Transfer Masuk',
+                'category' => 'Mutasi Kas',
+                'description' => $trf->notes ?: ('Transfer dari '.($trf->fromAccount?->name ?? 'Akun Lain')),
+                'payee' => $trf->fromAccount?->name ?? '-',
+                'amount_in' => (float) $trf->amount,
+                'amount_out' => 0.0,
+                'attachment_url' => $trf->attachment_url,
+            ];
+        }
+
+        foreach ($transfersOut as $trf) {
+            $date = $trf->transfer_date?->format('Y-m-d') ?? (string) $trf->transfer_date;
+            $merged[] = [
+                'id' => $trf->id,
+                'source_type' => 'transfer_out',
+                'date' => $date,
+                'voucher_no' => $trf->reference_no,
+                'type' => 'Transfer Keluar',
+                'category' => 'Mutasi Kas',
+                'description' => $trf->notes ?: ('Transfer ke '.($trf->toAccount?->name ?? 'Akun Lain')),
+                'payee' => $trf->toAccount?->name ?? '-',
+                'amount_in' => 0.0,
+                'amount_out' => (float) $trf->amount,
+                'attachment_url' => $trf->attachment_url,
+            ];
+        }
+
+        // Sort chronologically by date ascending, then source_type, then id
+        usort($merged, function ($a, $b) {
+            $dateCmp = strcmp($a['date'], $b['date']);
+            if ($dateCmp !== 0) {
+                return $dateCmp;
+            }
+
+            return $a['id'] <=> $b['id'];
+        });
+
+        // Compute running balance
+        $currentRunning = $openingBalance;
+        $totalIn = 0.0;
+        $totalOut = 0.0;
+
+        foreach ($merged as &$item) {
+            $currentRunning = $currentRunning + $item['amount_in'] - $item['amount_out'];
+            $item['running_balance'] = $currentRunning;
+            $totalIn += $item['amount_in'];
+            $totalOut += $item['amount_out'];
+        }
+        unset($item);
+
+        return [
+            'account' => [
+                'id' => $account->id,
+                'name' => $account->name,
+                'type' => $account->type,
+                'account_number' => $account->account_number,
+                'bank_name' => $account->bank_name,
+                'imprest_limit' => $account->imprest_limit !== null ? (float) $account->imprest_limit : null,
+                'current_balance' => (float) $account->current_balance,
+            ],
+            'period' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
+            'opening_balance' => $openingBalance,
+            'total_in' => $totalIn,
+            'total_out' => $totalOut,
+            'closing_balance' => $currentRunning,
+            'transactions' => $merged,
+        ];
+    }
 }

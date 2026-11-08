@@ -10,10 +10,11 @@ import {
   CFormInput,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilReload, cilChartLine, cilBalanceScale, cilChartPie } from '@coreui/icons'
+import { cilReload, cilChartLine, cilBalanceScale, cilChartPie, cilWallet } from '@coreui/icons'
 import CashFlowReport from './CashFlowReport'
 import BudgetComparisonReport from './BudgetComparisonReport'
 import CategoryBreakdownReport from './CategoryBreakdownReport'
+import PettyCashBookReport from './PettyCashBookReport'
 import api from '../../services/api'
 
 const Reports = () => {
@@ -60,7 +61,7 @@ const Reports = () => {
         <CCardBody className="py-3">
           <CRow className="g-3 align-items-center justify-content-between">
             {/* Left: Tab Navigator */}
-            <CCol lg={6}>
+            <CCol lg={7}>
               <CButtonGroup size="sm" className="w-100 flex-wrap">
                 <CButton
                   color={activeTab === 'cash-flow' ? 'primary' : 'outline-secondary'}
@@ -68,7 +69,7 @@ const Reports = () => {
                   className="py-2"
                 >
                   <CIcon icon={cilChartLine} className="me-1" />
-                  Arus Kas Bulanan
+                  Arus Kas
                 </CButton>
                 <CButton
                   color={activeTab === 'budget-comparison' ? 'primary' : 'outline-secondary'}
@@ -76,7 +77,7 @@ const Reports = () => {
                   className="py-2"
                 >
                   <CIcon icon={cilBalanceScale} className="me-1" />
-                  Realisasi Anggaran
+                  Anggaran
                 </CButton>
                 <CButton
                   color={activeTab === 'category-breakdown' ? 'primary' : 'outline-secondary'}
@@ -84,14 +85,22 @@ const Reports = () => {
                   className="py-2"
                 >
                   <CIcon icon={cilChartPie} className="me-1" />
-                  Rincian Kategori
+                  Kategori
+                </CButton>
+                <CButton
+                  color={activeTab === 'petty-cash-book' ? 'primary' : 'outline-secondary'}
+                  onClick={() => setActiveTab('petty-cash-book')}
+                  className="py-2"
+                >
+                  <CIcon icon={cilWallet} className="me-1" />
+                  Buku Kas / Petty Cash
                 </CButton>
               </CButtonGroup>
             </CCol>
 
             {/* Right: Period Filter Controls */}
             <CCol
-              lg={6}
+              lg={5}
               className="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap"
             >
               {activeTab === 'cash-flow' && (
@@ -212,6 +221,7 @@ const Reports = () => {
               month={selectedMonth}
             />
           )}
+          {activeTab === 'petty-cash-book' && <PettyCashBookReport key={`pcb-${reloadKey}`} />}
         </CCol>
       </CRow>
     </div>
