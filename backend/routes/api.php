@@ -56,6 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pengeluaran
     Route::get('expenses/calendar', [ExpenseController::class, 'calendar']);
     Route::post('expenses/scan-receipt', [ExpenseController::class, 'scanReceipt']);
+    Route::post('expenses/{expense}/approve', [ExpenseController::class, 'approve']);
+    Route::post('expenses/{expense}/reject', [ExpenseController::class, 'reject']);
+    Route::post('expenses/{expense}/submit', [ExpenseController::class, 'submit']);
     Route::apiResource('expenses', ExpenseController::class);
 
     // Laporan

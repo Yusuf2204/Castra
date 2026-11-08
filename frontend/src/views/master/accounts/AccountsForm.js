@@ -154,6 +154,27 @@ const AccountsForm = ({ visible, onClose, account, onSaved }) => {
               />
             </div>
 
+            {/* Mata Uang (Currency) */}
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold">Mata Uang *</label>
+              <CFormSelect
+                name="currency"
+                value={form.currency || 'IDR'}
+                onChange={handleChange}
+                disabled={saving}
+                required
+              >
+                <option value="IDR">IDR - Rupiah Indonesia (Rp)</option>
+                <option value="USD">USD - US Dollar ($)</option>
+                <option value="EUR">EUR - Euro (€)</option>
+                <option value="SGD">SGD - Singapore Dollar (S$)</option>
+                <option value="MYR">MYR - Malaysian Ringgit (RM)</option>
+                <option value="JPY">JPY - Japanese Yen (¥)</option>
+                <option value="GBP">GBP - British Pound (£)</option>
+                <option value="AUD">AUD - Australian Dollar (A$)</option>
+              </CFormSelect>
+            </div>
+
             {/* Saldo Awal */}
             <div className="col-md-6">
               <label className="form-label small fw-semibold">Saldo Awal (Rp)</label>

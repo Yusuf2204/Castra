@@ -19,15 +19,23 @@ class ExpenseTransaction extends Model
         'category_id',
         'transaction_date',
         'amount',
+        'currency',
+        'exchange_rate',
         'voucher_no',
         'payee',
         'notes',
+        'status',
+        'approved_by',
+        'approved_at',
+        'parent_id',
         'attachment_path',
     ];
 
     protected $casts = [
         'transaction_date' => 'date:Y-m-d',
         'amount' => 'float',
+        'exchange_rate' => 'float',
+        'approved_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -60,5 +68,20 @@ class ExpenseTransaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'account_id');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseTransaction::class, 'parent_id');
+    }
+
+    public function children(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ExpenseTransaction::class, 'parent_id');
     }
 }

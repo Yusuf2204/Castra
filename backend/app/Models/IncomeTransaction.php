@@ -20,14 +20,18 @@ class IncomeTransaction extends Model
         'category_id',
         'transaction_date',
         'amount',
+        'currency',
+        'exchange_rate',
         'voucher_no',
         'notes',
+        'status',
         'attachment_path',
     ];
 
     protected $casts = [
         'transaction_date' => 'date:Y-m-d',
         'amount' => 'float',
+        'exchange_rate' => 'float',
     ];
 
     protected $appends = [

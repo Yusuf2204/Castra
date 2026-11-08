@@ -16,7 +16,9 @@ import {
   CModalFooter,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilImage, cilPrint } from '@coreui/icons'
+import { cilPencil, cilTrash, cilImage, cilPrint, cilCheck, cilXCircle } from '@coreui/icons'
+import api from '../../services/api'
+import { toastSuccess, toastError } from '../../services/toastService'
 import VoucherModal from '../../components/vouchers/VoucherModal'
 
 const formatCurrency = (val) => {
@@ -39,10 +41,37 @@ const formatDateShort = (value) => {
   })
 }
 
-const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
+const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete, onReload }) => {
   const [previewImage, setPreviewImage] = useState(null)
   const [selectedVoucher, setSelectedVoucher] = useState(null)
   const [showVoucherModal, setShowVoucherModal] = useState(false)
+  const [actionLoadingId, setActionLoadingId] = useState(null)
+
+  const handleApprove = async (id) => {
+    setActionLoadingId(id)
+    try {
+      await api.post(`/expenses/${id}/approve`)
+      toastSuccess('Voucher pengeluaran berhasil disetujui (Approved)')
+      onReload?.()
+    } catch (err) {
+      toastError(err.userMessage || 'Gagal menyetujui voucher')
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleReject = async (id) => {
+    setActionLoadingId(id)
+    try {
+      await api.post(`/expenses/${id}/reject`)
+      toastSuccess('Voucher pengeluaran ditolak (Rejected)')
+      onReload?.()
+    } catch (err) {
+      toastError(err.userMessage || 'Gagal menolak voucher')
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -70,11 +99,12 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
             <CTableHeaderCell>Kategori</CTableHeaderCell>
             <CTableHeaderCell>Kelompok</CTableHeaderCell>
             <CTableHeaderCell>Penerima & Catatan</CTableHeaderCell>
+            <CTableHeaderCell>Status</CTableHeaderCell>
             <CTableHeaderCell>Nominal</CTableHeaderCell>
             <CTableHeaderCell width={70} className="text-center">
               Nota
             </CTableHeaderCell>
-            <CTableHeaderCell width={100}>Aksi</CTableHeaderCell>
+            <CTableHeaderCell width={140}>Aksi</CTableHeaderCell>
           </CTableRow>
         </CTableHead>
 
@@ -119,6 +149,25 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
                 <span className="small text-body-secondary">{item.notes || '-'}</span>
               </CTableDataCell>
 
+              <CTableDataCell>
+                {item.status === 'approved' ? (
+                  <CBadge color="success">Disetujui</CBadge>
+                ) : item.status === 'submitted' ? (
+                  <CBadge color="warning">Menunggu</CBadge>
+                ) : item.status === 'rejected' ? (
+                  <CBadge color="danger">Ditolak</CBadge>
+                ) : (
+                  <CBadge color="secondary">Draft</CBadge>
+                )}
+                {item.children && item.children.length > 0 && (
+                  <div className="mt-1">
+                    <CBadge color="info" className="small">
+                      Split ({item.children.length})
+                    </CBadge>
+                  </div>
+                )}
+              </CTableDataCell>
+
               <CTableDataCell className="text-danger fw-bold">
                 -{formatCurrency(item.amount)}
               </CTableDataCell>
@@ -141,12 +190,42 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
               </CTableDataCell>
 
               <CTableDataCell>
+                {/* Inline Quick Approve / Reject for Maker-Approver Workflow */}
+                {item.status !== 'approved' && (
+                  <>
+                    <CButton
+                      size="sm"
+                      color="success"
+                      variant="ghost"
+                      title="Setujui Voucher"
+                      className="p-1 me-1 text-success"
+                      disabled={actionLoadingId === item.id}
+                      onClick={() => handleApprove(item.id)}
+                    >
+                      <CIcon icon={cilCheck} />
+                    </CButton>
+                    {item.status !== 'rejected' && (
+                      <CButton
+                        size="sm"
+                        color="danger"
+                        variant="ghost"
+                        title="Tolak Voucher"
+                        className="p-1 me-1 text-danger"
+                        disabled={actionLoadingId === item.id}
+                        onClick={() => handleReject(item.id)}
+                      >
+                        <CIcon icon={cilXCircle} />
+                      </CButton>
+                    )}
+                  </>
+                )}
+
                 <CButton
                   size="sm"
                   color="primary"
                   variant="ghost"
                   title="Cetak Voucher BKK"
-                  className="me-1 text-primary"
+                  className="p-1 me-1 text-primary"
                   onClick={() => {
                     setSelectedVoucher(item)
                     setShowVoucherModal(true)
@@ -160,7 +239,7 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
                   color="secondary"
                   variant="ghost"
                   title="Edit"
-                  className="me-1"
+                  className="p-1 me-1"
                   onClick={() => onEdit(item)}
                 >
                   <CIcon icon={cilPencil} />
@@ -171,6 +250,7 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
                   color="danger"
                   variant="ghost"
                   title="Hapus"
+                  className="p-1"
                   onClick={() => onDelete(item.id)}
                 >
                   <CIcon icon={cilTrash} />

@@ -379,6 +379,7 @@ const Expenses = () => {
                 loading={loadingTable}
                 onEdit={handleEditItemFromTable}
                 onDelete={handleDeleteItemFromTable}
+                onReload={fetchTableData}
               />
 
               {tableMeta && (

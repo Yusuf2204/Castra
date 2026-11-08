@@ -330,4 +330,107 @@ class ExpenseTransactionTest extends TestCase
         $this->assertDatabaseHas('ms_income_sources', ['user_id' => $newUserId, 'name' => 'Kas Kecil (Petty Cash)']);
         $this->assertDatabaseHas('ms_categories', ['user_id' => $newUserId, 'name' => 'Belanja Operasional & ATK']);
     }
+
+    public function test_expense_supports_split_categories(): void
+    {
+        $catATK = Category::factory()->create([
+            'user_id' => $this->user->id,
+            'name' => 'ATK Kantor',
+            'type' => 'expense',
+            'budget_group_id' => $this->budgetGroup->id,
+        ]);
+
+        $payload = [
+            'category_id' => $this->category->id,
+            'transaction_date' => '2026-11-05',
+            'amount' => 300000.0,
+            'payee' => 'Supermarket Grosir',
+            'notes' => 'Belanja bulanan kantor',
+            'splits' => [
+                [
+                    'category_id' => $this->category->id,
+                    'amount' => 180000.0,
+                    'notes' => 'Kopi dan snack pantry',
+                ],
+                [
+                    'category_id' => $catATK->id,
+                    'amount' => 120000.0,
+                    'notes' => 'Kertas A4 dan tinta',
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/expenses', $payload);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.amount', fn ($val) => (float) $val === 300000.0)
+            ->assertJsonPath('data.payee', 'Supermarket Grosir')
+            ->assertJsonCount(2, 'data.children');
+
+        $this->assertDatabaseHas('out_transactions', [
+            'user_id' => $this->user->id,
+            'amount' => 180000.0,
+            'notes' => 'Kopi dan snack pantry',
+        ]);
+
+        $this->assertDatabaseHas('out_transactions', [
+            'user_id' => $this->user->id,
+            'amount' => 120000.0,
+            'notes' => 'Kertas A4 dan tinta',
+        ]);
+    }
+
+    public function test_expense_approval_workflow_changes_status_and_recalculates_balance(): void
+    {
+        $account = \App\Models\Account::create([
+            'user_id' => $this->user->id,
+            'name' => 'Kas Kecil Approval Test',
+            'type' => 'petty_cash',
+            'initial_balance' => 1000000.0,
+            'current_balance' => 1000000.0,
+            'is_active' => true,
+        ]);
+
+        // Create draft expense - should NOT deduct balance yet!
+        $expense = ExpenseTransaction::create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'category_id' => $this->category->id,
+            'transaction_date' => '2026-11-05',
+            'amount' => 250000.0,
+            'status' => 'draft',
+        ]);
+        $account->recalculateBalance();
+
+        $this->assertEquals(1000000.0, $account->current_balance);
+
+        // Submit for approval
+        $this->actingAs($this->user)
+            ->postJson("/api/expenses/{$expense->id}/submit")
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'submitted');
+
+        $account->refresh();
+        $this->assertEquals(1000000.0, $account->current_balance);
+
+        // Approve by Finance Manager
+        $this->actingAs($this->user)
+            ->postJson("/api/expenses/{$expense->id}/approve")
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'approved')
+            ->assertJsonPath('data.approved_by', $this->user->id);
+
+        $account->refresh();
+        $this->assertEquals(750000.0, $account->current_balance);
+
+        // Reject reverses deduction
+        $this->actingAs($this->user)
+            ->postJson("/api/expenses/{$expense->id}/reject")
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'rejected');
+
+        $account->refresh();
+        $this->assertEquals(1000000.0, $account->current_balance);
+    }
 }

@@ -63,8 +63,18 @@ class Account extends Model
      */
     public function recalculateBalance(): float
     {
-        $incomes = (float) $this->inTransactions()->sum('amount');
-        $expenses = (float) $this->outTransactions()->sum('amount');
+        $incomes = (float) $this->inTransactions()
+            ->where(function ($q) {
+                $q->whereNull('status')->orWhere('status', 'approved');
+            })
+            ->sum('amount');
+
+        $expenses = (float) $this->outTransactions()
+            ->where(function ($q) {
+                $q->whereNull('status')->orWhere('status', 'approved');
+            })
+            ->sum('amount');
+
         $transfersIn = (float) $this->transfersIn()->sum('amount');
         $transfersOut = (float) $this->transfersOut()->sum('amount');
 

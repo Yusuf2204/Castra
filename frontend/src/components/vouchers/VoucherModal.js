@@ -103,6 +103,25 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
               <span className="badge border border-dark text-dark fs-6 px-3 py-1 font-monospace">
                 {transaction.voucher_no || (isExpense ? 'BKK-DRAFT' : 'BKM-DRAFT')}
               </span>
+              <div className="mt-1">
+                {transaction.status === 'approved' ? (
+                  <span className="badge bg-success-subtle text-success border border-success small">
+                    APPROVED
+                  </span>
+                ) : transaction.status === 'submitted' ? (
+                  <span className="badge bg-warning-subtle text-warning border border-warning small">
+                    PENDING APPROVAL
+                  </span>
+                ) : transaction.status === 'rejected' ? (
+                  <span className="badge bg-danger-subtle text-danger border border-danger small">
+                    REJECTED
+                  </span>
+                ) : (
+                  <span className="badge bg-secondary-subtle text-secondary border border-secondary small">
+                    DRAFT
+                  </span>
+                )}
+              </div>
               <div className="small text-muted mt-1">
                 Tanggal: {formatDateLong(transaction.transaction_date)}
               </div>
@@ -177,6 +196,31 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
             </table>
           </div>
 
+          {/* Split Items Breakdown if any */}
+          {transaction.children && transaction.children.length > 0 && (
+            <div className="my-3">
+              <div className="small fw-bold text-muted mb-1">Rincian Alokasi Split Kategori:</div>
+              <table className="table table-sm table-bordered border-dark small mb-0">
+                <thead>
+                  <tr className="bg-light">
+                    <th>Pos Kategori</th>
+                    <th>Keterangan</th>
+                    <th className="text-end">Nominal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transaction.children.map((child, i) => (
+                    <tr key={i}>
+                      <td>{child.category?.name || '-'}</td>
+                      <td>{child.notes || '-'}</td>
+                      <td className="text-end fw-bold">{formatCurrency(child.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* Attached Receipt Thumbnail if printed */}
           {transaction.attachment_url && (
             <div className="my-3 text-center d-print-block">
@@ -194,8 +238,19 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
           <div className="row text-center mt-4 pt-2">
             <div className="col-4">
               <div className="small text-muted mb-1">Disetujui Oleh:</div>
-              <div className="border-bottom border-dark" style={{ height: '65px' }}></div>
-              <div className="small fw-bold mt-1">( Pimpinan / Atasan )</div>
+              <div
+                className="border-bottom border-dark d-flex align-items-center justify-content-center"
+                style={{ height: '65px' }}
+              >
+                {transaction.status === 'approved' && (
+                  <span className="badge bg-success-subtle text-success border border-success small">
+                    ✓ APPROVED
+                  </span>
+                )}
+              </div>
+              <div className="small fw-bold mt-1">
+                ( {transaction.approver?.name || 'Pimpinan / Atasan'} )
+              </div>
             </div>
             <div className="col-4">
               <div className="small text-muted mb-1">Dibukukan / Kasir:</div>

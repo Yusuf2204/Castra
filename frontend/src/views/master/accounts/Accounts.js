@@ -220,6 +220,11 @@ const Accounts = () => {
                     <CTableRow key={acc.id}>
                       <CTableDataCell>
                         <strong>{acc.name}</strong>
+                        {acc.currency && acc.currency !== 'IDR' && (
+                          <CBadge color="dark" className="ms-2 small">
+                            {acc.currency}
+                          </CBadge>
+                        )}
                       </CTableDataCell>
                       <CTableDataCell>
                         <CBadge color={tMeta.color} variant="outline">

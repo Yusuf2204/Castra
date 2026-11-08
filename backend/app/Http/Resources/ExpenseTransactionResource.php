@@ -43,9 +43,22 @@ class ExpenseTransactionResource extends JsonResource
             }),
             'transaction_date' => $this->transaction_date?->format('Y-m-d') ?? $this->transaction_date,
             'amount' => (float) $this->amount,
+            'currency' => $this->currency ?? 'IDR',
+            'exchange_rate' => (float) ($this->exchange_rate ?? 1.0),
             'voucher_no' => $this->voucher_no,
             'payee' => $this->payee,
             'notes' => $this->notes,
+            'status' => $this->status ?? 'approved',
+            'approved_by' => $this->approved_by,
+            'approved_at' => $this->approved_at?->toISOString(),
+            'approver' => $this->whenLoaded('approver', function () {
+                return $this->approver ? [
+                    'id' => $this->approver->id,
+                    'name' => $this->approver->name,
+                ] : null;
+            }),
+            'parent_id' => $this->parent_id,
+            'children' => ExpenseTransactionResource::collection($this->whenLoaded('children')),
             'attachment_path' => $this->attachment_path,
             'attachment_url' => $this->attachment_url,
             'created_at' => $this->created_at?->toISOString(),

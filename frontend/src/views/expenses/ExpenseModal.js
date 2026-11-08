@@ -69,6 +69,8 @@ const emptyForm = {
   payee: '',
   voucher_no: '',
   notes: '',
+  status: 'approved',
+  currency: 'IDR',
   transaction_date: '',
   attachment_path: '',
 }
@@ -103,6 +105,54 @@ const ExpenseModal = ({
   const [accounts, setAccounts] = useState([])
   const [voucherItem, setVoucherItem] = useState(null)
   const [showVoucherModal, setShowVoucherModal] = useState(false)
+  const [isSplitMode, setIsSplitMode] = useState(false)
+  const [splits, setSplits] = useState([
+    { category_id: '', amount: '', notes: '' },
+    { category_id: '', amount: '', notes: '' },
+  ])
+  const [actionLoadingId, setActionLoadingId] = useState(null)
+
+  const handleApprove = async (id) => {
+    setActionLoadingId(id)
+    try {
+      await api.post(`/expenses/${id}/approve`)
+      toastSuccess('Voucher pengeluaran disetujui (Approved)')
+      onSaved?.()
+    } catch (err) {
+      toastError(err.userMessage || 'Gagal menyetujui voucher')
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleReject = async (id) => {
+    setActionLoadingId(id)
+    try {
+      await api.post(`/expenses/${id}/reject`)
+      toastSuccess('Voucher pengeluaran ditolak')
+      onSaved?.()
+    } catch (err) {
+      toastError(err.userMessage || 'Gagal menolak voucher')
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleAddSplit = () => {
+    setSplits((prev) => [...prev, { category_id: '', amount: '', notes: '' }])
+  }
+
+  const handleRemoveSplit = (idx) => {
+    setSplits((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  const handleSplitChange = (idx, field, value) => {
+    setSplits((prev) => {
+      const next = [...prev]
+      next[idx] = { ...next[idx], [field]: value }
+      return next
+    })
+  }
 
   const fileInputRef = useRef(null)
 
@@ -340,10 +390,22 @@ const ExpenseModal = ({
       transaction_date: form.transaction_date,
       category_id: Number(form.category_id),
       amount: parseAmount(form.amount),
+      status: form.status || 'approved',
       payee: form.payee ? form.payee.trim() : null,
       voucher_no: form.voucher_no ? form.voucher_no.trim() : null,
       notes: form.notes ? form.notes.trim() : null,
       attachment_path: form.attachment_path || null,
+    }
+
+    if (isSplitMode && splits.length > 1) {
+      const validSplits = splits.filter((s) => s.category_id && s.amount)
+      if (validSplits.length > 1) {
+        payload.splits = validSplits.map((s) => ({
+          category_id: Number(s.category_id),
+          amount: parseAmount(s.amount),
+          notes: s.notes ? s.notes.trim() : null,
+        }))
+      }
     }
 
     try {
@@ -415,11 +477,12 @@ const ExpenseModal = ({
                     <CTableHeaderCell>Akun Kas</CTableHeaderCell>
                     <CTableHeaderCell>Kelompok</CTableHeaderCell>
                     <CTableHeaderCell>Penerima & Catatan</CTableHeaderCell>
+                    <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>Nominal</CTableHeaderCell>
                     <CTableHeaderCell width={70} className="text-center">
                       Nota
                     </CTableHeaderCell>
-                    <CTableHeaderCell width={80}>Aksi</CTableHeaderCell>
+                    <CTableHeaderCell width={120}>Aksi</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
@@ -463,6 +526,24 @@ const ExpenseModal = ({
                         )}
                         <span className="small text-body-secondary">{item.notes || '-'}</span>
                       </CTableDataCell>
+                      <CTableDataCell>
+                        {item.status === 'approved' ? (
+                          <CBadge color="success">Disetujui</CBadge>
+                        ) : item.status === 'submitted' ? (
+                          <CBadge color="warning">Menunggu</CBadge>
+                        ) : item.status === 'rejected' ? (
+                          <CBadge color="danger">Ditolak</CBadge>
+                        ) : (
+                          <CBadge color="secondary">Draft</CBadge>
+                        )}
+                        {item.children && item.children.length > 0 && (
+                          <div className="mt-1">
+                            <CBadge color="info" className="small">
+                              Split ({item.children.length})
+                            </CBadge>
+                          </div>
+                        )}
+                      </CTableDataCell>
                       <CTableDataCell className="text-danger fw-bold">
                         {formatCurrency(item.amount)}
                       </CTableDataCell>
@@ -486,6 +567,34 @@ const ExpenseModal = ({
                         )}
                       </CTableDataCell>
                       <CTableDataCell>
+                        {item.status !== 'approved' && (
+                          <>
+                            <CButton
+                              size="sm"
+                              color="success"
+                              variant="ghost"
+                              title="Setujui Voucher"
+                              className="p-1 me-1 text-success"
+                              disabled={actionLoadingId === item.id}
+                              onClick={() => handleApprove(item.id)}
+                            >
+                              <CIcon icon={cilCheck} />
+                            </CButton>
+                            {item.status !== 'rejected' && (
+                              <CButton
+                                size="sm"
+                                color="danger"
+                                variant="ghost"
+                                title="Tolak Voucher"
+                                className="p-1 me-1 text-danger"
+                                disabled={actionLoadingId === item.id}
+                                onClick={() => handleReject(item.id)}
+                              >
+                                <CIcon icon={cilXCircle} />
+                              </CButton>
+                            )}
+                          </>
+                        )}
                         <CButton
                           size="sm"
                           color="primary"
@@ -901,6 +1010,109 @@ const ExpenseModal = ({
                     disabled={saving}
                   />
                 </div>
+
+                {/* Status Pengajuan Voucher */}
+                <div className="col-md-6">
+                  <label className="form-label mb-1 fw-semibold small">
+                    Status Pengajuan Voucher
+                  </label>
+                  <CFormSelect
+                    name="status"
+                    value={form.status || 'approved'}
+                    onChange={handleChange}
+                    disabled={saving}
+                  >
+                    <option value="approved">Disetujui Langsung (Approved)</option>
+                    <option value="submitted">Ajukan Persetujuan (Submit for Approval)</option>
+                    <option value="draft">Simpan sebagai Draft</option>
+                  </CFormSelect>
+                </div>
+
+                {/* Split Category Toggle & Detail */}
+                {!editingItem && (
+                  <div className="col-12 mt-2">
+                    <div className="form-check form-switch p-2 bg-light rounded border d-flex align-items-center gap-2">
+                      <input
+                        className="form-check-input ms-0"
+                        type="checkbox"
+                        role="switch"
+                        id="splitCategorySwitch"
+                        checked={isSplitMode}
+                        onChange={(e) => setIsSplitMode(e.target.checked)}
+                      />
+                      <label
+                        className="form-check-label fw-bold small mb-0"
+                        htmlFor="splitCategorySwitch"
+                      >
+                        Pecah Kategori Pengeluaran (Split Category untuk 1 Nota Belanja)
+                      </label>
+                    </div>
+
+                    {isSplitMode && (
+                      <div className="p-3 border rounded bg-white mt-2 shadow-sm">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <span className="small fw-semibold text-secondary">
+                            Rincian Alokasi Kategori Belanja Nota:
+                          </span>
+                          <CButton size="sm" color="outline-primary" onClick={handleAddSplit}>
+                            + Tambah Alokasi Kategori
+                          </CButton>
+                        </div>
+                        {splits.map((s, idx) => (
+                          <div key={idx} className="row g-2 align-items-center mb-2">
+                            <div className="col-md-5">
+                              <CFormSelect
+                                size="sm"
+                                value={s.category_id}
+                                onChange={(e) =>
+                                  handleSplitChange(idx, 'category_id', e.target.value)
+                                }
+                              >
+                                <option value="">-- Pilih Kategori --</option>
+                                {categories.map((c) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.name}
+                                  </option>
+                                ))}
+                              </CFormSelect>
+                            </div>
+                            <div className="col-md-3">
+                              <CFormInput
+                                size="sm"
+                                type="number"
+                                placeholder="Nominal (Rp)"
+                                value={s.amount}
+                                onChange={(e) => handleSplitChange(idx, 'amount', e.target.value)}
+                              />
+                            </div>
+                            <div className="col-md-3">
+                              <CFormInput
+                                size="sm"
+                                type="text"
+                                placeholder="Catatan item..."
+                                value={s.notes}
+                                onChange={(e) => handleSplitChange(idx, 'notes', e.target.value)}
+                              />
+                            </div>
+                            <div className="col-md-1 text-center">
+                              {splits.length > 1 && (
+                                <CButton
+                                  size="sm"
+                                  color="danger"
+                                  variant="ghost"
+                                  className="p-1"
+                                  onClick={() => handleRemoveSplit(idx)}
+                                >
+                                  &times;
+                                </CButton>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Attachment Indicator / Upload Notice */}
                 {form.attachment_path && (

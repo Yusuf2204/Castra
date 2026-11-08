@@ -19,7 +19,13 @@ class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = $request->user()->expenseTransactions()->with(['category.budgetGroup', 'account']);
+        $query = $request->user()->expenseTransactions()
+            ->whereNull('parent_id')
+            ->with(['category.budgetGroup', 'account', 'approver', 'children.category.budgetGroup']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
 
         if ($request->filled('month')) {
             try {
@@ -184,12 +190,28 @@ class ExpenseController extends Controller
             ],
             'transaction_date' => ['required', 'date_format:Y-m-d'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
+            'currency' => ['nullable', 'string', 'max:10'],
+            'exchange_rate' => ['nullable', 'numeric', 'min:0.000001'],
             'voucher_no' => ['nullable', 'string', 'max:50'],
             'payee' => ['nullable', 'string', 'max:150'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'status' => ['nullable', 'string', 'in:draft,submitted,approved,rejected'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
             'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'splits' => ['nullable', 'array', 'min:1'],
+            'splits.*.category_id' => [
+                'required_with:splits',
+                'integer',
+                Rule::exists('ms_categories', 'id')->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id)->where('type', 'expense');
+                }),
+            ],
+            'splits.*.amount' => ['required_with:splits', 'numeric', 'min:0.01'],
+            'splits.*.notes' => ['nullable', 'string', 'max:500'],
         ]);
+
+        $splits = $validated['splits'] ?? null;
+        unset($validated['splits']);
 
         if (empty($validated['account_id'])) {
             $defaultAcc = $user->accounts()->where('type', 'petty_cash')->where('is_active', true)->first()
@@ -197,6 +219,17 @@ class ExpenseController extends Controller
             if ($defaultAcc) {
                 $validated['account_id'] = $defaultAcc->id;
             }
+        }
+
+        $account = ! empty($validated['account_id']) ? Account::find($validated['account_id']) : null;
+        if (empty($validated['currency'])) {
+            $validated['currency'] = $account?->currency ?? 'IDR';
+        }
+        if (empty($validated['exchange_rate'])) {
+            $validated['exchange_rate'] = 1.0;
+        }
+        if (empty($validated['status'])) {
+            $validated['status'] = 'approved';
         }
 
         if ($request->hasFile('attachment')) {
@@ -212,8 +245,36 @@ class ExpenseController extends Controller
             $validated['voucher_no'] = sprintf('BKK-%s-%04d', $ym, $count);
         }
 
+        if ($validated['status'] === 'approved') {
+            $validated['approved_by'] = $user->id;
+            $validated['approved_at'] = Carbon::now();
+        }
+
         $expense = $user->expenseTransactions()->create($validated);
-        $expense->load(['category.budgetGroup', 'account']);
+
+        // Process Category Splits if provided (> 1 item)
+        if (! empty($splits) && count($splits) > 1) {
+            foreach ($splits as $splitItem) {
+                $user->expenseTransactions()->create([
+                    'parent_id' => $expense->id,
+                    'account_id' => $expense->account_id,
+                    'category_id' => $splitItem['category_id'],
+                    'transaction_date' => $expense->transaction_date,
+                    'amount' => (float) $splitItem['amount'],
+                    'currency' => $expense->currency ?? 'IDR',
+                    'exchange_rate' => $expense->exchange_rate ?? 1.0,
+                    'voucher_no' => $expense->voucher_no,
+                    'payee' => $expense->payee,
+                    'notes' => $splitItem['notes'] ?? $expense->notes,
+                    'status' => $expense->status,
+                    'approved_by' => $expense->approved_by,
+                    'approved_at' => $expense->approved_at,
+                    'attachment_path' => $expense->attachment_path,
+                ]);
+            }
+        }
+
+        $expense->load(['category.budgetGroup', 'account', 'approver', 'children.category.budgetGroup']);
         $expense->account?->recalculateBalance();
 
         return response()->json([
@@ -315,6 +376,107 @@ class ExpenseController extends Controller
         return response()->json([
             'data' => null,
             'message' => 'Transaksi pengeluaran berhasil dihapus',
+            'errors' => null,
+        ]);
+    }
+
+    /**
+     * Approve an expense voucher (Approver action).
+     */
+    public function approve(Request $request, ExpenseTransaction $expense)
+    {
+        $user = $request->user();
+
+        if ($expense->user_id !== $user->id) {
+            return response()->json([
+                'data' => null,
+                'message' => 'Transaksi tidak ditemukan',
+                'errors' => null,
+            ], 404);
+        }
+
+        $expense->status = 'approved';
+        $expense->approved_by = $user->id;
+        $expense->approved_at = Carbon::now();
+        $expense->save();
+
+        // Also update child split transactions if any
+        $expense->children()->update([
+            'status' => 'approved',
+            'approved_by' => $user->id,
+            'approved_at' => Carbon::now(),
+        ]);
+
+        $expense->account?->recalculateBalance();
+        $expense->load(['category.budgetGroup', 'account', 'approver', 'children.category.budgetGroup']);
+
+        return response()->json([
+            'data' => (new ExpenseTransactionResource($expense))->resolve(),
+            'message' => 'Voucher pengeluaran berhasil disetujui (Approved)',
+            'errors' => null,
+        ]);
+    }
+
+    /**
+     * Reject an expense voucher.
+     */
+    public function reject(Request $request, ExpenseTransaction $expense)
+    {
+        $user = $request->user();
+
+        if ($expense->user_id !== $user->id) {
+            return response()->json([
+                'data' => null,
+                'message' => 'Transaksi tidak ditemukan',
+                'errors' => null,
+            ], 404);
+        }
+
+        $expense->status = 'rejected';
+        $expense->save();
+
+        $expense->children()->update([
+            'status' => 'rejected',
+        ]);
+
+        $expense->account?->recalculateBalance();
+        $expense->load(['category.budgetGroup', 'account', 'approver', 'children.category.budgetGroup']);
+
+        return response()->json([
+            'data' => (new ExpenseTransactionResource($expense))->resolve(),
+            'message' => 'Voucher pengeluaran ditolak (Rejected)',
+            'errors' => null,
+        ]);
+    }
+
+    /**
+     * Submit an expense voucher for approval (Maker action).
+     */
+    public function submit(Request $request, ExpenseTransaction $expense)
+    {
+        $user = $request->user();
+
+        if ($expense->user_id !== $user->id) {
+            return response()->json([
+                'data' => null,
+                'message' => 'Transaksi tidak ditemukan',
+                'errors' => null,
+            ], 404);
+        }
+
+        $expense->status = 'submitted';
+        $expense->save();
+
+        $expense->children()->update([
+            'status' => 'submitted',
+        ]);
+
+        $expense->account?->recalculateBalance();
+        $expense->load(['category.budgetGroup', 'account', 'approver', 'children.category.budgetGroup']);
+
+        return response()->json([
+            'data' => (new ExpenseTransactionResource($expense))->resolve(),
+            'message' => 'Voucher berhasil diajukan untuk persetujuan (Submitted)',
             'errors' => null,
         ]);
     }
