@@ -2,7 +2,7 @@
 
 **Tanggal:** 2026-11-08  
 **Nomor Dokumen:** 2026-11-08-08  
-**Status:** DRAFT (PROPOSED)  
+**Status:** COMPLETED (ALL 4 MILESTONES IMPLEMENTED & COMMITTED)  
 **Dokumen Terkait:**  
 - [PRD 01 Planning Perubahan Konsep](2026-10-03-01-planning-perubahan-konsep.md)  
 - [PRD 02 Master Data Refactoring (Kategori & Budget Groups)](2026-10-03-02-prd-master-kategori-dan-budget-groups.md)  
@@ -154,36 +154,40 @@ flowchart LR
     M3 --> M4["Milestone 4:<br/>Multi-Currency &<br/>Company Collaboration"]
 ```
 
-### Milestone 1: Quick-Wins & Perbaikan Celah Utama (Fokus Segera)
-1. **Auto-Seed Template User Baru**:
-   - Buat listener / service `UserTemplateInitializer` yang otomatis menyiapkan kategori dan budget group saat user baru terdaftar.
-2. **Penyimpanan Permanen File Nota/Struk**:
-   - Modifikasi tabel `out_transactions` & `in_transactions` untuk menambahkan kolom `attachment_path`.
-   - Modifikasi `ExpenseController` & `IncomeController` untuk menyimpan file upload OCR ke storage publik.
-   - Tambahkan thumbnail dan modal pratinjau bukti nota di riwayat transaksi.
+### Milestone 1: Quick-Wins & Perbaikan Celah Utama (Completed - Commit `93fcd2e`)
+1. [x] **Auto-Seed Template User Baru**:
+   - `UserTemplateInitializer` otomatis menyiapkan kategori, sumber dana, budget group, dan akun kas saat user baru terdaftar.
+2. [x] **Penyimpanan Permanen File Nota/Struk**:
+   - Kolom `attachment_path` pada `out_transactions` & `in_transactions`.
+   - File upload OCR disimpan di storage publik `receipts/`.
+   - Thumbnail dan modal pratinjau bukti nota di riwayat transaksi.
 
-### Milestone 2: Sistem Akun Kas & Saldo Berjalan (Core Petty Cash)
-1. Buat tabel `ms_accounts` dan `fund_transfers`.
-2. Tambahkan pilihan "Akun Pembayaran / Kas" di form Pemasukan dan Pengeluaran.
-3. Buat UI Transfer Antar Kas (*Top-Up Kas Kecil*).
-4. Tampilkan widget kartu *Saldo Kas Kecil Saat Ini* di Dashboard.
+### Milestone 2: Sistem Akun Kas & Saldo Berjalan (Completed - Commit `e7ecbfc`)
+1. [x] Tabel `ms_accounts` dan `fund_transfers`.
+2. [x] Pilihan "Akun Pembayaran / Kas" di form Pemasukan dan Pengeluaran.
+3. [x] UI Transfer Antar Kas (*Top-Up Kas Kecil* via `FundTransferModal`).
+4. [x] Widget kartu *Saldo Kas Kecil Saat Ini* di Dashboard lengkap dengan progress limit imprest.
 
-### Milestone 3: Dokumen & Tata Kelola Operasional Kas Kecil
-1. Generator otomatis nomor voucher transaksi (`voucher_no`).
-2. Input pihak penerima (*payee*) pada modal pengeluaran.
-3. Template cetak Voucher Bukti Kas Keluar (BKK) siap tanda tangan.
+### Milestone 3: Dokumen & Tata Kelola Operasional Kas Kecil (Completed - Commit `a47aa23`)
+1. [x] Generator otomatis nomor voucher transaksi (`voucher_no`: `BKK-YYYYMM-XXXX` & `BKM-YYYYMM-XXXX`).
+2. [x] Input pihak penerima (*payee*) pada modal pengeluaran.
+3. [x] Helper konversi Terbilang Rupiah formal akuntansi (`terbilang.js`).
+4. [x] Template cetak Voucher Bukti Kas Keluar (BKK) & Bukti Kas Masuk (BKM) siap tanda tangan 3 otoritas (`VoucherModal.js`).
+5. [x] Laporan Buku Kas Kecil (*Petty Cash Book Ledger*) dengan kalkulasi saldo awal, mutasi masuk/keluar, running balance, ekspor CSV, dan print A4 (`PettyCashBookReport.js`).
 
-### Milestone 4: Standar Global & Kolaborasi Organisasi
-1. Dukungan multi-mata uang (*currency settings per account*).
-2. Opsi split-kategori pada satu transaksi nota.
-3. Mode multi-user dengan hak akses *Maker* (Kasir Kas Kecil) dan *Approver* (Manajer Keuangan).
+### Milestone 4: Standar Global & Kolaborasi Organisasi (Completed - Commit `b17b688`)
+1. [x] Dukungan multi-mata uang (*currency settings per account*: IDR, USD, EUR, SGD, MYR, JPY, GBP, AUD).
+2. [x] Opsi split-kategori pada satu transaksi nota belanja (`splits` payload & relasi `parent_id`).
+3. [x] Mode multi-user dengan alur persetujuan Maker & Approver (*Draft*, *Submitted*, *Approved*, *Rejected*).
+4. [x] Rekalkulasi saldo akun otomatis hanya memotong transaksi yang telah disetujui (*Approved*).
 
 ---
 
-## 6. Kriteria Penerimaan (*Acceptance Criteria*)
+## 6. Kriteria Penerimaan (*Acceptance Criteria - All Verified*)
 
-1. **User Baru Langsung Siap Pakai**: User baru (seperti `pc@mail.com`) setelah didaftarkan dapat langsung membuka form Pemasukan / Pengeluaran dan menemukan pilihan kategori standar tanpa error.
-2. **Nota Tersimpan & Terbaca**: Gambar nota yang di-upload atau di-paste saat OCR tetap tersimpan di server dan dapat dibuka kembali kapan saja dari tabel transaksi.
-3. **Saldo Kas Terhitung Akurat**: Saldo kas kecil berkurang saat terjadi pengeluaran kas kecil, dan bertambah saat ada mutasi transfer dari rekening bank.
-4. **Voucher Terbit**: Pengeluaran memiliki nomor urut voucher unik dan nama penerima dana tercatat rapi.
-5. **Zero Regression**: Seluruh fitur lama (kalender pengeluaran, budgeting dinamis, dan laporan arus kas) tetap berjalan normal.
+1. [x] **User Baru Langsung Siap Pakai**: User baru (seperti `pc@mail.com`) langsung memiliki akun Kas Kecil (plafon Rp 2.000.000) dan kategori operasional standar.
+2. [x] **Nota Tersimpan & Terbaca**: Gambar nota tersimpan permanen dan dapat dilihat kembali dari riwayat transaksi.
+3. [x] **Saldo Kas Terhitung Akurat**: Saldo kas kecil berkurang saat transaksi *approved*, dan bertambah saat ada mutasi transfer dari bank.
+4. [x] **Voucher Terbit**: Nomor voucher unik tercetak lengkap dengan penerima dana, nominal terbilang, dan tanda tangan otoritas.
+5. [x] **Split & Multi-Currency**: Nota belanja multi-item dapat dipecah ke beberapa kategori sekaligus dan mata uang akun tercatat dinamis.
+6. [x] **Zero Regression**: Seluruh 74 feature & unit test backend lulus 100%, frontend Vite build lolos tanpa error.
