@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\UserTemplateInitializer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    public function __construct(
+        protected UserTemplateInitializer $templateInitializer
+    ) {}
+
     public function index()
     {
         return response()->json([
@@ -31,6 +36,7 @@ class UserController extends Controller
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
+        $this->templateInitializer->initialize($user);
 
         return response()->json([
             'data' => $user,

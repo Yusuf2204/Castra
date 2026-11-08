@@ -8,6 +8,7 @@ use App\Models\IncomeTransaction;
 use App\Services\ReceiptOcrService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /**
@@ -49,6 +50,7 @@ class IncomeController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('notes', 'like', "%{$search}%")
+                    ->orWhere('voucher_no', 'like', "%{$search}%")
                     ->orWhereHas('incomeSource', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%");
                     })
@@ -163,8 +165,24 @@ class IncomeController extends Controller
             ],
             'transaction_date' => ['required', 'date_format:Y-m-d'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
+            'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'attachment_path' => ['nullable', 'string', 'max:255'],
+            'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
         ]);
+
+        if ($request->hasFile('attachment')) {
+            $validated['attachment_path'] = $request->file('attachment')->store('receipts', 'public');
+        }
+        unset($validated['attachment']);
+
+        if (empty($validated['voucher_no'])) {
+            $ym = Carbon::parse($validated['transaction_date'])->format('Ym');
+            $count = $user->incomeTransactions()
+                ->where('transaction_date', 'like', Carbon::parse($validated['transaction_date'])->format('Y-m').'%')
+                ->count() + 1;
+            $validated['voucher_no'] = sprintf('BKM-%s-%04d', $ym, $count);
+        }
 
         $income = $user->incomeTransactions()->create($validated);
         $income->load(['incomeSource', 'category']);
@@ -223,8 +241,16 @@ class IncomeController extends Controller
             ],
             'transaction_date' => ['sometimes', 'required', 'date_format:Y-m-d'],
             'amount' => ['sometimes', 'required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
+            'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'attachment_path' => ['nullable', 'string', 'max:255'],
+            'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
         ]);
+
+        if ($request->hasFile('attachment')) {
+            $validated['attachment_path'] = $request->file('attachment')->store('receipts', 'public');
+        }
+        unset($validated['attachment']);
 
         $income->update($validated);
         $income->load(['incomeSource', 'category']);
@@ -266,6 +292,10 @@ class IncomeController extends Controller
 
         $file = $request->file('receipt');
         $parsed = $ocrService->scanIncome($file, $request->user());
+
+        $storedPath = $file->store('receipts', 'public');
+        $parsed['attachment_path'] = $storedPath;
+        $parsed['attachment_url'] = Storage::disk('public')->url($storedPath);
 
         return response()->json([
             'data' => $parsed,

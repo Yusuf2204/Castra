@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Services\NavigationService;
+use App\Services\UserTemplateInitializer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly NavigationService $navigation) {}
+    public function __construct(
+        private readonly NavigationService $navigation,
+        private readonly UserTemplateInitializer $templateInitializer
+    ) {}
 
     public function login(Request $request)
     {
@@ -28,6 +32,11 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
+
+        // Ensure user has base financial templates if newly created or empty
+        if ($user->categories()->count() === 0) {
+            $this->templateInitializer->initialize($user);
+        }
 
         // Keep one active API token per user.
         $user->tokens()->delete();

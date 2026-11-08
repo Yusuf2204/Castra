@@ -17,13 +17,7 @@ import {
   CTableRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilArrowBottom,
-  cilArrowTop,
-  cilChartPie,
-  cilReload,
-  cilWallet,
-} from '@coreui/icons'
+import { cilArrowBottom, cilArrowTop, cilChartPie, cilReload, cilWallet } from '@coreui/icons'
 import { Link } from 'react-router-dom'
 import api from '../../services/api'
 
@@ -160,7 +154,9 @@ const Dashboard = () => {
         </CCol>
         <CCol sm={6} xl={3}>
           <SummaryCard
-            label={kpis.active_period ? `Realisasi (${kpis.active_period.name})` : 'Realisasi Anggaran'}
+            label={
+              kpis.active_period ? `Realisasi (${kpis.active_period.name})` : 'Realisasi Anggaran'
+            }
             value={`${budgetPct}%`}
             subtext={
               kpis.active_period

@@ -281,4 +281,53 @@ class ExpenseTransactionTest extends TestCase
         $this->actingAs($this->user)->putJson("/api/expenses/{$tx->id}", ['amount' => 999])->assertStatus(404);
         $this->actingAs($this->user)->deleteJson("/api/expenses/{$tx->id}")->assertStatus(404);
     }
+
+    public function test_expense_transaction_auto_generates_voucher_no_and_saves_payee_and_attachment(): void
+    {
+        $payload = [
+            'category_id' => $this->category->id,
+            'transaction_date' => '2026-11-08',
+            'amount' => 85000.0,
+            'payee' => 'Toko Alat Tulis Makmur',
+            'notes' => 'Beli kertas A4 dan tinta',
+            'attachment_path' => 'receipts/test_receipt.png',
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/expenses', $payload);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.payee', 'Toko Alat Tulis Makmur')
+            ->assertJsonPath('data.attachment_path', 'receipts/test_receipt.png')
+            ->assertJsonStructure(['data' => ['voucher_no', 'attachment_url']]);
+
+        $this->assertDatabaseHas('out_transactions', [
+            'user_id' => $this->user->id,
+            'payee' => 'Toko Alat Tulis Makmur',
+            'attachment_path' => 'receipts/test_receipt.png',
+        ]);
+    }
+
+    public function test_new_user_created_via_api_is_auto_initialized_with_templates(): void
+    {
+        $adminRole = \App\Models\Roles::firstOrCreate(['id' => 1], ['role_name' => 'admin']);
+        $userRole = \App\Models\Roles::firstOrCreate(['id' => 2], ['role_name' => 'user']);
+
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/users', [
+                'name' => 'Petty Cash User',
+                'email' => 'pc_test@mail.com',
+                'password' => 'secret123',
+                'role_id' => $userRole->id,
+            ]);
+
+        $response->assertStatus(201);
+        $newUserId = $response->json('data.id');
+
+        $this->assertDatabaseHas('ms_budget_groups', ['user_id' => $newUserId, 'code' => 'need']);
+        $this->assertDatabaseHas('ms_income_sources', ['user_id' => $newUserId, 'name' => 'Kas Kecil (Petty Cash)']);
+        $this->assertDatabaseHas('ms_categories', ['user_id' => $newUserId, 'name' => 'Belanja Operasional & ATK']);
+    }
 }

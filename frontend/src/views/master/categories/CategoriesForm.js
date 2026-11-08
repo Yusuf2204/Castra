@@ -68,7 +68,8 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
       is_active: form.is_active,
     }
 
-    const parseAmount = (val) => (typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val))
+    const parseAmount = (val) =>
+      typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val)
 
     if (type === 'expense') {
       payload.budget_group_id = form.budget_group_id ? Number(form.budget_group_id) : null

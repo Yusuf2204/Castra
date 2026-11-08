@@ -34,7 +34,10 @@ class IncomeTransactionResource extends JsonResource
             }),
             'transaction_date' => $this->transaction_date?->format('Y-m-d') ?? $this->transaction_date,
             'amount' => (float) $this->amount,
+            'voucher_no' => $this->voucher_no,
             'notes' => $this->notes,
+            'attachment_path' => $this->attachment_path,
+            'attachment_url' => $this->attachment_url,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

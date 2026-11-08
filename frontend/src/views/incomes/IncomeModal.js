@@ -64,8 +64,10 @@ const emptyForm = {
   income_source_id: '',
   category_id: '',
   amount: '',
+  voucher_no: '',
   notes: '',
   transaction_date: '',
+  attachment_path: '',
 }
 
 const emptyOcrFlags = {
@@ -176,6 +178,7 @@ const IncomeModal = ({
           category_id: data.suggested_category_id
             ? String(data.suggested_category_id)
             : prev.category_id,
+          attachment_path: data.attachment_path || prev.attachment_path,
         }))
 
         setOcrAutoFilled(newOcrFlags)
@@ -187,6 +190,7 @@ const IncomeModal = ({
           suggested_income_source_name: data.suggested_income_source_name,
           suggested_category_name: data.suggested_category_name,
           fileName: file.name,
+          attachment_url: data.attachment_url,
         })
 
         if (data.amount) {
@@ -276,8 +280,13 @@ const IncomeModal = ({
       income_source_id: item.income_source_id || '',
       category_id: item.category_id || '',
       amount: item.amount != null ? String(item.amount) : '',
+      voucher_no: item.voucher_no || '',
       notes: item.notes || '',
+      attachment_path: item.attachment_path || '',
     })
+    if (item.attachment_url) {
+      setProofImagePreview(item.attachment_url)
+    }
     setErrors({})
   }
 
@@ -311,7 +320,9 @@ const IncomeModal = ({
       income_source_id: Number(form.income_source_id),
       category_id: form.category_id ? Number(form.category_id) : null,
       amount: parseAmount(form.amount),
+      voucher_no: form.voucher_no ? form.voucher_no.trim() : null,
       notes: form.notes ? form.notes.trim() : null,
+      attachment_path: form.attachment_path || null,
     }
 
     try {
@@ -379,10 +390,13 @@ const IncomeModal = ({
               <CTable hover responsive small className="border">
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell>Sumber Dana</CTableHeaderCell>
+                    <CTableHeaderCell>No. Bukti / Sumber Dana</CTableHeaderCell>
                     <CTableHeaderCell>Kategori</CTableHeaderCell>
                     <CTableHeaderCell>Nominal</CTableHeaderCell>
                     <CTableHeaderCell>Catatan</CTableHeaderCell>
+                    <CTableHeaderCell width={70} className="text-center">
+                      Bukti
+                    </CTableHeaderCell>
                     <CTableHeaderCell width={80}>Aksi</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -393,6 +407,11 @@ const IncomeModal = ({
                       className={editingItem?.id === item.id ? 'table-primary' : ''}
                     >
                       <CTableDataCell>
+                        {item.voucher_no && (
+                          <div className="small font-monospace text-secondary mb-1">
+                            {item.voucher_no}
+                          </div>
+                        )}
                         <strong>{item.income_source?.name || '-'}</strong>
                       </CTableDataCell>
                       <CTableDataCell>
@@ -406,6 +425,25 @@ const IncomeModal = ({
                         {formatCurrency(item.amount)}
                       </CTableDataCell>
                       <CTableDataCell>{item.notes || '-'}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        {item.attachment_url ? (
+                          <CButton
+                            size="sm"
+                            color="info"
+                            variant="ghost"
+                            className="p-1 text-info"
+                            title="Lihat Bukti Transfer"
+                            onClick={() => {
+                              setProofImagePreview(item.attachment_url)
+                              setShowImagePreviewModal(true)
+                            }}
+                          >
+                            <CIcon icon={cilImage} size="lg" />
+                          </CButton>
+                        ) : (
+                          <span className="text-body-secondary small">-</span>
+                        )}
+                      </CTableDataCell>
                       <CTableDataCell>
                         <CButton
                           size="sm"
@@ -591,7 +629,11 @@ const IncomeModal = ({
                     }}
                   >
                     <div className="mb-2">
-                      <CIcon icon={cilCloudUpload} size="xl" className="text-secondary opacity-75" />
+                      <CIcon
+                        icon={cilCloudUpload}
+                        size="xl"
+                        className="text-secondary opacity-75"
+                      />
                     </div>
                     <div className="mb-2">
                       <CButton
@@ -691,7 +733,9 @@ const IncomeModal = ({
                     )}
                   </div>
                   <CInputGroup>
-                    <CInputGroupText className="bg-light fw-bold text-secondary">Rp</CInputGroupText>
+                    <CInputGroupText className="bg-light fw-bold text-secondary">
+                      Rp
+                    </CInputGroupText>
                     <CFormInput
                       type="number"
                       name="amount"
@@ -705,7 +749,9 @@ const IncomeModal = ({
                     />
                   </CInputGroup>
                   {getFieldError(errors, 'amount') ? (
-                    <div className="invalid-feedback d-block">{getFieldError(errors, 'amount')}</div>
+                    <div className="invalid-feedback d-block">
+                      {getFieldError(errors, 'amount')}
+                    </div>
                   ) : form.amount && !isNaN(Number(form.amount)) && Number(form.amount) > 0 ? (
                     <div className="form-text text-body-secondary mt-1">
                       Terbilang: <strong>{formatCurrency(form.amount)}</strong>
@@ -735,10 +781,33 @@ const IncomeModal = ({
                   />
                 </div>
 
+                {/* Voucher Number (BKM) */}
+                <div className="col-md-6">
+                  <div className="d-flex align-items-center justify-content-between mb-1">
+                    <label className="form-label mb-0 fw-semibold small">
+                      No. Bukti Kas Masuk (BKM)
+                    </label>
+                    <span className="text-body-secondary small">(Opsional / Otomatis)</span>
+                  </div>
+                  <CFormInput
+                    type="text"
+                    name="voucher_no"
+                    maxLength={50}
+                    placeholder="Contoh: BKM-202611-0001"
+                    value={form.voucher_no}
+                    onChange={handleChange}
+                    invalid={Boolean(getFieldError(errors, 'voucher_no'))}
+                    feedbackInvalid={getFieldError(errors, 'voucher_no')}
+                    disabled={saving}
+                  />
+                </div>
+
                 {/* Notes */}
                 <div className="col-12">
                   <div className="d-flex align-items-center justify-content-between mb-1">
-                    <label className="form-label mb-0 fw-semibold small">Catatan / Keterangan</label>
+                    <label className="form-label mb-0 fw-semibold small">
+                      Catatan / Keterangan
+                    </label>
                     {ocrAutoFilled.notes && (
                       <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2 small">
                         <CIcon icon={cilCheck} size="sm" className="me-1" />
@@ -758,6 +827,31 @@ const IncomeModal = ({
                     disabled={saving}
                   />
                 </div>
+
+                {/* Attachment Indicator / Upload Notice */}
+                {form.attachment_path && (
+                  <div className="col-12">
+                    <div className="d-flex align-items-center justify-content-between p-2 rounded border bg-success-subtle border-success-subtle">
+                      <div className="d-flex align-items-center gap-2 small text-success-emphasis">
+                        <CIcon icon={cilCheckCircle} />
+                        <span>
+                          Foto bukti transfer / pemasukan terlampir dan akan disimpan permanen.
+                        </span>
+                      </div>
+                      <CButton
+                        size="sm"
+                        color="link"
+                        className="text-danger p-0 small text-decoration-none"
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, attachment_path: '' }))
+                          handleClearScannedProof()
+                        }}
+                      >
+                        Hapus Bukti
+                      </CButton>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Friendly Hint if OCR was used */}
@@ -765,7 +859,8 @@ const IncomeModal = ({
                 <div className="d-flex align-items-center gap-2 mt-3 p-2 bg-info-subtle border border-info-subtle rounded small text-info-emphasis">
                   <CIcon icon={cilInfo} className="flex-shrink-0" />
                   <span>
-                    Data di atas diisi otomatis dari hasil baca bukti transfer. Anda tetap dapat mengedit atau menyesuaikan nilai sebelum menyimpan.
+                    Data di atas diisi otomatis dari hasil baca bukti transfer. Anda tetap dapat
+                    mengedit atau menyesuaikan nilai sebelum menyimpan.
                   </span>
                 </div>
               )}
@@ -832,7 +927,9 @@ const IncomeModal = ({
         </CModalBody>
         <CModalFooter className="d-flex justify-content-between">
           <span className="text-muted small">
-            {scannedProof?.sender ? `Pengirim/Keterangan: ${scannedProof.sender}` : 'Bukti Pemasukan'}
+            {scannedProof?.sender
+              ? `Pengirim/Keterangan: ${scannedProof.sender}`
+              : 'Bukti Pemasukan'}
           </span>
           <CButton color="secondary" onClick={() => setShowImagePreviewModal(false)}>
             Tutup Pratinjau

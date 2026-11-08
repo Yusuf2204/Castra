@@ -105,14 +105,16 @@ const BudgetComparisonReport = ({ month, periodId }) => {
           <div className="small">
             Evaluasi Berdasarkan Siklus Gajian: <strong>{data.period.name}</strong> (
             {formatDateShort(data.period.start_date)} s/d {formatDateShort(data.period.end_date)}).
-            Plafon belanja dan transaksi pengeluaran dihitung spesifik pada rentang tanggal siklus ini.
+            Plafon belanja dan transaksi pengeluaran dihitung spesifik pada rentang tanggal siklus
+            ini.
           </div>
         </CAlert>
       ) : (
         <CAlert color="secondary" className="d-flex align-items-center mb-4 shadow-sm py-2">
           <CIcon icon={cilInfo} className="me-2" size="lg" />
           <div className="small">
-            Evaluasi Berdasarkan Bulan Kalender Standar: <strong>{data.month}</strong> (Tanggal 1 s/d akhir bulan).
+            Evaluasi Berdasarkan Bulan Kalender Standar: <strong>{data.month}</strong> (Tanggal 1
+            s/d akhir bulan).
           </div>
         </CAlert>
       )}
@@ -273,7 +275,9 @@ const BudgetComparisonReport = ({ month, periodId }) => {
             <tfoot>
               <tr className="fw-bold fs-6 border-top border-2">
                 <td colSpan={2}>
-                  {isPeriodMode ? `TOTAL SIKLUS (${data.period.name})` : `TOTAL BULAN ${data.month}`}
+                  {isPeriodMode
+                    ? `TOTAL SIKLUS (${data.period.name})`
+                    : `TOTAL BULAN ${data.month}`}
                 </td>
                 <td className="text-end">{formatCurrency(data.total_estimated)}</td>
                 <td className="text-end text-danger">{formatCurrency(data.total_actual)}</td>

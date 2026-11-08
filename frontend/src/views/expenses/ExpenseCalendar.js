@@ -157,7 +157,9 @@ const ExpenseCalendar = ({ year, month, calendarData, loading, onDateClick }) =>
                   </div>
                 </div>
               ) : (
-                <div className="text-body-secondary small text-end opacity-25 d-none d-sm-block">-</div>
+                <div className="text-body-secondary small text-end opacity-25 d-none d-sm-block">
+                  -
+                </div>
               )}
             </div>
           )

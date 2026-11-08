@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class IncomeTransaction extends Model
 {
@@ -18,13 +19,32 @@ class IncomeTransaction extends Model
         'category_id',
         'transaction_date',
         'amount',
+        'voucher_no',
         'notes',
+        'attachment_path',
     ];
 
     protected $casts = [
         'transaction_date' => 'date:Y-m-d',
         'amount' => 'float',
     ];
+
+    protected $appends = [
+        'attachment_url',
+    ];
+
+    public function getAttachmentUrlAttribute(): ?string
+    {
+        if (! $this->attachment_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->attachment_path, 'http://') || str_starts_with($this->attachment_path, 'https://')) {
+            return $this->attachment_path;
+        }
+
+        return Storage::disk('public')->url(ltrim($this->attachment_path, '/'));
+    }
 
     public function user(): BelongsTo
     {

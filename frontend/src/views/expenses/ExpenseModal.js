@@ -63,13 +63,17 @@ const formatDateIndonesian = (dateStr) => {
 const emptyForm = {
   category_id: '',
   amount: '',
+  payee: '',
+  voucher_no: '',
   notes: '',
   transaction_date: '',
+  attachment_path: '',
 }
 
 const emptyOcrFlags = {
   amount: false,
   transaction_date: false,
+  payee: false,
   notes: false,
   category_id: false,
 }
@@ -157,6 +161,7 @@ const ExpenseModal = ({
         const newOcrFlags = {
           amount: data.amount != null,
           transaction_date: Boolean(data.transaction_date),
+          payee: Boolean(data.payee || data.merchant),
           notes: Boolean(data.notes),
           category_id: Boolean(data.suggested_category_id),
         }
@@ -165,20 +170,23 @@ const ExpenseModal = ({
           ...prev,
           amount: data.amount != null ? String(data.amount) : prev.amount,
           transaction_date: data.transaction_date || prev.transaction_date,
+          payee: data.payee || data.merchant || prev.payee,
           notes: data.notes || prev.notes,
           category_id: data.suggested_category_id
             ? String(data.suggested_category_id)
             : prev.category_id,
+          attachment_path: data.attachment_path || prev.attachment_path,
         }))
 
         setOcrAutoFilled(newOcrFlags)
 
         setScannedReceipt({
-          merchant: data.merchant || 'Struk Belanja',
+          merchant: data.payee || data.merchant || 'Struk Belanja',
           amount: data.amount,
           transaction_date: data.transaction_date,
           suggested_category_name: data.suggested_category_name,
           fileName: file.name,
+          attachment_url: data.attachment_url,
         })
 
         if (data.amount) {
@@ -191,7 +199,9 @@ const ExpenseModal = ({
           )
         }
       } catch (err) {
-        toastError(err.userMessage || 'Gagal membaca nota. Silakan isi form pengeluaran secara manual.')
+        toastError(
+          err.userMessage || 'Gagal membaca nota. Silakan isi form pengeluaran secara manual.',
+        )
       } finally {
         setScanning(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
@@ -266,8 +276,14 @@ const ExpenseModal = ({
       transaction_date: item.transaction_date || selectedDate,
       category_id: item.category_id || '',
       amount: item.amount != null ? String(item.amount) : '',
+      payee: item.payee || '',
+      voucher_no: item.voucher_no || '',
       notes: item.notes || '',
+      attachment_path: item.attachment_path || '',
     })
+    if (item.attachment_url) {
+      setReceiptImagePreview(item.attachment_url)
+    }
     setErrors({})
   }
 
@@ -301,7 +317,10 @@ const ExpenseModal = ({
       transaction_date: form.transaction_date,
       category_id: Number(form.category_id),
       amount: parseAmount(form.amount),
+      payee: form.payee ? form.payee.trim() : null,
+      voucher_no: form.voucher_no ? form.voucher_no.trim() : null,
       notes: form.notes ? form.notes.trim() : null,
+      attachment_path: form.attachment_path || null,
     }
 
     try {
@@ -369,10 +388,13 @@ const ExpenseModal = ({
               <CTable hover responsive small className="border">
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell>Kategori</CTableHeaderCell>
+                    <CTableHeaderCell>No. Bukti / Kategori</CTableHeaderCell>
                     <CTableHeaderCell>Kelompok</CTableHeaderCell>
+                    <CTableHeaderCell>Penerima & Catatan</CTableHeaderCell>
                     <CTableHeaderCell>Nominal</CTableHeaderCell>
-                    <CTableHeaderCell>Catatan</CTableHeaderCell>
+                    <CTableHeaderCell width={70} className="text-center">
+                      Nota
+                    </CTableHeaderCell>
                     <CTableHeaderCell width={80}>Aksi</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -383,22 +405,51 @@ const ExpenseModal = ({
                       className={editingItem?.id === item.id ? 'table-danger' : ''}
                     >
                       <CTableDataCell>
+                        {item.voucher_no && (
+                          <div className="small font-monospace text-secondary mb-1">
+                            {item.voucher_no}
+                          </div>
+                        )}
                         <strong>{item.category?.name || '-'}</strong>
                       </CTableDataCell>
                       <CTableDataCell>
                         {item.category?.budget_group ? (
                           <CBadge color="info">
-                            {item.category.budget_group.name} ({item.category.budget_group.percentage}
-                            %)
+                            {item.category.budget_group.name} (
+                            {item.category.budget_group.percentage}%)
                           </CBadge>
                         ) : (
                           <span className="text-body-secondary">-</span>
                         )}
                       </CTableDataCell>
+                      <CTableDataCell>
+                        {item.payee && (
+                          <div className="fw-semibold text-body small">Penerima: {item.payee}</div>
+                        )}
+                        <span className="small text-body-secondary">{item.notes || '-'}</span>
+                      </CTableDataCell>
                       <CTableDataCell className="text-danger fw-bold">
                         {formatCurrency(item.amount)}
                       </CTableDataCell>
-                      <CTableDataCell>{item.notes || '-'}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        {item.attachment_url ? (
+                          <CButton
+                            size="sm"
+                            color="info"
+                            variant="ghost"
+                            className="p-1 text-info"
+                            title="Lihat Bukti Nota"
+                            onClick={() => {
+                              setReceiptImagePreview(item.attachment_url)
+                              setShowImagePreviewModal(true)
+                            }}
+                          >
+                            <CIcon icon={cilImage} size="lg" />
+                          </CButton>
+                        ) : (
+                          <span className="text-body-secondary small">-</span>
+                        )}
+                      </CTableDataCell>
                       <CTableDataCell>
                         <CButton
                           size="sm"
@@ -468,7 +519,9 @@ const ExpenseModal = ({
                   /* Loading State */
                   <div className="receipt-drop-zone text-center">
                     <CSpinner size="sm" color="primary" className="mb-2" />
-                    <div className="small fw-semibold text-body">Membaca nota dengan Tesseract OCR...</div>
+                    <div className="small fw-semibold text-body">
+                      Membaca nota dengan Tesseract OCR...
+                    </div>
                     <div className="receipt-drop-hint">
                       Sedang mendeteksi total harga, tanggal, dan nama toko
                     </div>
@@ -574,7 +627,11 @@ const ExpenseModal = ({
                     }}
                   >
                     <div className="mb-2">
-                      <CIcon icon={cilCloudUpload} size="xl" className="text-secondary opacity-75" />
+                      <CIcon
+                        icon={cilCloudUpload}
+                        size="xl"
+                        className="text-secondary opacity-75"
+                      />
                     </div>
                     <div className="mb-2">
                       <CButton
@@ -591,7 +648,8 @@ const ExpenseModal = ({
                       </CButton>
                     </div>
                     <div className="receipt-drop-hint">
-                      Tarik &amp; lepas file nota ke sini, atau tekan <kbd>Ctrl + V</kbd> untuk menempelkan gambar
+                      Tarik &amp; lepas file nota ke sini, atau tekan <kbd>Ctrl + V</kbd> untuk
+                      menempelkan gambar
                     </div>
                   </div>
                 )}
@@ -645,7 +703,9 @@ const ExpenseModal = ({
                     )}
                   </div>
                   <CInputGroup>
-                    <CInputGroupText className="bg-light fw-bold text-secondary">Rp</CInputGroupText>
+                    <CInputGroupText className="bg-light fw-bold text-secondary">
+                      Rp
+                    </CInputGroupText>
                     <CFormInput
                       type="number"
                       name="amount"
@@ -659,7 +719,9 @@ const ExpenseModal = ({
                     />
                   </CInputGroup>
                   {getFieldError(errors, 'amount') ? (
-                    <div className="invalid-feedback d-block">{getFieldError(errors, 'amount')}</div>
+                    <div className="invalid-feedback d-block">
+                      {getFieldError(errors, 'amount')}
+                    </div>
                   ) : form.amount && !isNaN(Number(form.amount)) && Number(form.amount) > 0 ? (
                     <div className="form-text text-body-secondary mt-1">
                       Terbilang: <strong>{formatCurrency(form.amount)}</strong>
@@ -670,9 +732,7 @@ const ExpenseModal = ({
                 {/* Transaction Date */}
                 <div className="col-md-6">
                   <div className="d-flex align-items-center justify-content-between mb-1">
-                    <label className="form-label mb-0 fw-semibold small">
-                      Tanggal Transaksi *
-                    </label>
+                    <label className="form-label mb-0 fw-semibold small">Tanggal Transaksi *</label>
                     {ocrAutoFilled.transaction_date && (
                       <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2 small">
                         <CIcon icon={cilCheck} size="sm" className="me-1" />
@@ -691,14 +751,63 @@ const ExpenseModal = ({
                   />
                 </div>
 
-                {/* Notes Input */}
+                {/* Payee / Vendor Input */}
                 <div className="col-md-6">
                   <div className="d-flex align-items-center justify-content-between mb-1">
-                    <label className="form-label mb-0 fw-semibold small">Catatan / Keterangan</label>
-                    {ocrAutoFilled.notes && (
+                    <label className="form-label mb-0 fw-semibold small">
+                      Penerima / Toko / Vendor
+                    </label>
+                    {ocrAutoFilled.payee && (
                       <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2 small">
                         <CIcon icon={cilCheck} size="sm" className="me-1" />
                         Terisi Nama Toko
+                      </span>
+                    )}
+                  </div>
+                  <CFormInput
+                    type="text"
+                    name="payee"
+                    maxLength={150}
+                    placeholder="Contoh: Pak Wahyu, SPBU Pertamina, Toko ATK..."
+                    value={form.payee}
+                    onChange={handleChange}
+                    invalid={Boolean(getFieldError(errors, 'payee'))}
+                    feedbackInvalid={getFieldError(errors, 'payee')}
+                    disabled={saving}
+                  />
+                </div>
+
+                {/* Voucher Number (BKK) */}
+                <div className="col-md-6">
+                  <div className="d-flex align-items-center justify-content-between mb-1">
+                    <label className="form-label mb-0 fw-semibold small">
+                      No. Bukti Kas Keluar (BKK)
+                    </label>
+                    <span className="text-body-secondary small">(Opsional / Otomatis)</span>
+                  </div>
+                  <CFormInput
+                    type="text"
+                    name="voucher_no"
+                    maxLength={50}
+                    placeholder="Contoh: BKK-202611-0001"
+                    value={form.voucher_no}
+                    onChange={handleChange}
+                    invalid={Boolean(getFieldError(errors, 'voucher_no'))}
+                    feedbackInvalid={getFieldError(errors, 'voucher_no')}
+                    disabled={saving}
+                  />
+                </div>
+
+                {/* Notes Input */}
+                <div className="col-md-6">
+                  <div className="d-flex align-items-center justify-content-between mb-1">
+                    <label className="form-label mb-0 fw-semibold small">
+                      Catatan / Keterangan
+                    </label>
+                    {ocrAutoFilled.notes && (
+                      <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2 small">
+                        <CIcon icon={cilCheck} size="sm" className="me-1" />
+                        Terisi dari Catatan
                       </span>
                     )}
                   </div>
@@ -706,7 +815,7 @@ const ExpenseModal = ({
                     name="notes"
                     rows={2}
                     maxLength={500}
-                    placeholder="Keterangan pengeluaran (contoh: Makan siang, belanja bulanan)..."
+                    placeholder="Keterangan pengeluaran (contoh: Belanja ATK kantor, sarapan tim)..."
                     value={form.notes}
                     onChange={handleChange}
                     invalid={Boolean(getFieldError(errors, 'notes'))}
@@ -714,6 +823,31 @@ const ExpenseModal = ({
                     disabled={saving}
                   />
                 </div>
+
+                {/* Attachment Indicator / Upload Notice */}
+                {form.attachment_path && (
+                  <div className="col-12">
+                    <div className="d-flex align-items-center justify-content-between p-2 rounded border bg-success-subtle border-success-subtle">
+                      <div className="d-flex align-items-center gap-2 small text-success-emphasis">
+                        <CIcon icon={cilCheckCircle} />
+                        <span>
+                          Foto bukti nota fisik terlampir dan akan disimpan permanen ke server.
+                        </span>
+                      </div>
+                      <CButton
+                        size="sm"
+                        color="link"
+                        className="text-danger p-0 small text-decoration-none"
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, attachment_path: '' }))
+                          handleClearScannedReceipt()
+                        }}
+                      >
+                        Hapus Bukti
+                      </CButton>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Friendly Hint if OCR was used */}
@@ -721,7 +855,8 @@ const ExpenseModal = ({
                 <div className="d-flex align-items-center gap-2 mt-3 p-2 bg-info-subtle border border-info-subtle rounded small text-info-emphasis">
                   <CIcon icon={cilInfo} className="flex-shrink-0" />
                   <span>
-                    Data di atas diisi otomatis dari hasil baca nota. Anda tetap dapat mengedit atau menyesuaikan nilai sebelum menyimpan.
+                    Data di atas diisi otomatis dari hasil baca nota. Anda tetap dapat mengedit atau
+                    menyesuaikan nilai sebelum menyimpan.
                   </span>
                 </div>
               )}

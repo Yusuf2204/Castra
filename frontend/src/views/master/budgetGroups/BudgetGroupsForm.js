@@ -62,7 +62,8 @@ const BudgetGroupsForm = ({ budgetGroup, onReset, onSaved }) => {
     setSaving(true)
     setErrors({})
 
-    const parseAmount = (val) => (typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val))
+    const parseAmount = (val) =>
+      typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val)
 
     const payload = {
       code: form.code.trim().toLowerCase(),

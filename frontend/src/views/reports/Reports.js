@@ -90,7 +90,10 @@ const Reports = () => {
             </CCol>
 
             {/* Right: Period Filter Controls */}
-            <CCol lg={6} className="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
+            <CCol
+              lg={6}
+              className="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap"
+            >
               {activeTab === 'cash-flow' && (
                 <div className="d-flex align-items-center gap-2">
                   <label className="text-nowrap small text-body-secondary fw-semibold">
@@ -198,7 +201,9 @@ const Reports = () => {
             <BudgetComparisonReport
               key={`bc-${budgetMode}-${budgetMode === 'period' ? selectedPeriodId : selectedMonth}-${reloadKey}`}
               month={budgetMode === 'month' ? selectedMonth : null}
-              periodId={budgetMode === 'period' && selectedPeriodId ? Number(selectedPeriodId) : null}
+              periodId={
+                budgetMode === 'period' && selectedPeriodId ? Number(selectedPeriodId) : null
+              }
             />
           )}
           {activeTab === 'category-breakdown' && (
