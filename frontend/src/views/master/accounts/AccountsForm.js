@@ -179,7 +179,7 @@ const AccountsForm = ({ visible, onClose, account, onSaved }) => {
             <div className="col-md-6">
               <label className="form-label small fw-semibold">Saldo Awal (Rp)</label>
               <CInputGroup>
-                <CInputGroupText className="bg-light fw-bold text-secondary">Rp</CInputGroupText>
+                <CInputGroupText className="fw-bold text-secondary">Rp</CInputGroupText>
                 <CFormInput
                   type="number"
                   name="initial_balance"
@@ -198,7 +198,7 @@ const AccountsForm = ({ visible, onClose, account, onSaved }) => {
                 Plafon Kas Kecil (Imprest Limit)
               </label>
               <CInputGroup>
-                <CInputGroupText className="bg-light fw-bold text-secondary">Rp</CInputGroupText>
+                <CInputGroupText className="fw-bold text-secondary">Rp</CInputGroupText>
                 <CFormInput
                   type="number"
                   name="imprest_limit"

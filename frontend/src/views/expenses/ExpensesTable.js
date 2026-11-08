@@ -269,7 +269,7 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete, onReload }) =
             Bukti Struk / Nota Fisik
           </CModalTitle>
         </CModalHeader>
-        <CModalBody className="text-center p-3 bg-light">
+        <CModalBody className="text-center p-3 bg-body-tertiary">
           {previewImage && (
             <img
               src={previewImage}

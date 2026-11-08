@@ -198,7 +198,7 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
               <div className="col-md-6">
                 <label className="form-label small fw-semibold">Nominal Mutasi / Top-Up *</label>
                 <CInputGroup>
-                  <CInputGroupText className="bg-light fw-bold text-secondary">Rp</CInputGroupText>
+                  <CInputGroupText className="fw-bold text-secondary">Rp</CInputGroupText>
                   <CFormInput
                     type="number"
                     name="amount"

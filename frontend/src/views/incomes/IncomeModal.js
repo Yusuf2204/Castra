@@ -811,7 +811,7 @@ const IncomeModal = ({
                     )}
                   </div>
                   <CInputGroup>
-                    <CInputGroupText className="bg-light fw-bold text-secondary">
+                    <CInputGroupText className="fw-bold text-secondary">
                       Rp
                     </CInputGroupText>
                     <CFormInput
@@ -991,7 +991,7 @@ const IncomeModal = ({
             Pratinjau Bukti Pemasukan
           </CModalTitle>
         </CModalHeader>
-        <CModalBody className="text-center p-3 bg-light">
+        <CModalBody className="text-center p-3 bg-body-tertiary">
           {proofImagePreview ? (
             <img
               src={proofImagePreview}

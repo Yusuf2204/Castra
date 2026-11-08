@@ -57,7 +57,7 @@ const Reports = () => {
   return (
     <div className="mb-4">
       {/* Top Row: Filter Bar (Pola 3) */}
-      <CCard className="mb-4 shadow-sm">
+      <CCard className="mb-4 shadow-sm d-print-none">
         <CCardBody className="py-3">
           <CRow className="g-3 align-items-center justify-content-between">
             {/* Left: Tab Navigator */}

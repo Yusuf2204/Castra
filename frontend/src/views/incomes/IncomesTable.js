@@ -184,7 +184,7 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
             Bukti Transfer / Pemasukan
           </CModalTitle>
         </CModalHeader>
-        <CModalBody className="text-center p-3 bg-light">
+        <CModalBody className="text-center p-3 bg-body-tertiary">
           {previewImage && (
             <img
               src={previewImage}

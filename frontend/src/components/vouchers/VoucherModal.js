@@ -64,31 +64,115 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
       <CModalBody className="p-4 voucher-print-area">
         <style>
           {`
+            .voucher-paper-sheet,
+            .voucher-paper-sheet * {
+              color: #111827 !important;
+              --cui-body-color: #111827 !important;
+              --cui-table-color: #111827 !important;
+            }
+            .voucher-paper-sheet .bg-light,
+            .voucher-paper-sheet .bg-light-subtle {
+              background-color: #f3f4f6 !important;
+              color: #111827 !important;
+            }
+            .voucher-paper-sheet .text-muted {
+              color: #6b7280 !important;
+            }
+            .voucher-paper-sheet .text-dark {
+              color: #111827 !important;
+            }
+            .voucher-paper-sheet .border-dark {
+              border-color: #111827 !important;
+            }
+            .voucher-paper-sheet .table {
+              --cui-table-color: #111827 !important;
+              --cui-table-bg: transparent !important;
+              color: #111827 !important;
+            }
+            .voucher-paper-sheet .badge.border-dark {
+              color: #111827 !important;
+              border-color: #111827 !important;
+            }
+            @page {
+              size: A4 portrait;
+              margin: 10mm;
+            }
             @media print {
-              body * {
-                visibility: hidden;
+              html, body {
+                background: #ffffff !important;
+                overflow: visible !important;
+                height: auto !important;
               }
-              .voucher-print-area, .voucher-print-area * {
-                visibility: visible;
+              .sidebar,
+              .header,
+              .footer,
+              .d-print-none,
+              .modal-backdrop,
+              .btn,
+              button {
+                display: none !important;
+              }
+              .modal {
+                position: static !important;
+                overflow: visible !important;
+                display: block !important;
+                padding: 0 !important;
+              }
+              .modal-dialog {
+                position: static !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                transform: none !important;
+              }
+              .modal-content {
+                position: static !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
               }
               .voucher-print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 1.5cm !important;
-                background: white !important;
-                color: black !important;
+                position: static !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
               }
-              .d-print-none {
-                display: none !important;
+              .voucher-paper-sheet {
+                border: 2px solid #111827 !important;
+                padding: 1.25rem !important;
+                margin: 0 auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+              }
+              .table-responsive {
+                overflow: visible !important;
+                display: block !important;
+                width: 100% !important;
+              }
+              table.table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+              }
+              table.table th,
+              table.table td {
+                padding: 5px 8px !important;
+                border-color: #111827 !important;
+                color: #111827 !important;
+              }
+              .voucher-signatures {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
               }
             }
           `}
         </style>
 
         {/* Voucher Container Sheet */}
-        <div className="border border-2 border-dark p-4 bg-white text-dark rounded-1">
+        <div className="voucher-paper-sheet border border-2 border-dark p-4 bg-white text-dark rounded-1">
           {/* Header Kop Surat / Perusahaan */}
           <div className="d-flex justify-content-between align-items-start border-bottom border-dark pb-3 mb-3">
             <div>
@@ -152,7 +236,7 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
                 <tr>
                   <td className="bg-light fw-bold">Nominal Pembayaran</td>
                   <td>
-                    <span className="fs-5 fw-bold text-dark">
+                    <span className="fs-5 fw-bold text-dark text-nowrap">
                       {formatCurrency(transaction.amount)}
                     </span>
                   </td>
@@ -205,7 +289,7 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
                   <tr className="bg-light">
                     <th>Pos Kategori</th>
                     <th>Keterangan</th>
-                    <th className="text-end">Nominal</th>
+                    <th className="text-end text-nowrap">Nominal</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -213,7 +297,9 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
                     <tr key={i}>
                       <td>{child.category?.name || '-'}</td>
                       <td>{child.notes || '-'}</td>
-                      <td className="text-end fw-bold">{formatCurrency(child.amount)}</td>
+                      <td className="text-end fw-bold text-nowrap">
+                        {formatCurrency(child.amount)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -229,13 +315,13 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
                 src={transaction.attachment_url}
                 alt="Bukti Nota"
                 className="img-fluid border rounded"
-                style={{ maxHeight: '180px', objectFit: 'contain' }}
+                style={{ maxHeight: '130px', objectFit: 'contain' }}
               />
             </div>
           )}
 
           {/* Kotak Tanda Tangan 3 Kolom */}
-          <div className="row text-center mt-4 pt-2">
+          <div className="row text-center mt-4 pt-2 voucher-signatures">
             <div className="col-4">
               <div className="small text-muted mb-1">Disetujui Oleh:</div>
               <div

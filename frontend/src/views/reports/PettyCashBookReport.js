@@ -194,24 +194,80 @@ const PettyCashBookReport = () => {
     <div>
       <style>
         {`
+          @page {
+            size: A4 landscape;
+            margin: 12mm 10mm;
+          }
           @media print {
-            body * {
-              visibility: hidden;
+            html, body {
+              background: #ffffff !important;
+              color: #111827 !important;
+              font-size: 11px !important;
+              line-height: 1.3 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
             }
-            .petty-cash-print-area, .petty-cash-print-area * {
-              visibility: visible;
+            .sidebar,
+            .header,
+            .footer,
+            .d-print-none,
+            .nav,
+            .modal-backdrop,
+            .btn,
+            button {
+              display: none !important;
+            }
+            .wrapper,
+            .body,
+            .container-fluid,
+            main {
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
             }
             .petty-cash-print-area {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              padding: 1cm !important;
-              background: white !important;
-              color: black !important;
+              position: static !important;
+              width: 100% !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: transparent !important;
+              color: #111827 !important;
             }
-            .d-print-none {
-              display: none !important;
+            .table-responsive {
+              overflow: visible !important;
+              display: block !important;
+              width: 100% !important;
+            }
+            table.table {
+              width: 100% !important;
+              border-collapse: collapse !important;
+              color: #111827 !important;
+              font-size: 11px !important;
+              margin-bottom: 0 !important;
+            }
+            table.table th,
+            table.table td {
+              padding: 6px 6px !important;
+              border-color: #374151 !important;
+              color: #111827 !important;
+              vertical-align: middle !important;
+            }
+            thead {
+              display: table-header-group !important;
+            }
+            tr {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            tbody tr {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .print-signature-block {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
           }
         `}
@@ -321,7 +377,7 @@ const PettyCashBookReport = () => {
               <CCard className="border-start border-start-4 border-start-info h-100 shadow-sm">
                 <CCardBody className="p-3">
                   <div className="text-body-secondary small mb-1 fw-semibold">SALDO AWAL</div>
-                  <div className="fs-5 fw-bold text-dark">
+                  <div className="fs-5 fw-bold text-body">
                     {formatCurrency(data.opening_balance)}
                   </div>
                 </CCardBody>
@@ -373,22 +429,28 @@ const PettyCashBookReport = () => {
           <CCard className="shadow-sm mb-4">
             <CCardBody className="p-0">
               <CTable hover responsive align="middle" className="mb-0 border">
-                <CTableHead className="table-light border-bottom border-dark">
+                <CTableHead className="bg-body-secondary border-bottom">
                   <CTableRow>
                     <CTableHeaderCell style={{ width: '4%' }}>No</CTableHeaderCell>
                     <CTableHeaderCell style={{ width: '10%' }}>Tanggal</CTableHeaderCell>
                     <CTableHeaderCell style={{ width: '13%' }}>No. Bukti</CTableHeaderCell>
-                    <CTableHeaderCell style={{ width: '12%' }}>Pos / Kategori</CTableHeaderCell>
-                    <CTableHeaderCell style={{ width: '23%' }}>
+                    <CTableHeaderCell style={{ width: '13%' }}>Pos / Kategori</CTableHeaderCell>
+                    <CTableHeaderCell style={{ width: '24%' }}>
                       Keterangan & Penerima
                     </CTableHeaderCell>
-                    <CTableHeaderCell style={{ width: '12%' }} className="text-end text-success">
+                    <CTableHeaderCell
+                      style={{ width: '12%' }}
+                      className="text-end text-success text-nowrap"
+                    >
                       Masuk (Rp)
                     </CTableHeaderCell>
-                    <CTableHeaderCell style={{ width: '12%' }} className="text-end text-danger">
+                    <CTableHeaderCell
+                      style={{ width: '12%' }}
+                      className="text-end text-danger text-nowrap"
+                    >
                       Keluar (Rp)
                     </CTableHeaderCell>
-                    <CTableHeaderCell style={{ width: '14%' }} className="text-end">
+                    <CTableHeaderCell style={{ width: '12%' }} className="text-end text-nowrap">
                       Saldo (Rp)
                     </CTableHeaderCell>
                     <CTableHeaderCell width={80} className="text-center d-print-none">
@@ -399,7 +461,7 @@ const PettyCashBookReport = () => {
 
                 <CTableBody>
                   {/* Saldo Awal Row */}
-                  <CTableRow className="table-light fw-bold">
+                  <CTableRow className="bg-body-tertiary fw-bold">
                     <CTableDataCell className="text-center">&bull;</CTableDataCell>
                     <CTableDataCell>{formatDateShort(data.period.start_date)}</CTableDataCell>
                     <CTableDataCell className="text-muted font-monospace">-</CTableDataCell>
@@ -409,7 +471,7 @@ const PettyCashBookReport = () => {
                     <CTableDataCell>Saldo kas awal periode</CTableDataCell>
                     <CTableDataCell className="text-end">-</CTableDataCell>
                     <CTableDataCell className="text-end">-</CTableDataCell>
-                    <CTableDataCell className="text-end text-dark fw-bold">
+                    <CTableDataCell className="text-end text-body fw-bold text-nowrap">
                       {formatCurrency(data.opening_balance)}
                     </CTableDataCell>
                     <CTableDataCell className="d-print-none text-center text-muted small">
@@ -453,18 +515,18 @@ const PettyCashBookReport = () => {
                           </CBadge>
                         </CTableDataCell>
                         <CTableDataCell>
-                          <div className="fw-semibold text-dark small">{tx.description}</div>
+                          <div className="fw-semibold text-body small">{tx.description}</div>
                           {tx.payee && tx.payee !== '-' && (
                             <div className="text-muted small">Pihak: {tx.payee}</div>
                           )}
                         </CTableDataCell>
-                        <CTableDataCell className="text-end text-success fw-bold small">
+                        <CTableDataCell className="text-end text-success fw-bold small text-nowrap">
                           {tx.amount_in > 0 ? `+${formatCurrency(tx.amount_in)}` : '-'}
                         </CTableDataCell>
-                        <CTableDataCell className="text-end text-danger fw-bold small">
+                        <CTableDataCell className="text-end text-danger fw-bold small text-nowrap">
                           {tx.amount_out > 0 ? `-${formatCurrency(tx.amount_out)}` : '-'}
                         </CTableDataCell>
-                        <CTableDataCell className="text-end fw-bold text-dark small">
+                        <CTableDataCell className="text-end fw-bold text-body small text-nowrap">
                           {formatCurrency(tx.running_balance)}
                         </CTableDataCell>
                         <CTableDataCell className="d-print-none text-center">
@@ -513,17 +575,17 @@ const PettyCashBookReport = () => {
                   )}
 
                   {/* Summary Footer Row */}
-                  <CTableRow className="table-light fw-bold border-top border-dark">
+                  <CTableRow className="bg-body-tertiary fw-bold border-top">
                     <CTableDataCell colSpan={5} className="text-end text-uppercase">
                       Total Mutasi &amp; Saldo Akhir:
                     </CTableDataCell>
-                    <CTableDataCell className="text-end text-success fs-6">
+                    <CTableDataCell className="text-end text-success fw-bold text-nowrap">
                       +{formatCurrency(data.total_in)}
                     </CTableDataCell>
-                    <CTableDataCell className="text-end text-danger fs-6">
+                    <CTableDataCell className="text-end text-danger fw-bold text-nowrap">
                       -{formatCurrency(data.total_out)}
                     </CTableDataCell>
-                    <CTableDataCell className="text-end text-primary fs-6">
+                    <CTableDataCell className="text-end text-primary fw-bold text-nowrap">
                       {formatCurrency(data.closing_balance)}
                     </CTableDataCell>
                     <CTableDataCell className="d-print-none"></CTableDataCell>
@@ -535,7 +597,7 @@ const PettyCashBookReport = () => {
         )}
 
         {/* Print Sign-Off Footer */}
-        <div className="d-none d-print-block mt-5 pt-3">
+        <div className="d-none d-print-block mt-4 pt-3 print-signature-block">
           <div className="row text-center">
             <div className="col-4">
               <div className="small text-muted mb-1">Dibuat Oleh (Kasir Kas Kecil):</div>
@@ -580,7 +642,7 @@ const PettyCashBookReport = () => {
             Bukti Struk / Nota Fisik
           </CModalTitle>
         </CModalHeader>
-        <CModalBody className="text-center p-3 bg-light">
+        <CModalBody className="text-center p-3 bg-body-tertiary">
           {previewImage && (
             <img
               src={previewImage}

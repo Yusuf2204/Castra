@@ -890,7 +890,7 @@ const ExpenseModal = ({
                     )}
                   </div>
                   <CInputGroup>
-                    <CInputGroupText className="bg-light fw-bold text-secondary">
+                    <CInputGroupText className="fw-bold text-secondary">
                       Rp
                     </CInputGroupText>
                     <CFormInput
@@ -1031,7 +1031,7 @@ const ExpenseModal = ({
                 {/* Split Category Toggle & Detail */}
                 {!editingItem && (
                   <div className="col-12 mt-2">
-                    <div className="form-check form-switch p-2 bg-light rounded border d-flex align-items-center gap-2">
+                    <div className="form-check form-switch p-2 bg-body-tertiary rounded border d-flex align-items-center gap-2">
                       <input
                         className="form-check-input ms-0"
                         type="checkbox"
@@ -1049,7 +1049,7 @@ const ExpenseModal = ({
                     </div>
 
                     {isSplitMode && (
-                      <div className="p-3 border rounded bg-white mt-2 shadow-sm">
+                      <div className="p-3 border rounded bg-body-tertiary mt-2 shadow-sm">
                         <div className="d-flex justify-content-between align-items-center mb-2">
                           <span className="small fw-semibold text-secondary">
                             Rincian Alokasi Kategori Belanja Nota:
@@ -1200,7 +1200,7 @@ const ExpenseModal = ({
             Pratinjau Foto Nota / Struk
           </CModalTitle>
         </CModalHeader>
-        <CModalBody className="text-center p-3 bg-light">
+        <CModalBody className="text-center p-3 bg-body-tertiary">
           {receiptImagePreview ? (
             <img
               src={receiptImagePreview}
