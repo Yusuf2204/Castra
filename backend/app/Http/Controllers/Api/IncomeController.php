@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IncomeTransactionResource;
+use App\Models\Account;
 use App\Models\IncomeTransaction;
 use App\Services\ReceiptOcrService;
 use Carbon\Carbon;
@@ -18,7 +19,7 @@ class IncomeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = $request->user()->incomeTransactions()->with(['incomeSource', 'category']);
+        $query = $request->user()->incomeTransactions()->with(['incomeSource', 'category', 'account']);
 
         if ($request->filled('month')) {
             try {
@@ -36,6 +37,10 @@ class IncomeController extends Controller
 
         if ($request->filled('end_date')) {
             $query->where('transaction_date', '<=', $request->input('end_date'));
+        }
+
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->input('account_id'));
         }
 
         if ($request->filled('income_source_id')) {
@@ -93,15 +98,20 @@ class IncomeController extends Controller
     {
         $validated = $request->validate([
             'month' => ['required', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+            'account_id' => ['nullable', 'integer'],
             'income_source_id' => ['nullable', 'integer'],
         ]);
 
         $monthDate = Carbon::createFromFormat('Y-m', $validated['month']);
 
         $query = $request->user()->incomeTransactions()
-            ->with(['incomeSource', 'category'])
+            ->with(['incomeSource', 'category', 'account'])
             ->whereYear('transaction_date', $monthDate->year)
             ->whereMonth('transaction_date', $monthDate->month);
+
+        if (! empty($validated['account_id'])) {
+            $query->where('account_id', $validated['account_id']);
+        }
 
         if (! empty($validated['income_source_id'])) {
             $query->where('income_source_id', $validated['income_source_id']);
@@ -151,6 +161,11 @@ class IncomeController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
+            'account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
+            ],
             'income_source_id' => [
                 'required',
                 'integer',
@@ -171,6 +186,14 @@ class IncomeController extends Controller
             'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
         ]);
 
+        if (empty($validated['account_id'])) {
+            $defaultAcc = $user->accounts()->where('type', 'petty_cash')->where('is_active', true)->first()
+                ?? $user->accounts()->where('is_active', true)->first();
+            if ($defaultAcc) {
+                $validated['account_id'] = $defaultAcc->id;
+            }
+        }
+
         if ($request->hasFile('attachment')) {
             $validated['attachment_path'] = $request->file('attachment')->store('receipts', 'public');
         }
@@ -185,7 +208,8 @@ class IncomeController extends Controller
         }
 
         $income = $user->incomeTransactions()->create($validated);
-        $income->load(['incomeSource', 'category']);
+        $income->load(['incomeSource', 'category', 'account']);
+        $income->account?->recalculateBalance();
 
         return response()->json([
             'data' => (new IncomeTransactionResource($income))->resolve(),
@@ -204,7 +228,7 @@ class IncomeController extends Controller
             ], 404);
         }
 
-        $income->load(['incomeSource', 'category']);
+        $income->load(['incomeSource', 'category', 'account']);
 
         return response()->json([
             'data' => (new IncomeTransactionResource($income))->resolve(),
@@ -226,6 +250,11 @@ class IncomeController extends Controller
         }
 
         $validated = $request->validate([
+            'account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
+            ],
             'income_source_id' => [
                 'sometimes',
                 'required',
@@ -252,8 +281,14 @@ class IncomeController extends Controller
         }
         unset($validated['attachment']);
 
+        $oldAccountId = $income->account_id;
         $income->update($validated);
-        $income->load(['incomeSource', 'category']);
+        $income->load(['incomeSource', 'category', 'account']);
+
+        if ($oldAccountId && $oldAccountId !== $income->account_id) {
+            Account::find($oldAccountId)?->recalculateBalance();
+        }
+        $income->account?->recalculateBalance();
 
         return response()->json([
             'data' => (new IncomeTransactionResource($income))->resolve(),
@@ -272,7 +307,9 @@ class IncomeController extends Controller
             ], 404);
         }
 
+        $account = $income->account;
         $income->delete();
+        $account?->recalculateBalance();
 
         return response()->json([
             'data' => null,

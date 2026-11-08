@@ -17,6 +17,15 @@ class IncomeTransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
+            'account_id' => $this->account_id,
+            'account' => $this->whenLoaded('account', function () {
+                return $this->account ? [
+                    'id' => $this->account->id,
+                    'name' => $this->account->name,
+                    'type' => $this->account->type,
+                    'currency' => $this->account->currency,
+                ] : null;
+            }),
             'income_source_id' => $this->income_source_id,
             'income_source' => $this->whenLoaded('incomeSource', function () {
                 return [

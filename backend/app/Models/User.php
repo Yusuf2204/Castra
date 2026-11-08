@@ -88,4 +88,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(CategoryBudgetAllocation::class);
     }
+
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
+    }
+
+    public function fundTransfers()
+    {
+        return $this->hasMany(FundTransfer::class);
+    }
 }

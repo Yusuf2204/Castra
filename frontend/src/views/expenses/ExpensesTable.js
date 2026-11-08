@@ -87,6 +87,16 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete }) => {
 
               <CTableDataCell>
                 <strong>{item.category?.name || '-'}</strong>
+                {item.account && (
+                  <div className="mt-1">
+                    <CBadge
+                      color={item.account.type === 'petty_cash' ? 'warning' : 'secondary'}
+                      className="small"
+                    >
+                      {item.account.name}
+                    </CBadge>
+                  </div>
+                )}
               </CTableDataCell>
 
               <CTableDataCell>

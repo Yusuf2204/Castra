@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Account;
 use App\Models\BudgetGroup;
 use App\Models\BudgetPeriod;
 use App\Models\Category;
@@ -12,15 +13,48 @@ use Carbon\Carbon;
 class UserTemplateInitializer
 {
     /**
-     * Initialize standard master templates (budget groups, income sources, categories, budget period)
+     * Initialize standard master templates (budget groups, income sources, categories, budget period, accounts)
      * for a given user. Fully idempotent.
      */
     public function initialize(User $user): void
     {
+        $this->initAccounts($user);
         $this->initBudgetGroups($user);
         $this->initIncomeSources($user);
         $this->initCategories($user);
         $this->initBudgetPeriod($user);
+    }
+
+    protected function initAccounts(User $user): void
+    {
+        $defaultAccounts = [
+            [
+                'name' => 'Kas Kecil (Petty Cash)',
+                'type' => 'petty_cash',
+                'currency' => 'IDR',
+                'initial_balance' => 0.00,
+                'imprest_limit' => 2000000.00,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Kas Utama / Rekening Bank',
+                'type' => 'bank',
+                'currency' => 'IDR',
+                'initial_balance' => 0.00,
+                'imprest_limit' => null,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($defaultAccounts as $acc) {
+            Account::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'name' => $acc['name'],
+                ],
+                $acc
+            );
+        }
     }
 
     protected function initBudgetGroups(User $user): void

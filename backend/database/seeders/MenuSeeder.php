@@ -72,11 +72,20 @@ class MenuSeeder extends Seeder
         );
 
         Menus::updateOrCreate(
+            ['menu_path' => '/master/accounts'],
+            [
+                'menu_name' => 'Akun Kas & Bank',
+                'menu_parent_id' => $master->id,
+                'menu_order' => 1,
+            ]
+        );
+
+        Menus::updateOrCreate(
             ['menu_path' => '/master/income-sources'],
             [
                 'menu_name' => 'Sumber Dana',
                 'menu_parent_id' => $master->id,
-                'menu_order' => 1,
+                'menu_order' => 2,
             ]
         );
 
@@ -85,7 +94,7 @@ class MenuSeeder extends Seeder
             [
                 'menu_name' => 'Kategori',
                 'menu_parent_id' => $master->id,
-                'menu_order' => 2,
+                'menu_order' => 3,
             ]
         );
 
@@ -94,7 +103,7 @@ class MenuSeeder extends Seeder
             [
                 'menu_name' => 'Kelompok Anggaran',
                 'menu_parent_id' => $master->id,
-                'menu_order' => 3,
+                'menu_order' => 4,
             ]
         );
 
@@ -103,7 +112,7 @@ class MenuSeeder extends Seeder
             [
                 'menu_name' => 'Siklus Anggaran',
                 'menu_parent_id' => $master->id,
-                'menu_order' => 4,
+                'menu_order' => 5,
             ]
         );
 

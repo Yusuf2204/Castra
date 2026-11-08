@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseTransactionResource;
+use App\Models\Account;
 use App\Models\ExpenseTransaction;
 use App\Services\ReceiptOcrService;
 use Carbon\Carbon;
@@ -18,7 +19,7 @@ class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = $request->user()->expenseTransactions()->with('category.budgetGroup');
+        $query = $request->user()->expenseTransactions()->with(['category.budgetGroup', 'account']);
 
         if ($request->filled('month')) {
             try {
@@ -36,6 +37,10 @@ class ExpenseController extends Controller
 
         if ($request->filled('end_date')) {
             $query->where('transaction_date', '<=', $request->input('end_date'));
+        }
+
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->input('account_id'));
         }
 
         if ($request->filled('category_id')) {
@@ -94,6 +99,7 @@ class ExpenseController extends Controller
     {
         $validated = $request->validate([
             'month' => ['required', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+            'account_id' => ['nullable', 'integer'],
             'category_id' => ['nullable', 'integer'],
             'budget_group_id' => ['nullable', 'integer'],
         ]);
@@ -101,9 +107,13 @@ class ExpenseController extends Controller
         $monthDate = Carbon::createFromFormat('Y-m', $validated['month']);
 
         $query = $request->user()->expenseTransactions()
-            ->with('category.budgetGroup')
+            ->with(['category.budgetGroup', 'account'])
             ->whereYear('transaction_date', $monthDate->year)
             ->whereMonth('transaction_date', $monthDate->month);
+
+        if (! empty($validated['account_id'])) {
+            $query->where('account_id', $validated['account_id']);
+        }
 
         if (! empty($validated['category_id'])) {
             $query->where('category_id', $validated['category_id']);
@@ -160,6 +170,11 @@ class ExpenseController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
+            'account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
+            ],
             'category_id' => [
                 'required',
                 'integer',
@@ -176,6 +191,14 @@ class ExpenseController extends Controller
             'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
         ]);
 
+        if (empty($validated['account_id'])) {
+            $defaultAcc = $user->accounts()->where('type', 'petty_cash')->where('is_active', true)->first()
+                ?? $user->accounts()->where('is_active', true)->first();
+            if ($defaultAcc) {
+                $validated['account_id'] = $defaultAcc->id;
+            }
+        }
+
         if ($request->hasFile('attachment')) {
             $validated['attachment_path'] = $request->file('attachment')->store('receipts', 'public');
         }
@@ -190,7 +213,8 @@ class ExpenseController extends Controller
         }
 
         $expense = $user->expenseTransactions()->create($validated);
-        $expense->load('category.budgetGroup');
+        $expense->load(['category.budgetGroup', 'account']);
+        $expense->account?->recalculateBalance();
 
         return response()->json([
             'data' => (new ExpenseTransactionResource($expense))->resolve(),
@@ -209,7 +233,7 @@ class ExpenseController extends Controller
             ], 404);
         }
 
-        $expense->load('category.budgetGroup');
+        $expense->load(['category.budgetGroup', 'account']);
 
         return response()->json([
             'data' => (new ExpenseTransactionResource($expense))->resolve(),
@@ -231,6 +255,11 @@ class ExpenseController extends Controller
         }
 
         $validated = $request->validate([
+            'account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
+            ],
             'category_id' => [
                 'sometimes',
                 'required',
@@ -253,8 +282,14 @@ class ExpenseController extends Controller
         }
         unset($validated['attachment']);
 
+        $oldAccountId = $expense->account_id;
         $expense->update($validated);
-        $expense->load('category.budgetGroup');
+        $expense->load(['category.budgetGroup', 'account']);
+
+        if ($oldAccountId && $oldAccountId !== $expense->account_id) {
+            Account::find($oldAccountId)?->recalculateBalance();
+        }
+        $expense->account?->recalculateBalance();
 
         return response()->json([
             'data' => (new ExpenseTransactionResource($expense))->resolve(),
@@ -273,7 +308,9 @@ class ExpenseController extends Controller
             ], 404);
         }
 
+        $account = $expense->account;
         $expense->delete();
+        $account?->recalculateBalance();
 
         return response()->json([
             'data' => null,

@@ -15,6 +15,7 @@ class IncomeTransaction extends Model
 
     protected $fillable = [
         'user_id',
+        'account_id',
         'income_source_id',
         'category_id',
         'transaction_date',
@@ -59,5 +60,10 @@ class IncomeTransaction extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'account_id');
     }
 }

@@ -17,6 +17,15 @@ class ExpenseTransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
+            'account_id' => $this->account_id,
+            'account' => $this->whenLoaded('account', function () {
+                return $this->account ? [
+                    'id' => $this->account->id,
+                    'name' => $this->account->name,
+                    'type' => $this->account->type,
+                    'currency' => $this->account->currency,
+                ] : null;
+            }),
             'category_id' => $this->category_id,
             'category' => $this->whenLoaded('category', function () {
                 return $this->category ? [

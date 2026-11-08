@@ -15,6 +15,7 @@ class ExpenseTransaction extends Model
 
     protected $fillable = [
         'user_id',
+        'account_id',
         'category_id',
         'transaction_date',
         'amount',
@@ -54,5 +55,10 @@ class ExpenseTransaction extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'account_id');
     }
 }

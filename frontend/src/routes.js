@@ -15,6 +15,7 @@ const RolePermissions = React.lazy(() => import('./views/setup/rolePermissions/R
 const ChangePassword = React.lazy(() => import('./views/setup/changePassword/Changepassword'))
 
 // Master
+const Accounts = React.lazy(() => import('./views/master/accounts/Accounts'))
 const IncomeSources = React.lazy(() => import('./views/master/incomeSources/IncomeSources'))
 const Categories = React.lazy(() => import('./views/master/categories/Categories'))
 const BudgetGroups = React.lazy(() => import('./views/master/budgetGroups/BudgetGroups'))
@@ -42,6 +43,7 @@ const routes = [
   { path: '/setup/company', name: 'Company', element: Company },
 
   // Master
+  { path: '/master/accounts', name: 'Akun Kas & Bank', element: Accounts },
   { path: '/master/income-sources', name: 'Sumber Dana', element: IncomeSources },
   { path: '/master/categories', name: 'Kategori', element: Categories },
   { path: '/master/budget-groups', name: 'Alokasi Anggaran', element: BudgetGroups },

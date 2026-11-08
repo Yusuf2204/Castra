@@ -37,12 +37,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('company', [CompanyController::class, 'update']);
 
     // Master Keuangan
+    Route::apiResource('accounts', \App\Http\Controllers\Api\AccountController::class);
     Route::apiResource('income-sources', IncomeSourceController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('budget-groups', BudgetGroupController::class);
     Route::get('budget-periods/{budget_period}/allocations', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'getAllocations']);
     Route::put('budget-periods/{budget_period}/allocations', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'updateAllocations']);
     Route::apiResource('budget-periods', \App\Http\Controllers\Api\BudgetPeriodController::class);
+
+    // Mutasi Kas (Fund Transfers / Top-Up Kas Kecil)
+    Route::apiResource('fund-transfers', \App\Http\Controllers\Api\FundTransferController::class)->except(['update']);
 
     // Pemasukan
     Route::get('incomes/calendar', [IncomeController::class, 'calendar']);

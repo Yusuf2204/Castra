@@ -61,6 +61,7 @@ const formatDateIndonesian = (dateStr) => {
 }
 
 const emptyForm = {
+  account_id: '',
   income_source_id: '',
   category_id: '',
   amount: '',
@@ -98,10 +99,11 @@ const IncomeModal = ({
   const [ocrAutoFilled, setOcrAutoFilled] = useState(emptyOcrFlags)
   const [deletingId, setDeletingId] = useState(null)
   const [errors, setErrors] = useState({})
+  const [accounts, setAccounts] = useState([])
 
   const fileInputRef = useRef(null)
 
-  // Reset modal state on open/close
+  // Reset modal state on open/close and fetch accounts
   useEffect(() => {
     if (visible) {
       setForm({
@@ -114,6 +116,21 @@ const IncomeModal = ({
       setShowImagePreviewModal(false)
       setOcrAutoFilled(emptyOcrFlags)
       setErrors({})
+
+      api
+        .get('/accounts', { params: { all: 1, is_active: 1 } })
+        .then((res) => {
+          const accList = res.data?.data || []
+          setAccounts(accList)
+          const defaultAcc = accList.find((a) => a.type === 'bank') || accList[0]
+          if (defaultAcc) {
+            setForm((prev) => ({
+              ...prev,
+              account_id: prev.account_id || String(defaultAcc.id),
+            }))
+          }
+        })
+        .catch(() => {})
     }
   }, [visible, selectedDate])
 
@@ -276,6 +293,7 @@ const IncomeModal = ({
     setEditingItem(item)
     handleClearScannedProof()
     setForm({
+      account_id: item.account_id ? String(item.account_id) : '',
       transaction_date: item.transaction_date || selectedDate,
       income_source_id: item.income_source_id || '',
       category_id: item.category_id || '',
@@ -316,6 +334,7 @@ const IncomeModal = ({
       typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val)
 
     const payload = {
+      account_id: form.account_id ? Number(form.account_id) : null,
       transaction_date: form.transaction_date,
       income_source_id: Number(form.income_source_id),
       category_id: form.category_id ? Number(form.category_id) : null,
@@ -391,6 +410,7 @@ const IncomeModal = ({
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell>No. Bukti / Sumber Dana</CTableHeaderCell>
+                    <CTableHeaderCell>Masuk ke Akun</CTableHeaderCell>
                     <CTableHeaderCell>Kategori</CTableHeaderCell>
                     <CTableHeaderCell>Nominal</CTableHeaderCell>
                     <CTableHeaderCell>Catatan</CTableHeaderCell>
@@ -413,6 +433,17 @@ const IncomeModal = ({
                           </div>
                         )}
                         <strong>{item.income_source?.name || '-'}</strong>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        {item.account ? (
+                          <CBadge
+                            color={item.account.type === 'petty_cash' ? 'warning' : 'secondary'}
+                          >
+                            {item.account.name}
+                          </CBadge>
+                        ) : (
+                          <span className="text-body-secondary small">-</span>
+                        )}
                       </CTableDataCell>
                       <CTableDataCell>
                         {item.category?.name ? (
@@ -661,6 +692,36 @@ const IncomeModal = ({
 
             <CForm onSubmit={handleSubmit}>
               <div className="row g-3">
+                {/* Account / Rekening Kas Masuk */}
+                <div className="col-md-6">
+                  <div className="d-flex align-items-center justify-content-between mb-1">
+                    <label className="form-label mb-0 fw-semibold small">
+                      Masuk ke Rekening / Kas *
+                    </label>
+                  </div>
+                  <CFormSelect
+                    name="account_id"
+                    value={form.account_id}
+                    onChange={handleChange}
+                    invalid={Boolean(getFieldError(errors, 'account_id'))}
+                    feedbackInvalid={getFieldError(errors, 'account_id')}
+                    disabled={saving}
+                  >
+                    <option value="">-- Pilih Akun Kas / Bank --</option>
+                    {accounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} (
+                        {acc.type === 'petty_cash'
+                          ? 'Kas Kecil'
+                          : acc.type === 'bank'
+                            ? 'Bank'
+                            : 'Tunai'}
+                        ) - Sisa: {formatCurrency(acc.current_balance)}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </div>
+
                 {/* Income Source */}
                 <div className="col-md-6">
                   <div className="d-flex align-items-center justify-content-between mb-1">

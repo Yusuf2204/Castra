@@ -375,6 +375,12 @@ class ReportService
                 'notes' => $tx->notes,
             ]);
 
+        $accounts = $user->accounts()->where('is_active', true)->get();
+        $totalCashBalance = (float) $accounts->sum('current_balance');
+        $pettyCashAccount = $accounts->where('type', 'petty_cash')->first();
+        $pettyCashBalance = $pettyCashAccount ? (float) $pettyCashAccount->current_balance : 0.0;
+        $pettyCashLimit = $pettyCashAccount ? (float) $pettyCashAccount->imprest_limit : null;
+
         return [
             'month' => $currentMonthStr,
             'kpis' => [
@@ -384,11 +390,23 @@ class ReportService
                 'all_time_income' => $allTimeIncome,
                 'all_time_expense' => $allTimeExpense,
                 'all_time_net' => $allTimeNet,
+                'total_cash_balance' => $totalCashBalance,
+                'petty_cash_balance' => $pettyCashBalance,
+                'petty_cash_limit' => $pettyCashLimit,
+                'petty_cash_account_id' => $pettyCashAccount?->id,
                 'total_budget_estimate' => $budgetComparison['total_estimated'],
                 'budget_usage_percentage' => $budgetComparison['overall_usage_percentage'],
                 'period_mode' => $budgetComparison['period_mode'],
                 'active_period' => $budgetComparison['period'] ?? null,
             ],
+            'accounts' => $accounts->map(fn ($acc) => [
+                'id' => $acc->id,
+                'name' => $acc->name,
+                'type' => $acc->type,
+                'currency' => $acc->currency,
+                'current_balance' => (float) $acc->current_balance,
+                'imprest_limit' => $acc->imprest_limit !== null ? (float) $acc->imprest_limit : null,
+            ])->values()->all(),
             'recent_incomes' => $recentIncomes,
             'recent_expenses' => $recentExpenses,
         ];
