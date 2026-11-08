@@ -644,15 +644,39 @@ const PettyCashBookReport = () => {
         </CModalHeader>
         <CModalBody className="text-center p-3 bg-body-tertiary">
           {previewImage && (
-            <img
-              src={previewImage}
-              alt="Bukti Nota"
-              className="img-fluid rounded shadow-sm border"
-              style={{ maxHeight: '75vh', objectFit: 'contain' }}
-            />
+            previewImage.toLowerCase().includes('.pdf') ? (
+              <iframe
+                src={previewImage}
+                title="Bukti Dokumen"
+                width="100%"
+                height="500px"
+                className="border rounded bg-white"
+              />
+            ) : (
+              <img
+                src={previewImage}
+                alt="Bukti Nota"
+                className="img-fluid rounded shadow-sm border"
+                style={{ maxHeight: '75vh', objectFit: 'contain' }}
+              />
+            )
           )}
         </CModalBody>
-        <CModalFooter>
+        <CModalFooter className="d-flex justify-content-between align-items-center">
+          <div>
+            {previewImage && (
+              <a
+                href={previewImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+              >
+                <CIcon icon={cilCloudDownload} />
+                Unduh / Buka File Asli
+              </a>
+            )}
+          </div>
           <CButton color="secondary" onClick={() => setPreviewImage(null)}>
             Tutup
           </CButton>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   CModal,
   CModalHeader,
@@ -15,7 +15,7 @@ import {
   CSpinner,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilLoopCircular } from '@coreui/icons'
+import { cilLoopCircular, cilPaperclip, cilXCircle } from '@coreui/icons'
 import api from '../../services/api'
 import { toastSuccess, toastError } from '../../services/toastService'
 import { getFieldError } from '../../utils/formErrors'
@@ -45,11 +45,15 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
   const [loadingAccounts, setLoadingAccounts] = useState(false)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [attachmentFile, setAttachmentFile] = useState(null)
+  const fileInputRef = useRef(null)
 
   // Fetch accounts on open
   useEffect(() => {
     if (visible) {
       setErrors({})
+      setAttachmentFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       setForm({
         ...emptyForm,
         transfer_date: new Date().toISOString().substring(0, 10),
@@ -95,17 +99,19 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
     const parseAmount = (val) =>
       typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val)
 
-    const payload = {
-      from_account_id: Number(form.from_account_id),
-      to_account_id: Number(form.to_account_id),
-      amount: parseAmount(form.amount),
-      transfer_date: form.transfer_date,
-      reference_no: form.reference_no ? form.reference_no.trim() : null,
-      notes: form.notes ? form.notes.trim() : null,
-    }
+    const formData = new FormData()
+    formData.append('from_account_id', Number(form.from_account_id))
+    formData.append('to_account_id', Number(form.to_account_id))
+    formData.append('amount', parseAmount(form.amount))
+    formData.append('transfer_date', form.transfer_date)
+    if (form.reference_no) formData.append('reference_no', form.reference_no.trim())
+    if (form.notes) formData.append('notes', form.notes.trim())
+    if (attachmentFile) formData.append('attachment', attachmentFile)
 
     try {
-      await api.post('/fund-transfers', payload)
+      await api.post('/fund-transfers', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       toastSuccess('Mutasi transfer kas berhasil dicatat!')
       onSaved?.()
       onClose()
@@ -264,6 +270,50 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
                   feedbackInvalid={getFieldError(errors, 'notes')}
                   disabled={saving}
                 />
+              </div>
+
+              {/* Bukti Transfer / Slip Bank */}
+              <div className="col-12">
+                <label className="form-label small fw-semibold">
+                  <CIcon icon={cilPaperclip} className="me-1 text-primary" />
+                  Lampiran Bukti Transfer / Slip Bank / Nota (Opsional)
+                </label>
+                <div className="d-flex align-items-center gap-2">
+                  <CFormInput
+                    ref={fileInputRef}
+                    type="file"
+                    size="sm"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      setAttachmentFile(file || null)
+                    }}
+                    disabled={saving}
+                  />
+                  {attachmentFile && (
+                    <CButton
+                      size="sm"
+                      color="danger"
+                      variant="ghost"
+                      onClick={() => {
+                        setAttachmentFile(null)
+                        if (fileInputRef.current) fileInputRef.current.value = ''
+                      }}
+                      title="Hapus file terpilih"
+                    >
+                      <CIcon icon={cilXCircle} />
+                    </CButton>
+                  )}
+                </div>
+                {attachmentFile ? (
+                  <div className="small text-success mt-1 fw-semibold">
+                    File terpilih: {attachmentFile.name} ({(attachmentFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                ) : (
+                  <div className="form-text small">
+                    Format: JPG, PNG, WEBP, atau PDF (maks. 10MB). File akan tersimpan permanen sebagai bukti audit kas.
+                  </div>
+                )}
               </div>
             </div>
           )}

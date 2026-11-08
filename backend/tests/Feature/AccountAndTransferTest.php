@@ -8,6 +8,7 @@ use App\Models\ExpenseTransaction;
 use App\Models\IncomeSource;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class AccountAndTransferTest extends TestCase
@@ -112,16 +113,23 @@ class AccountAndTransferTest extends TestCase
             'is_active' => true,
         ]);
 
+        $fakeSlip = UploadedFile::fake()->create('slip_bank.pdf', 150, 'application/pdf');
+
         $response = $this->actingAs($this->user)->postJson('/api/fund-transfers', [
             'from_account_id' => $bank->id,
             'to_account_id' => $petty->id,
             'transfer_date' => '2026-11-08',
             'amount' => 2000000,
             'notes' => 'Pengisian Dana Kas Kecil',
+            'attachment' => $fakeSlip,
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('data.amount', 2000000);
+            ->assertJsonPath('data.amount', 2000000)
+            ->assertJsonPath('data.notes', 'Pengisian Dana Kas Kecil');
+
+        $this->assertNotNull($response->json('data.attachment_path'));
+        $this->assertNotNull($response->json('data.attachment_url'));
 
         $this->assertEquals(3000000, $bank->fresh()->current_balance);
         $this->assertEquals(2000000, $petty->fresh()->current_balance);

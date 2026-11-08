@@ -183,7 +183,7 @@ class IncomeController extends Controller
             'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
         ]);
 
         if (empty($validated['account_id'])) {
@@ -273,7 +273,7 @@ class IncomeController extends Controller
             'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -337,6 +337,29 @@ class IncomeController extends Controller
         return response()->json([
             'data' => $parsed,
             'message' => 'Bukti pemasukan berhasil dipindai',
+            'errors' => null,
+        ]);
+    }
+
+    /**
+     * Direct upload receipt/proof file (image or PDF) without OCR.
+     */
+    public function uploadReceipt(Request $request)
+    {
+        $request->validate([
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+        ]);
+
+        $file = $request->file('receipt');
+        $storedPath = $file->store('receipts', 'public');
+
+        return response()->json([
+            'data' => [
+                'attachment_path' => $storedPath,
+                'attachment_url' => Storage::disk('public')->url($storedPath),
+                'file_name' => $file->getClientOriginalName(),
+            ],
+            'message' => 'Bukti transaksi berhasil diunggah',
             'errors' => null,
         ]);
     }

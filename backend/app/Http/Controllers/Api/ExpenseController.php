@@ -197,7 +197,7 @@ class ExpenseController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
             'status' => ['nullable', 'string', 'in:draft,submitted,approved,rejected'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
             'splits' => ['nullable', 'array', 'min:1'],
             'splits.*.category_id' => [
                 'required_with:splits',
@@ -335,7 +335,7 @@ class ExpenseController extends Controller
             'payee' => ['nullable', 'string', 'max:150'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -501,6 +501,29 @@ class ExpenseController extends Controller
         return response()->json([
             'data' => $parsed,
             'message' => 'Nota berhasil dipindai',
+            'errors' => null,
+        ]);
+    }
+
+    /**
+     * Direct upload receipt/invoice file (image or PDF) without OCR.
+     */
+    public function uploadReceipt(Request $request)
+    {
+        $request->validate([
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+        ]);
+
+        $file = $request->file('receipt');
+        $storedPath = $file->store('receipts', 'public');
+
+        return response()->json([
+            'data' => [
+                'attachment_path' => $storedPath,
+                'attachment_url' => Storage::disk('public')->url($storedPath),
+                'file_name' => $file->getClientOriginalName(),
+            ],
+            'message' => 'Bukti transaksi berhasil diunggah',
             'errors' => null,
         ]);
     }

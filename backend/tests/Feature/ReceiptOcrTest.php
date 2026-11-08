@@ -165,4 +165,29 @@ class ReceiptOcrTest extends TestCase
             ->assertJsonPath('data.suggested_income_source_id', $incomeSource->id)
             ->assertJsonPath('data.suggested_category_id', $incomeCategory->id);
     }
+
+    public function test_user_can_directly_upload_expense_and_income_receipts(): void
+    {
+        $fakePdf = UploadedFile::fake()->create('invoice_tagihan.pdf', 250, 'application/pdf');
+
+        $expRes = $this->actingAs($this->user)
+            ->postJson('/api/expenses/upload-receipt', [
+                'receipt' => $fakePdf,
+            ]);
+
+        $expRes->assertStatus(200)
+            ->assertJsonPath('message', 'Bukti transaksi berhasil diunggah')
+            ->assertJsonStructure(['data' => ['attachment_path', 'attachment_url', 'file_name']]);
+
+        $fakePng = UploadedFile::fake()->image('bukti_transfer.png', 200, 200);
+
+        $incRes = $this->actingAs($this->user)
+            ->postJson('/api/incomes/upload-receipt', [
+                'receipt' => $fakePng,
+            ]);
+
+        $incRes->assertStatus(200)
+            ->assertJsonPath('message', 'Bukti transaksi berhasil diunggah')
+            ->assertJsonStructure(['data' => ['attachment_path', 'attachment_url', 'file_name']]);
+    }
 }

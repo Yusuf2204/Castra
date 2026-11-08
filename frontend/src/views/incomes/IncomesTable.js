@@ -16,7 +16,7 @@ import {
   CModalFooter,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilImage, cilPrint } from '@coreui/icons'
+import { cilPencil, cilTrash, cilImage, cilPrint, cilCloudDownload } from '@coreui/icons'
 import VoucherModal from '../../components/vouchers/VoucherModal'
 
 const formatCurrency = (val) => {
@@ -186,15 +186,39 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
         </CModalHeader>
         <CModalBody className="text-center p-3 bg-body-tertiary">
           {previewImage && (
-            <img
-              src={previewImage}
-              alt="Bukti Transfer"
-              className="img-fluid rounded shadow-sm border"
-              style={{ maxHeight: '75vh', objectFit: 'contain' }}
-            />
+            previewImage.toLowerCase().includes('.pdf') ? (
+              <iframe
+                src={previewImage}
+                title="Bukti Transfer"
+                width="100%"
+                height="500px"
+                className="border rounded bg-white"
+              />
+            ) : (
+              <img
+                src={previewImage}
+                alt="Bukti Transfer"
+                className="img-fluid rounded shadow-sm border"
+                style={{ maxHeight: '75vh', objectFit: 'contain' }}
+              />
+            )
           )}
         </CModalBody>
-        <CModalFooter>
+        <CModalFooter className="d-flex justify-content-between align-items-center">
+          <div>
+            {previewImage && (
+              <a
+                href={previewImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+              >
+                <CIcon icon={cilCloudDownload} />
+                Unduh / Buka File Asli
+              </a>
+            )}
+          </div>
           <CButton color="secondary" onClick={() => setPreviewImage(null)}>
             Tutup
           </CButton>

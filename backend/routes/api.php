@@ -51,11 +51,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pemasukan
     Route::get('incomes/calendar', [IncomeController::class, 'calendar']);
     Route::post('incomes/scan-receipt', [IncomeController::class, 'scanReceipt']);
+    Route::post('incomes/upload-receipt', [IncomeController::class, 'uploadReceipt']);
     Route::apiResource('incomes', IncomeController::class);
 
     // Pengeluaran
     Route::get('expenses/calendar', [ExpenseController::class, 'calendar']);
     Route::post('expenses/scan-receipt', [ExpenseController::class, 'scanReceipt']);
+    Route::post('expenses/upload-receipt', [ExpenseController::class, 'uploadReceipt']);
     Route::post('expenses/{expense}/approve', [ExpenseController::class, 'approve']);
     Route::post('expenses/{expense}/reject', [ExpenseController::class, 'reject']);
     Route::post('expenses/{expense}/submit', [ExpenseController::class, 'submit']);

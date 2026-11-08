@@ -34,6 +34,8 @@ import {
   cilInfo,
   cilCheck,
   cilPrint,
+  cilPaperclip,
+  cilCloudDownload,
 } from '@coreui/icons'
 import api from '../../services/api'
 import { toastSuccess, toastError, toastWarning } from '../../services/toastService'
@@ -111,6 +113,8 @@ const ExpenseModal = ({
     { category_id: '', amount: '', notes: '' },
   ])
   const [actionLoadingId, setActionLoadingId] = useState(null)
+  const [uploadingReceipt, setUploadingReceipt] = useState(false)
+  const directFileInputRef = useRef(null)
 
   const handleApprove = async (id) => {
     setActionLoadingId(id)
@@ -280,6 +284,46 @@ const ExpenseModal = ({
     },
     [receiptImagePreview],
   )
+
+  const handleDirectFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf'
+    const isImage = file.type.startsWith('image/')
+
+    if (!isImage && !isPdf) {
+      toastError('Format file harus berupa gambar (JPG, PNG, WEBP) atau dokumen PDF.')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toastError('Ukuran file maksimal adalah 10MB.')
+      return
+    }
+
+    setUploadingReceipt(true)
+    const formData = new FormData()
+    formData.append('receipt', file)
+
+    try {
+      const res = await api.post('/expenses/upload-receipt', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      const data = res.data?.data || {}
+      setForm((prev) => ({
+        ...prev,
+        attachment_path: data.attachment_path,
+      }))
+      setReceiptImagePreview(data.attachment_url)
+      toastSuccess(`Bukti transaksi "${file.name}" berhasil diunggah!`)
+    } catch (err) {
+      toastError(err.userMessage || 'Gagal mengunggah bukti transaksi.')
+    } finally {
+      setUploadingReceipt(false)
+      if (directFileInputRef.current) directFileInputRef.current.value = ''
+    }
+  }
 
   // Listen to paste event (Ctrl+V) when modal is open
   useEffect(() => {
@@ -1114,30 +1158,82 @@ const ExpenseModal = ({
                   </div>
                 )}
 
-                {/* Attachment Indicator / Upload Notice */}
-                {form.attachment_path && (
-                  <div className="col-12">
+                {/* Attachment / Bukti Nota Fisik Section */}
+                <div className="col-12">
+                  <label className="form-label small fw-semibold d-flex align-items-center gap-1 mb-1">
+                    <CIcon icon={cilPaperclip} className="text-primary" />
+                    Lampiran Bukti Transaksi / Nota Fisik (Opsional)
+                  </label>
+                  <input
+                    type="file"
+                    ref={directFileInputRef}
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    style={{ display: 'none' }}
+                    onChange={handleDirectFileUpload}
+                  />
+                  {form.attachment_path ? (
                     <div className="d-flex align-items-center justify-content-between p-2 rounded border bg-success-subtle border-success-subtle">
                       <div className="d-flex align-items-center gap-2 small text-success-emphasis">
                         <CIcon icon={cilCheckCircle} />
                         <span>
-                          Foto bukti nota fisik terlampir dan akan disimpan permanen ke server.
+                          Bukti nota fisik terlampir dan tersimpan di server.
                         </span>
+                        {receiptImagePreview && (
+                          <CButton
+                            size="sm"
+                            color="link"
+                            className="p-0 text-success-emphasis fw-bold text-decoration-underline"
+                            onClick={() => setShowImagePreviewModal(true)}
+                          >
+                            (Pratinjau)
+                          </CButton>
+                        )}
                       </div>
+                      <div className="d-flex gap-2">
+                        <CButton
+                          size="sm"
+                          color="secondary"
+                          variant="outline"
+                          className="py-0 px-2 small"
+                          onClick={() => directFileInputRef.current?.click()}
+                          disabled={uploadingReceipt || saving}
+                        >
+                          Ganti File
+                        </CButton>
+                        <CButton
+                          size="sm"
+                          color="link"
+                          className="text-danger p-0 small text-decoration-none"
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, attachment_path: '' }))
+                            setReceiptImagePreview(null)
+                            handleClearScannedReceipt()
+                          }}
+                        >
+                          Hapus Bukti
+                        </CButton>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="d-flex align-items-center gap-2">
                       <CButton
                         size="sm"
-                        color="link"
-                        className="text-danger p-0 small text-decoration-none"
-                        onClick={() => {
-                          setForm((prev) => ({ ...prev, attachment_path: '' }))
-                          handleClearScannedReceipt()
-                        }}
+                        color="secondary"
+                        variant="outline"
+                        onClick={() => directFileInputRef.current?.click()}
+                        disabled={uploadingReceipt || saving}
+                        className="d-inline-flex align-items-center gap-1"
                       >
-                        Hapus Bukti
+                        <CIcon icon={cilCloudUpload} />
+                        {uploadingReceipt ? 'Mengunggah...' : 'Unggah Bukti Nota / Invoice (JPG, PNG, PDF)'}
                       </CButton>
+                      {uploadingReceipt && <CSpinner size="sm" />}
+                      <span className="text-muted small">
+                        Maks. 10MB
+                      </span>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Friendly Hint if OCR was used */}
@@ -1202,20 +1298,41 @@ const ExpenseModal = ({
         </CModalHeader>
         <CModalBody className="text-center p-3 bg-body-tertiary">
           {receiptImagePreview ? (
-            <img
-              src={receiptImagePreview}
-              alt="Foto Struk Penuh"
-              className="img-fluid rounded shadow-sm border"
-              style={{ maxHeight: '72vh', objectFit: 'contain' }}
-            />
+            receiptImagePreview.toLowerCase().includes('.pdf') ? (
+              <iframe
+                src={receiptImagePreview}
+                title="Dokumen Bukti Nota"
+                width="100%"
+                height="500px"
+                className="border rounded bg-white"
+              />
+            ) : (
+              <img
+                src={receiptImagePreview}
+                alt="Foto Struk Penuh"
+                className="img-fluid rounded shadow-sm border"
+                style={{ maxHeight: '72vh', objectFit: 'contain' }}
+              />
+            )
           ) : (
             <p className="text-muted">Tidak ada foto nota untuk ditampilkan.</p>
           )}
         </CModalBody>
-        <CModalFooter className="d-flex justify-content-between">
-          <span className="text-muted small">
-            {scannedReceipt?.merchant ? `Toko: ${scannedReceipt.merchant}` : 'Nota Pengeluaran'}
-          </span>
+        <CModalFooter className="d-flex justify-content-between align-items-center">
+          <div>
+            {receiptImagePreview && (
+              <a
+                href={receiptImagePreview}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+              >
+                <CIcon icon={cilCloudDownload} />
+                Unduh / Buka File Asli
+              </a>
+            )}
+          </div>
           <CButton color="secondary" onClick={() => setShowImagePreviewModal(false)}>
             Tutup Pratinjau
           </CButton>
