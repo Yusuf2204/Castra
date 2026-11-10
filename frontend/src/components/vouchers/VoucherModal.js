@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { useSelector } from 'react-redux'
 import {
@@ -11,7 +11,7 @@ import {
   CBadge,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilPrint, cilCheckCircle } from '@coreui/icons'
+import { cilPrint, cilCheckCircle, cilFile, cilExternalLink, cilPaperclip } from '@coreui/icons'
 import { terbilang } from '../../utils/terbilang'
 
 const formatCurrency = (val) => {
@@ -37,8 +37,20 @@ const formatDateLong = (dateStr) => {
 
 const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
   const company = useSelector((state) => state.company)
+  const [includeReceipt, setIncludeReceipt] = useState(true)
 
   if (!transaction) return null
+
+  const receiptUrl =
+    transaction.attachment_url ||
+    (transaction.attachment_path
+      ? (transaction.attachment_path.startsWith('http')
+          ? transaction.attachment_path
+          : `/storage/${transaction.attachment_path}`)
+      : null)
+  const isPdf =
+    receiptUrl?.toLowerCase().endsWith('.pdf') ||
+    transaction.attachment_path?.toLowerCase().endsWith('.pdf')
 
   const isExpense = type === 'expense' || transaction.voucher_no?.startsWith('BKK')
   const voucherTitle = isExpense ? 'BUKTI KAS KELUAR (BKK)' : 'BUKTI KAS MASUK (BKM)'
@@ -145,8 +157,16 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
                 width: 100% !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
+              }
+              .voucher-receipt-section {
                 break-inside: avoid !important;
                 page-break-inside: avoid !important;
+                margin-top: 1.5rem !important;
+              }
+              .voucher-receipt-section img {
+                max-height: 480px !important;
+                display: block !important;
+                margin: 0 auto !important;
               }
               .table-responsive {
                 overflow: visible !important;
@@ -265,7 +285,7 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
                   <td className="bg-light fw-bold">Catatan / Keterangan</td>
                   <td>{transaction.notes || '-'}</td>
                 </tr>
-                {transaction.attachment_url && (
+                {receiptUrl && (
                   <tr>
                     <td className="bg-light fw-bold">Bukti Fisik / Nota</td>
                     <td>
@@ -307,19 +327,6 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
             </div>
           )}
 
-          {/* Attached Receipt Thumbnail if printed */}
-          {transaction.attachment_url && (
-            <div className="my-3 text-center d-print-block">
-              <div className="small text-muted mb-1 fst-italic">Lampiran Bukti Transaksi:</div>
-              <img
-                src={transaction.attachment_url}
-                alt="Bukti Nota"
-                className="img-fluid border rounded"
-                style={{ maxHeight: '130px', objectFit: 'contain' }}
-              />
-            </div>
-          )}
-
           {/* Kotak Tanda Tangan 3 Kolom */}
           <div className="row text-center mt-4 pt-2 voucher-signatures">
             <div className="col-4">
@@ -353,13 +360,80 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
               </div>
             </div>
           </div>
+
+          {/* Lampiran Bukti Fisik / Nota Belanja Asli */}
+          {includeReceipt && receiptUrl && (
+            <div className="voucher-receipt-section mt-4 pt-3 border-top">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="fw-bold small text-uppercase d-flex align-items-center gap-1">
+                  <CIcon icon={cilPaperclip} className="text-primary" />
+                  Lampiran Bukti Fisik / Nota Transaksi Asli
+                </span>
+                <span className="small text-muted font-monospace">
+                  No. Bukti: {transaction.voucher_no || '-'}
+                </span>
+              </div>
+              {isPdf ? (
+                <div className="p-3 border rounded bg-light text-center">
+                  <CIcon icon={cilFile} size="2xl" className="text-danger mb-1" />
+                  <div className="fw-bold small">Dokumen PDF Terlampir di Sistem</div>
+                  <div className="small font-monospace text-muted mb-2">
+                    {transaction.attachment_path?.split('/').pop() || 'dokumen.pdf'}
+                  </div>
+                  <a
+                    href={receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-sm btn-outline-danger d-print-none"
+                  >
+                    <CIcon icon={cilExternalLink} className="me-1" />
+                    Buka Dokumen PDF Asli
+                  </a>
+                </div>
+              ) : (
+                <div className="text-center p-2 bg-light border rounded">
+                  <img
+                    src={receiptUrl}
+                    alt={`Nota Asli ${transaction.voucher_no || ''}`}
+                    className="img-fluid rounded border shadow-sm"
+                    style={{
+                      maxHeight: '480px',
+                      maxWidth: '100%',
+                      objectFit: 'contain',
+                      background: '#ffffff',
+                    }}
+                  />
+                  <div className="small text-muted mt-2 fst-italic">
+                    Foto fisik nota belanja / bukti transfer asli yang diunggah
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </CModalBody>
 
       <CModalFooter className="d-print-none justify-content-between">
-        <span className="text-muted small">
-          Gunakan tombol cetak untuk mencetak lembar voucher fisik atau simpan sebagai PDF.
-        </span>
+        <div className="d-flex align-items-center gap-2">
+          {receiptUrl && (
+            <div className="form-check form-switch mb-0 small">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="includeReceiptSwitch"
+                checked={includeReceipt}
+                onChange={(e) => setIncludeReceipt(e.target.checked)}
+              />
+              <label
+                className="form-check-label small cursor-pointer fw-semibold"
+                htmlFor="includeReceiptSwitch"
+              >
+                Sertakan Gambar Nota Asli Saat Cetak
+              </label>
+            </div>
+          )}
+        </div>
         <div className="d-flex gap-2">
           <CButton color="secondary" variant="outline" onClick={onClose}>
             Tutup

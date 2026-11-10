@@ -94,7 +94,7 @@ class FundTransferController extends Controller
             'reference_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         if ($request->hasFile('attachment')) {

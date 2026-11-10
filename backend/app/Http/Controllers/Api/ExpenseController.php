@@ -197,7 +197,7 @@ class ExpenseController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
             'status' => ['nullable', 'string', 'in:draft,submitted,approved,rejected'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
             'splits' => ['nullable', 'array', 'min:1'],
             'splits.*.category_id' => [
                 'required_with:splits',
@@ -335,7 +335,7 @@ class ExpenseController extends Controller
             'payee' => ['nullable', 'string', 'max:150'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -487,15 +487,34 @@ class ExpenseController extends Controller
     public function scanReceipt(Request $request, ReceiptOcrService $ocrService)
     {
         $request->validate([
-            'receipt' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         $file = $request->file('receipt');
-        $parsed = $ocrService->scan($file, $request->user());
+        $isPdf = $file->getClientMimeType() === 'application/pdf' || strtolower($file->getClientOriginalExtension()) === 'pdf';
+
+        if ($isPdf) {
+            $storedPath = $file->store('receipts', 'public');
+            return response()->json([
+                'data' => [
+                    'attachment_path' => $storedPath,
+                    'attachment_url' => '/storage/' . ltrim($storedPath, '/'),
+                    'file_name' => $file->getClientOriginalName(),
+                ],
+                'message' => 'Dokumen PDF berhasil dilampirkan',
+                'errors' => null,
+            ]);
+        }
+
+        try {
+            $parsed = $ocrService->scan($file, $request->user());
+        } catch (\Throwable $e) {
+            $parsed = [];
+        }
 
         $storedPath = $file->store('receipts', 'public');
         $parsed['attachment_path'] = $storedPath;
-        $parsed['attachment_url'] = Storage::disk('public')->url($storedPath);
+        $parsed['attachment_url'] = '/storage/' . ltrim($storedPath, '/');
         $parsed['payee'] = $parsed['merchant'] ?? null;
 
         return response()->json([
@@ -511,7 +530,7 @@ class ExpenseController extends Controller
     public function uploadReceipt(Request $request)
     {
         $request->validate([
-            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         $file = $request->file('receipt');
@@ -520,7 +539,7 @@ class ExpenseController extends Controller
         return response()->json([
             'data' => [
                 'attachment_path' => $storedPath,
-                'attachment_url' => Storage::disk('public')->url($storedPath),
+                'attachment_url' => '/storage/' . ltrim($storedPath, '/'),
                 'file_name' => $file->getClientOriginalName(),
             ],
             'message' => 'Bukti transaksi berhasil diunggah',

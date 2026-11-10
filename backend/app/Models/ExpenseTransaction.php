@@ -52,7 +52,7 @@ class ExpenseTransaction extends Model
             return $this->attachment_path;
         }
 
-        return Storage::disk('public')->url(ltrim($this->attachment_path, '/'));
+        return '/storage/' . ltrim($this->attachment_path, '/');
     }
 
     public function user(): BelongsTo

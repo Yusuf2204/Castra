@@ -15,7 +15,7 @@ import {
   CSpinner,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilLoopCircular, cilPaperclip, cilXCircle } from '@coreui/icons'
+import { cilLoopCircular, cilPaperclip, cilXCircle, cilCloudUpload, cilCheckCircle, cilImage, cilDescription } from '@coreui/icons'
 import api from '../../services/api'
 import { toastSuccess, toastError } from '../../services/toastService'
 import { getFieldError } from '../../utils/formErrors'
@@ -46,14 +46,52 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [attachmentFile, setAttachmentFile] = useState(null)
+  const [attachmentPreview, setAttachmentPreview] = useState(null)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef(null)
+
+  const handleProcessAttachment = (file) => {
+    if (!file) return
+
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf'
+    const isImage = file.type.startsWith('image/')
+
+    if (!isImage && !isPdf) {
+      toastError('Format file harus berupa gambar (JPG, PNG, WEBP) atau dokumen PDF.')
+      return
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      toastError('Ukuran file maksimal adalah 25MB.')
+      return
+    }
+
+    setAttachmentFile(file)
+    if (isImage) {
+      if (attachmentPreview && attachmentPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(attachmentPreview)
+      }
+      setAttachmentPreview(URL.createObjectURL(file))
+    } else {
+      setAttachmentPreview(null)
+    }
+  }
+
+  const handleRemoveAttachment = () => {
+    if (attachmentPreview && attachmentPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(attachmentPreview)
+    }
+    setAttachmentFile(null)
+    setAttachmentPreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   // Fetch accounts on open
   useEffect(() => {
     if (visible) {
       setErrors({})
-      setAttachmentFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      handleRemoveAttachment()
       setForm({
         ...emptyForm,
         transfer_date: new Date().toISOString().substring(0, 10),
@@ -84,6 +122,60 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
       loadAccounts()
     }
   }, [visible])
+
+  // Paste (Ctrl+V) listener for clipboard screenshot or copied file
+  useEffect(() => {
+    if (!visible) return
+
+    const handlePaste = (e) => {
+      const files = e.clipboardData?.files
+      const items = e.clipboardData?.items
+      let file = null
+
+      if (files && files.length > 0) {
+        file = files[0]
+      } else if (items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].kind === 'file') {
+            file = items[i].getAsFile()
+            if (file) break
+          }
+        }
+      }
+
+      if (file && (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf')) {
+        e.preventDefault()
+        handleProcessAttachment(file)
+        toastSuccess('Tangkapan layar / berkas dari clipboard berhasil ditempel!')
+      }
+    }
+
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [visible])
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isDragging) setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    const file = e.dataTransfer?.files?.[0]
+    if (file) {
+      handleProcessAttachment(file)
+      toastSuccess(`Berkas "${file.name}" berhasil ditarik dan dilampirkan!`)
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -272,46 +364,81 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
                 />
               </div>
 
-              {/* Bukti Transfer / Slip Bank */}
+              {/* Bukti Transfer / Slip Bank Dropzone & Paste Area */}
               <div className="col-12">
-                <label className="form-label small fw-semibold">
-                  <CIcon icon={cilPaperclip} className="me-1 text-primary" />
-                  Lampiran Bukti Transfer / Slip Bank / Nota (Opsional)
+                <label className="form-label small fw-semibold d-flex align-items-center gap-1 mb-1">
+                  <CIcon icon={cilPaperclip} className="text-primary" />
+                  Lampiran Bukti Transfer / Slip Bank (Opsional)
                 </label>
-                <div className="d-flex align-items-center gap-2">
-                  <CFormInput
-                    ref={fileInputRef}
-                    type="file"
-                    size="sm"
-                    accept="image/jpeg,image/png,image/webp,application/pdf"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      setAttachmentFile(file || null)
-                    }}
-                    disabled={saving}
-                  />
-                  {attachmentFile && (
-                    <CButton
-                      size="sm"
-                      color="danger"
-                      variant="ghost"
-                      onClick={() => {
-                        setAttachmentFile(null)
-                        if (fileInputRef.current) fileInputRef.current.value = ''
-                      }}
-                      title="Hapus file terpilih"
-                    >
-                      <CIcon icon={cilXCircle} />
-                    </CButton>
-                  )}
-                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleProcessAttachment(file)
+                  }}
+                  disabled={saving}
+                />
+
                 {attachmentFile ? (
-                  <div className="small text-success mt-1 fw-semibold">
-                    File terpilih: {attachmentFile.name} ({(attachmentFile.size / 1024).toFixed(1)} KB)
+                  <div className="p-2 border rounded bg-success-subtle border-success-subtle d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-2 small text-success-emphasis">
+                      <CIcon icon={cilCheckCircle} />
+                      <span className="fw-semibold text-truncate" style={{ maxWidth: '280px' }}>
+                        {attachmentFile.name}
+                      </span>
+                      <span className="text-muted small">
+                        ({(attachmentFile.size / 1024).toFixed(1)} KB)
+                      </span>
+                      {attachmentPreview && (
+                        <CButton
+                          size="sm"
+                          color="link"
+                          className="p-0 text-success-emphasis fw-bold text-decoration-underline"
+                          onClick={() => setShowPreviewModal(true)}
+                        >
+                          (Pratinjau)
+                        </CButton>
+                      )}
+                    </div>
+                    <div className="d-flex gap-2">
+                      <CButton
+                        size="sm"
+                        color="secondary"
+                        variant="outline"
+                        className="py-0 px-2 small"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={saving}
+                      >
+                        Ganti
+                      </CButton>
+                      <CButton
+                        size="sm"
+                        color="link"
+                        className="text-danger p-0 small text-decoration-none"
+                        onClick={handleRemoveAttachment}
+                      >
+                        Hapus
+                      </CButton>
+                    </div>
                   </div>
                 ) : (
-                  <div className="form-text small">
-                    Format: JPG, PNG, WEBP, atau PDF (maks. 10MB). File akan tersimpan permanen sebagai bukti audit kas.
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`compact-drop-zone ${isDragging ? 'is-dragging' : ''}`}
+                  >
+                    <div className="d-flex align-items-center justify-content-center gap-2 text-primary mb-1">
+                      <CIcon icon={cilCloudUpload} />
+                      <span className="fw-semibold small">Tarik &amp; lepas file ke sini, atau klik untuk memilih</span>
+                    </div>
+                    <div className="text-muted small" style={{ fontSize: '0.78rem' }}>
+                      Bisa langsung tekan <kbd>Ctrl + V</kbd> untuk menempel tangkapan layar / clipboard &bull; JPG, PNG, PDF (Maks. 25MB)
+                    </div>
                   </div>
                 )}
               </div>
@@ -335,6 +462,31 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
           </CButton>
         </CModalFooter>
       </CForm>
+
+      {/* Lightbox Preview Modal for attached file */}
+      <CModal visible={showPreviewModal} onClose={() => setShowPreviewModal(false)} size="lg">
+        <CModalHeader closeButton>
+          <CModalTitle className="d-flex align-items-center gap-2">
+            <CIcon icon={cilImage} className="text-primary" />
+            Pratinjau Bukti Transfer
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody className="text-center p-3 bg-body-tertiary">
+          {attachmentPreview && (
+            <img
+              src={attachmentPreview}
+              alt="Bukti Transfer"
+              className="img-fluid rounded shadow-sm border"
+              style={{ maxHeight: '70vh', objectFit: 'contain' }}
+            />
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowPreviewModal(false)}>
+            Tutup
+          </CButton>
+        </CModalFooter>
+      </CModal>
     </CModal>
   )
 }

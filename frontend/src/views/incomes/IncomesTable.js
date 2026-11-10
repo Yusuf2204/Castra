@@ -16,7 +16,7 @@ import {
   CModalFooter,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilImage, cilPrint, cilCloudDownload } from '@coreui/icons'
+import { cilPencil, cilTrash, cilImage, cilPrint, cilCloudDownload, cilFile, cilZoom } from '@coreui/icons'
 import VoucherModal from '../../components/vouchers/VoucherModal'
 
 const formatCurrency = (val) => {
@@ -118,18 +118,54 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
 
               <CTableDataCell>{item.notes || '-'}</CTableDataCell>
 
-              <CTableDataCell className="text-center">
-                {item.attachment_url ? (
-                  <CButton
-                    size="sm"
-                    color="info"
-                    variant="ghost"
-                    className="p-1 text-info"
-                    title="Lihat Bukti Transfer"
-                    onClick={() => setPreviewImage(item.attachment_url)}
-                  >
-                    <CIcon icon={cilImage} size="lg" />
-                  </CButton>
+              <CTableDataCell className="text-center align-middle">
+                {item.attachment_url || item.attachment_path ? (
+                  (() => {
+                    const url = item.attachment_url || `/storage/${item.attachment_path}`
+                    const isPdf =
+                      url.toLowerCase().includes('.pdf') ||
+                      item.attachment_path?.toLowerCase().endsWith('.pdf')
+
+                    if (isPdf) {
+                      return (
+                        <CButton
+                          size="sm"
+                          color="danger"
+                          variant="ghost"
+                          className="p-1 text-danger d-inline-flex align-items-center gap-1 border border-danger-subtle rounded bg-danger-subtle"
+                          title="Buka Dokumen PDF Bukti Pemasukan"
+                          onClick={() => setPreviewImage(url)}
+                        >
+                          <CIcon icon={cilFile} size="sm" />
+                          <span style={{ fontSize: '10px', fontWeight: 'bold' }}>PDF</span>
+                        </CButton>
+                      )
+                    }
+
+                    return (
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        title="Klik untuk melihat bukti transfer"
+                        onClick={() => setPreviewImage(url)}
+                        onKeyDown={(e) => e.key === 'Enter' && setPreviewImage(url)}
+                        className="d-inline-block position-relative rounded overflow-hidden border shadow-sm cursor-pointer"
+                        style={{ width: '38px', height: '38px', verticalAlign: 'middle' }}
+                      >
+                        <img
+                          src={url}
+                          alt="Bukti"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <div
+                          className="position-absolute bottom-0 start-0 end-0 text-center bg-dark bg-opacity-75 text-white"
+                          style={{ fontSize: '8px', lineHeight: '11px' }}
+                        >
+                          <CIcon icon={cilZoom} style={{ width: '9px', height: '9px' }} />
+                        </div>
+                      </div>
+                    )
+                  })()
                 ) : (
                   <span className="text-body-secondary small">-</span>
                 )}

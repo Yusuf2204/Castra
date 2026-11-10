@@ -69,6 +69,9 @@ RUN php artisan package:discover --ansi \
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# ── php upload limits ────────────────────────────────────────
+COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # ── nginx config ─────────────────────────────────────────────
 COPY nginx-backend.conf /etc/nginx/http.d/default.conf
 RUN mkdir -p /run/nginx && chown -R www-data:www-data /run/nginx /var/lib/nginx

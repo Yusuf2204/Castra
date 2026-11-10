@@ -183,7 +183,7 @@ class IncomeController extends Controller
             'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         if (empty($validated['account_id'])) {
@@ -273,7 +273,7 @@ class IncomeController extends Controller
             'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment_path' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -324,15 +324,34 @@ class IncomeController extends Controller
     public function scanReceipt(Request $request, ReceiptOcrService $ocrService)
     {
         $request->validate([
-            'receipt' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         $file = $request->file('receipt');
-        $parsed = $ocrService->scanIncome($file, $request->user());
+        $isPdf = $file->getClientMimeType() === 'application/pdf' || strtolower($file->getClientOriginalExtension()) === 'pdf';
+
+        if ($isPdf) {
+            $storedPath = $file->store('receipts', 'public');
+            return response()->json([
+                'data' => [
+                    'attachment_path' => $storedPath,
+                    'attachment_url' => '/storage/' . ltrim($storedPath, '/'),
+                    'file_name' => $file->getClientOriginalName(),
+                ],
+                'message' => 'Dokumen PDF bukti pemasukan berhasil dilampirkan',
+                'errors' => null,
+            ]);
+        }
+
+        try {
+            $parsed = $ocrService->scanIncome($file, $request->user());
+        } catch (\Throwable $e) {
+            $parsed = [];
+        }
 
         $storedPath = $file->store('receipts', 'public');
         $parsed['attachment_path'] = $storedPath;
-        $parsed['attachment_url'] = Storage::disk('public')->url($storedPath);
+        $parsed['attachment_url'] = '/storage/' . ltrim($storedPath, '/');
 
         return response()->json([
             'data' => $parsed,
@@ -347,7 +366,7 @@ class IncomeController extends Controller
     public function uploadReceipt(Request $request)
     {
         $request->validate([
-            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:10240'],
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         $file = $request->file('receipt');
@@ -356,7 +375,7 @@ class IncomeController extends Controller
         return response()->json([
             'data' => [
                 'attachment_path' => $storedPath,
-                'attachment_url' => Storage::disk('public')->url($storedPath),
+                'attachment_url' => '/storage/' . ltrim($storedPath, '/'),
                 'file_name' => $file->getClientOriginalName(),
             ],
             'message' => 'Bukti transaksi berhasil diunggah',

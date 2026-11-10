@@ -483,6 +483,7 @@ class ReportService
                 'payee' => $inc->incomeSource?->name ?? '-',
                 'amount_in' => (float) $inc->amount,
                 'amount_out' => 0.0,
+                'attachment_path' => $inc->attachment_path,
                 'attachment_url' => $inc->attachment_url,
             ];
         }
@@ -500,6 +501,7 @@ class ReportService
                 'payee' => $exp->payee ?: '-',
                 'amount_in' => 0.0,
                 'amount_out' => (float) $exp->amount,
+                'attachment_path' => $exp->attachment_path,
                 'attachment_url' => $exp->attachment_url,
             ];
         }
@@ -517,6 +519,7 @@ class ReportService
                 'payee' => $trf->fromAccount?->name ?? '-',
                 'amount_in' => (float) $trf->amount,
                 'amount_out' => 0.0,
+                'attachment_path' => $trf->attachment_path,
                 'attachment_url' => $trf->attachment_url,
             ];
         }
@@ -534,6 +537,7 @@ class ReportService
                 'payee' => $trf->toAccount?->name ?? '-',
                 'amount_in' => 0.0,
                 'amount_out' => (float) $trf->amount,
+                'attachment_path' => $trf->attachment_path,
                 'attachment_url' => $trf->attachment_url,
             ];
         }

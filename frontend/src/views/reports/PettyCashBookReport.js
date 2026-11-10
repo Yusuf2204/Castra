@@ -22,7 +22,16 @@ import {
   CModalFooter,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilPrint, cilCloudDownload, cilReload, cilImage, cilDescription } from '@coreui/icons'
+import {
+  cilPrint,
+  cilCloudDownload,
+  cilReload,
+  cilImage,
+  cilDescription,
+  cilFile,
+  cilExternalLink,
+  cilPaperclip,
+} from '@coreui/icons'
 import api from '../../services/api'
 import { toastError } from '../../services/toastService'
 import VoucherModal from '../../components/vouchers/VoucherModal'
@@ -78,6 +87,7 @@ const PettyCashBookReport = () => {
   const [previewImage, setPreviewImage] = useState(null)
   const [selectedVoucher, setSelectedVoucher] = useState(null)
   const [showVoucherModal, setShowVoucherModal] = useState(false)
+  const [includeReceiptsInPrint, setIncludeReceiptsInPrint] = useState(true)
 
   // Fetch accounts list once
   useEffect(() => {
@@ -190,6 +200,10 @@ const PettyCashBookReport = () => {
     window.print()
   }
 
+  const transactionsWithReceipts = (data?.transactions || []).filter((tx) =>
+    Boolean(tx.attachment_url || tx.attachment_path),
+  )
+
   return (
     <div>
       <style>
@@ -269,6 +283,20 @@ const PettyCashBookReport = () => {
               page-break-inside: avoid !important;
               break-inside: avoid !important;
             }
+            .print-page-break-before {
+              page-break-before: always !important;
+              break-before: page !important;
+            }
+            .receipt-print-item {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              margin-bottom: 20px !important;
+            }
+            .receipt-print-item img {
+              max-height: 420px !important;
+              display: block !important;
+              margin: 0 auto !important;
+            }
           }
         `}
       </style>
@@ -347,6 +375,33 @@ const PettyCashBookReport = () => {
               </CButton>
             </div>
           </div>
+
+          {transactionsWithReceipts.length > 0 && (
+            <div className="row mt-3 pt-2 border-top">
+              <div className="col-12 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div className="form-check form-switch small mb-0">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="printReceiptsSwitch"
+                    checked={includeReceiptsInPrint}
+                    onChange={(e) => setIncludeReceiptsInPrint(e.target.checked)}
+                  />
+                  <label
+                    className="form-check-label small fw-semibold cursor-pointer"
+                    htmlFor="printReceiptsSwitch"
+                  >
+                    <CIcon icon={cilPaperclip} className="text-primary me-1" />
+                    Sertakan Lampiran Gambar Nota Asli Saat Cetak ({transactionsWithReceipts.length} Transaksi Memiliki Nota)
+                  </label>
+                </div>
+                <span className="text-muted small">
+                  Gambar nota fisik asli akan otomatis dicetak rapi pada lembar lampiran
+                </span>
+              </div>
+            </div>
+          )}
         </CCardBody>
       </CCard>
 
@@ -453,7 +508,10 @@ const PettyCashBookReport = () => {
                     <CTableHeaderCell style={{ width: '12%' }} className="text-end text-nowrap">
                       Saldo (Rp)
                     </CTableHeaderCell>
-                    <CTableHeaderCell width={80} className="text-center d-print-none">
+                    <CTableHeaderCell style={{ width: '6%' }} className="text-center">
+                      Nota
+                    </CTableHeaderCell>
+                    <CTableHeaderCell width={50} className="text-center d-print-none">
                       Aksi
                     </CTableHeaderCell>
                   </CTableRow>
@@ -474,6 +532,7 @@ const PettyCashBookReport = () => {
                     <CTableDataCell className="text-end text-body fw-bold text-nowrap">
                       {formatCurrency(data.opening_balance)}
                     </CTableDataCell>
+                    <CTableDataCell className="text-center text-muted small">-</CTableDataCell>
                     <CTableDataCell className="d-print-none text-center text-muted small">
                       -
                     </CTableDataCell>
@@ -482,7 +541,7 @@ const PettyCashBookReport = () => {
                   {/* Transaction Rows */}
                   {data.transactions.length === 0 ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={9} className="text-center py-4 text-muted">
+                      <CTableDataCell colSpan={10} className="text-center py-4 text-muted">
                         Tidak ada transaksi mutasi kas pada rentang tanggal ini.
                       </CTableDataCell>
                     </CTableRow>
@@ -529,6 +588,34 @@ const PettyCashBookReport = () => {
                         <CTableDataCell className="text-end fw-bold text-body small text-nowrap">
                           {formatCurrency(tx.running_balance)}
                         </CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          {tx.attachment_url || tx.attachment_path ? (
+                            <>
+                              <CButton
+                                size="sm"
+                                color="light"
+                                variant="ghost"
+                                className="p-1 text-info d-print-none"
+                                title="Lihat Foto Bukti"
+                                onClick={() =>
+                                  setPreviewImage(
+                                    tx.attachment_url || `/storage/${tx.attachment_path}`,
+                                  )
+                                }
+                              >
+                                <CIcon icon={cilImage} />
+                              </CButton>
+                              <span
+                                className="d-none d-print-inline badge bg-light text-dark border border-secondary"
+                                style={{ fontSize: '8px', padding: '1px 3px' }}
+                              >
+                                ✓ Ada
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-muted small">-</span>
+                          )}
+                        </CTableDataCell>
                         <CTableDataCell className="d-print-none text-center">
                           <div className="d-flex align-items-center justify-content-center gap-1">
                             {tx.voucher_no &&
@@ -549,6 +636,7 @@ const PettyCashBookReport = () => {
                                       account: data.account,
                                       notes: tx.description,
                                       attachment_url: tx.attachment_url,
+                                      attachment_path: tx.attachment_path,
                                     })
                                     setShowVoucherModal(true)
                                   }}
@@ -556,18 +644,6 @@ const PettyCashBookReport = () => {
                                   <CIcon icon={cilDescription} />
                                 </CButton>
                               )}
-                            {tx.attachment_url && (
-                              <CButton
-                                size="sm"
-                                color="light"
-                                variant="ghost"
-                                className="p-1 text-info"
-                                title="Lihat Foto Bukti"
-                                onClick={() => setPreviewImage(tx.attachment_url)}
-                              >
-                                <CIcon icon={cilImage} />
-                              </CButton>
-                            )}
                           </div>
                         </CTableDataCell>
                       </CTableRow>
@@ -588,6 +664,7 @@ const PettyCashBookReport = () => {
                     <CTableDataCell className="text-end text-primary fw-bold text-nowrap">
                       {formatCurrency(data.closing_balance)}
                     </CTableDataCell>
+                    <CTableDataCell className="text-center text-muted small">-</CTableDataCell>
                     <CTableDataCell className="d-print-none"></CTableDataCell>
                   </CTableRow>
                 </CTableBody>
@@ -632,6 +709,110 @@ const PettyCashBookReport = () => {
             Dokumen ini dicetak otomatis dari sistem Castra pada {formatDateLong(new Date())}
           </div>
         </div>
+
+        {/* Lampiran Bukti Transaksi Fisik & Nota Asli */}
+        {includeReceiptsInPrint && transactionsWithReceipts.length > 0 && (
+          <div className="petty-cash-receipts-appendix mt-5 pt-3">
+            <div className="print-page-break-before">
+              <div className="d-flex justify-content-between align-items-center border-bottom border-dark pb-2 mb-4">
+                <div>
+                  <h5 className="fw-bold mb-0 text-uppercase">
+                    LAMPIRAN BUKTI TRANSAKSI FISIK &amp; NOTA ASLI
+                  </h5>
+                  <div className="text-muted small">
+                    Dokumentasi fisik sah untuk Akun: <strong>{data?.account?.name}</strong> &bull; Periode: {formatDateShort(startDate)} s/d {formatDateShort(endDate)}
+                  </div>
+                </div>
+                <div className="text-end text-muted small">
+                  Total Terlampir: <strong>{transactionsWithReceipts.length} Berkas Nota</strong>
+                </div>
+              </div>
+
+              <div className="row g-4">
+                {transactionsWithReceipts.map((tx, idx) => {
+                  const rUrl =
+                    tx.attachment_url || (tx.attachment_path ? `/storage/${tx.attachment_path}` : null)
+                  const isPdf =
+                    rUrl?.toLowerCase().endsWith('.pdf') ||
+                    tx.attachment_path?.toLowerCase().endsWith('.pdf')
+
+                  return (
+                    <div
+                      key={`receipt-doc-${tx.source_type || 'tx'}-${tx.id}`}
+                      className="col-12 col-md-6 receipt-print-item mb-4"
+                    >
+                      <div className="border border-dark rounded p-3 h-100 bg-white shadow-sm">
+                        <div className="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
+                          <div>
+                            <span className="badge bg-dark text-white me-2">#{idx + 1}</span>
+                            <span className="font-monospace fw-bold text-primary">
+                              {tx.voucher_no || '-'}
+                            </span>
+                            <div className="small text-body-secondary mt-1">
+                              {formatDateShort(tx.date)} &bull; {tx.category || '-'}
+                            </div>
+                          </div>
+                          <div className="text-end">
+                            <span
+                              className={`fw-bold ${
+                                tx.amount_out > 0 ? 'text-danger' : 'text-success'
+                              }`}
+                            >
+                              {tx.amount_out > 0
+                                ? `-${formatCurrency(tx.amount_out)}`
+                                : `+${formatCurrency(tx.amount_in)}`}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="small mb-2">
+                          <div className="fw-semibold text-body">{tx.description}</div>
+                          {tx.payee && tx.payee !== '-' && (
+                            <div className="text-muted small">Pihak: {tx.payee}</div>
+                          )}
+                        </div>
+
+                        <div
+                          className="text-center p-2 bg-light border rounded d-flex align-items-center justify-content-center"
+                          style={{ minHeight: '220px', maxHeight: '420px', overflow: 'hidden' }}
+                        >
+                          {isPdf ? (
+                            <div className="py-4 text-center">
+                              <CIcon icon={cilFile} size="3xl" className="text-danger mb-2" />
+                              <div className="fw-bold small text-body">Dokumen PDF Terlampir</div>
+                              <div
+                                className="font-monospace text-muted small"
+                                style={{ fontSize: '11px' }}
+                              >
+                                {tx.attachment_path?.split('/').pop() || 'dokumen.pdf'}
+                              </div>
+                              <a
+                                href={rUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-sm btn-outline-primary mt-2 d-print-none"
+                              >
+                                Buka Berkas PDF
+                              </a>
+                            </div>
+                          ) : (
+                            <img
+                              src={rUrl}
+                              alt={`Nota ${tx.voucher_no || tx.description}`}
+                              className="img-fluid rounded border cursor-pointer"
+                              style={{ maxHeight: '400px', width: 'auto', objectFit: 'contain' }}
+                              onClick={() => setPreviewImage(rUrl)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Lightbox Modal for Attachment */}

@@ -146,12 +146,13 @@ const Incomes = () => {
   }, [monthStr, tablePage, filters])
 
   useEffect(() => {
-    if (viewMode === 'calendar') {
+    if (viewMode === 'calendar' || modalVisible) {
       fetchCalendar()
-    } else {
+    }
+    if (viewMode === 'table') {
       fetchTable()
     }
-  }, [viewMode, fetchCalendar, fetchTable])
+  }, [viewMode, modalVisible, fetchCalendar, fetchTable])
 
   // Month Navigation
   const handlePrevMonth = () => {
@@ -197,11 +198,8 @@ const Incomes = () => {
   }
 
   const handleSaved = () => {
-    if (viewMode === 'calendar') {
-      fetchCalendar()
-    } else {
-      fetchTable()
-    }
+    fetchCalendar()
+    fetchTable()
   }
 
   const handleEditItemFromTable = (item) => {

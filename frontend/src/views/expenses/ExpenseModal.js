@@ -36,6 +36,9 @@ import {
   cilPrint,
   cilPaperclip,
   cilCloudDownload,
+  cilFile,
+  cilExternalLink,
+  cilZoom,
 } from '@coreui/icons'
 import api from '../../services/api'
 import { toastSuccess, toastError, toastWarning } from '../../services/toastService'
@@ -114,7 +117,8 @@ const ExpenseModal = ({
   ])
   const [actionLoadingId, setActionLoadingId] = useState(null)
   const [uploadingReceipt, setUploadingReceipt] = useState(false)
-  const directFileInputRef = useRef(null)
+  const [autoOcr, setAutoOcr] = useState(true)
+  const [lastSavedId, setLastSavedId] = useState(null)
 
   const handleApprove = async (id) => {
     setActionLoadingId(id)
@@ -200,157 +204,184 @@ const ExpenseModal = ({
     }
   }, [receiptImagePreview])
 
-  // Process receipt file with OCR
-  const processReceiptFile = useCallback(
-    async (file) => {
+  // Unified receipt handler (supports both auto OCR scan and direct attachment)
+  const handleReceiptFile = useCallback(
+    async (file, forceOcr = null) => {
       if (!file) return
 
-      if (!file.type.startsWith('image/')) {
-        toastError('Format file harus berupa gambar (JPG, PNG, atau WEBP).')
+      const isPdfFile =
+        file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')
+      const isImageFile = file.type?.startsWith('image/')
+
+      if (!isImageFile && !isPdfFile) {
+        toastError('Format file harus berupa gambar (JPG, PNG, WEBP) atau PDF.')
         return
       }
 
-      // Max size: 10MB
-      if (file.size > 10 * 1024 * 1024) {
-        toastError('Ukuran gambar maksimal adalah 10MB.')
+      if (file.size > 25 * 1024 * 1024) {
+        toastError('Ukuran file maksimal adalah 25MB.')
         return
       }
 
-      // Create preview URL
-      if (receiptImagePreview && receiptImagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(receiptImagePreview)
-      }
-      const previewUrl = URL.createObjectURL(file)
-      setReceiptImagePreview(previewUrl)
+      const shouldOcr = forceOcr !== null ? forceOcr : autoOcr && isImageFile
 
-      setScanning(true)
+      // For images, set local blob preview
+      if (isImageFile) {
+        if (receiptImagePreview && receiptImagePreview.startsWith('blob:')) {
+          URL.revokeObjectURL(receiptImagePreview)
+        }
+        setReceiptImagePreview(URL.createObjectURL(file))
+      }
+
       const formData = new FormData()
       formData.append('receipt', file)
 
-      try {
-        const res = await api.post('/expenses/scan-receipt', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
-        const data = res.data?.data || {}
+      if (shouldOcr) {
+        setScanning(true)
+        try {
+          const res = await api.post('/expenses/scan-receipt', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })
+          const data = res.data?.data || {}
 
-        const newOcrFlags = {
-          amount: data.amount != null,
-          transaction_date: Boolean(data.transaction_date),
-          payee: Boolean(data.payee || data.merchant),
-          notes: Boolean(data.notes),
-          category_id: Boolean(data.suggested_category_id),
+          const newOcrFlags = {
+            amount: data.amount != null,
+            transaction_date: Boolean(data.transaction_date),
+            payee: Boolean(data.payee || data.merchant),
+            notes: Boolean(data.notes),
+            category_id: Boolean(data.suggested_category_id),
+          }
+
+          setForm((prev) => ({
+            ...prev,
+            amount: data.amount != null ? String(data.amount) : prev.amount,
+            transaction_date: data.transaction_date || prev.transaction_date,
+            payee: data.payee || data.merchant || prev.payee,
+            notes: data.notes || prev.notes,
+            category_id: data.suggested_category_id
+              ? String(data.suggested_category_id)
+              : prev.category_id,
+            attachment_path: data.attachment_path || prev.attachment_path,
+          }))
+
+          setOcrAutoFilled(newOcrFlags)
+
+          setScannedReceipt({
+            merchant: data.payee || data.merchant || 'Struk Belanja',
+            amount: data.amount,
+            transaction_date: data.transaction_date,
+            suggested_category_name: data.suggested_category_name,
+            fileName: file.name,
+            attachment_url: data.attachment_url,
+            isOcr: true,
+          })
+
+          if (data.amount) {
+            toastSuccess(
+              `Nota berhasil dibaca & dilampirkan: ${data.merchant || 'Struk'} (${formatCurrency(data.amount)})`,
+            )
+          } else {
+            toastWarning(
+              'Nota dilampirkan. Total harga tidak terdeteksi otomatis, silakan sesuaikan nominal di formulir.',
+            )
+          }
+        } catch (err) {
+          // Fallback to direct upload if OCR failed without throwing an alarming error toast
+          try {
+            const fallbackRes = await api.post('/expenses/upload-receipt', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            })
+            const fbData = fallbackRes.data?.data || {}
+            setForm((prev) => ({ ...prev, attachment_path: fbData.attachment_path }))
+            setReceiptImagePreview(fbData.attachment_url)
+            setScannedReceipt({
+              fileName: file.name,
+              attachment_url: fbData.attachment_url,
+              isOcr: false,
+            })
+            toastSuccess(`Bukti transaksi "${file.name}" berhasil disimpan sebagai lampiran.`)
+          } catch (fbErr) {
+            toastError(fbErr.userMessage || 'Gagal menyimpan lampiran berkas.')
+          }
+        } finally {
+          setScanning(false)
+          if (fileInputRef.current) fileInputRef.current.value = ''
         }
-
-        setForm((prev) => ({
-          ...prev,
-          amount: data.amount != null ? String(data.amount) : prev.amount,
-          transaction_date: data.transaction_date || prev.transaction_date,
-          payee: data.payee || data.merchant || prev.payee,
-          notes: data.notes || prev.notes,
-          category_id: data.suggested_category_id
-            ? String(data.suggested_category_id)
-            : prev.category_id,
-          attachment_path: data.attachment_path || prev.attachment_path,
-        }))
-
-        setOcrAutoFilled(newOcrFlags)
-
-        setScannedReceipt({
-          merchant: data.payee || data.merchant || 'Struk Belanja',
-          amount: data.amount,
-          transaction_date: data.transaction_date,
-          suggested_category_name: data.suggested_category_name,
-          fileName: file.name,
-          attachment_url: data.attachment_url,
-        })
-
-        if (data.amount) {
-          toastSuccess(
-            `Nota berhasil dibaca: ${data.merchant || 'Struk'} (${formatCurrency(data.amount)})`,
-          )
-        } else {
-          toastWarning(
-            'Nota terbaca, namun total harga tidak terdeteksi otomatis. Silakan periksa atau isi nominal secara manual.',
-          )
+      } else {
+        setUploadingReceipt(true)
+        try {
+          const res = await api.post('/expenses/upload-receipt', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })
+          const data = res.data?.data || {}
+          setForm((prev) => ({
+            ...prev,
+            attachment_path: data.attachment_path,
+          }))
+          setReceiptImagePreview(data.attachment_url)
+          setScannedReceipt({
+            fileName: file.name,
+            attachment_url: data.attachment_url,
+            isOcr: false,
+          })
+          toastSuccess(`Bukti transaksi "${file.name}" berhasil dilampirkan!`)
+        } catch (err) {
+          toastError(err.userMessage || 'Gagal mengunggah bukti transaksi.')
+        } finally {
+          setUploadingReceipt(false)
+          if (fileInputRef.current) fileInputRef.current.value = ''
         }
-      } catch (err) {
-        toastError(
-          err.userMessage || 'Gagal membaca nota. Silakan isi form pengeluaran secara manual.',
-        )
-      } finally {
-        setScanning(false)
-        if (fileInputRef.current) fileInputRef.current.value = ''
       }
     },
-    [receiptImagePreview],
+    [autoOcr, receiptImagePreview],
   )
 
-  const handleDirectFileUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf'
-    const isImage = file.type.startsWith('image/')
-
-    if (!isImage && !isPdf) {
-      toastError('Format file harus berupa gambar (JPG, PNG, WEBP) atau dokumen PDF.')
-      return
+  const handleClearReceipt = () => {
+    if (receiptImagePreview && receiptImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(receiptImagePreview)
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toastError('Ukuran file maksimal adalah 10MB.')
-      return
-    }
-
-    setUploadingReceipt(true)
-    const formData = new FormData()
-    formData.append('receipt', file)
-
-    try {
-      const res = await api.post('/expenses/upload-receipt', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      const data = res.data?.data || {}
-      setForm((prev) => ({
-        ...prev,
-        attachment_path: data.attachment_path,
-      }))
-      setReceiptImagePreview(data.attachment_url)
-      toastSuccess(`Bukti transaksi "${file.name}" berhasil diunggah!`)
-    } catch (err) {
-      toastError(err.userMessage || 'Gagal mengunggah bukti transaksi.')
-    } finally {
-      setUploadingReceipt(false)
-      if (directFileInputRef.current) directFileInputRef.current.value = ''
-    }
+    setScannedReceipt(null)
+    setReceiptImagePreview(null)
+    setOcrAutoFilled(emptyOcrFlags)
+    setForm((prev) => ({ ...prev, attachment_path: '' }))
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   // Listen to paste event (Ctrl+V) when modal is open
   useEffect(() => {
-    if (!visible || editingItem || scanning) return
+    if (!visible || scanning || uploadingReceipt) return
 
     const handlePaste = (e) => {
-      // Ignore if typing inside text fields
-      const tag = e.target?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
-
+      const files = e.clipboardData?.files
       const items = e.clipboardData?.items
-      if (!items) return
+      let file = null
 
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-          const file = items[i].getAsFile()
-          if (file) {
-            processReceiptFile(file)
-            break
+      if (files && files.length > 0) {
+        file = files[0]
+      } else if (items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].kind === 'file') {
+            file = items[i].getAsFile()
+            if (file) break
           }
         }
+      }
+
+      if (
+        file &&
+        (file.type.startsWith('image/') ||
+          file.name.toLowerCase().endsWith('.pdf') ||
+          file.type === 'application/pdf')
+      ) {
+        e.preventDefault()
+        handleReceiptFile(file)
+        toastSuccess('Tangkapan layar / berkas dari clipboard berhasil ditempel!')
       }
     }
 
     window.addEventListener('paste', handlePaste)
     return () => window.removeEventListener('paste', handlePaste)
-  }, [visible, editingItem, scanning, processReceiptFile])
+  }, [visible, scanning, uploadingReceipt, handleReceiptFile])
 
   // Drag and drop handlers
   const handleDragOver = (e) => {
@@ -371,22 +402,13 @@ const ExpenseModal = ({
     setIsDragging(false)
     const file = e.dataTransfer?.files?.[0]
     if (file) {
-      processReceiptFile(file)
+      handleReceiptFile(file)
     }
-  }
-
-  const handleClearScannedReceipt = () => {
-    if (receiptImagePreview && receiptImagePreview.startsWith('blob:')) {
-      URL.revokeObjectURL(receiptImagePreview)
-    }
-    setScannedReceipt(null)
-    setReceiptImagePreview(null)
-    setOcrAutoFilled(emptyOcrFlags)
   }
 
   const handleEditClick = (item) => {
     setEditingItem(item)
-    handleClearScannedReceipt()
+    handleClearReceipt()
     setForm({
       account_id: item.account_id ? String(item.account_id) : '',
       transaction_date: item.transaction_date || selectedDate,
@@ -399,13 +421,15 @@ const ExpenseModal = ({
     })
     if (item.attachment_url) {
       setReceiptImagePreview(item.attachment_url)
+    } else if (item.attachment_path) {
+      setReceiptImagePreview(`/storage/${item.attachment_path}`)
     }
     setErrors({})
   }
 
   const handleCancelEdit = () => {
     setEditingItem(null)
-    handleClearScannedReceipt()
+    handleClearReceipt()
     setForm({
       ...emptyForm,
       transaction_date: selectedDate || '',
@@ -453,21 +477,25 @@ const ExpenseModal = ({
     }
 
     try {
+      let savedId = null
       if (editingItem) {
         await api.put(`/expenses/${editingItem.id}`, payload)
+        savedId = editingItem.id
         toastSuccess('Transaksi pengeluaran berhasil diperbarui')
       } else {
-        await api.post('/expenses', payload)
+        const res = await api.post('/expenses', payload)
+        savedId = res.data?.data?.id
         toastSuccess('Transaksi pengeluaran berhasil dicatat')
       }
 
+      setLastSavedId(savedId)
       setEditingItem(null)
-      handleClearScannedReceipt()
+      handleClearReceipt()
       setForm({
         ...emptyForm,
         transaction_date: selectedDate || '',
       })
-      onSaved()
+      onSaved?.()
     } catch (err) {
       setErrors(err.validationErrors || {})
     } finally {
@@ -523,8 +551,8 @@ const ExpenseModal = ({
                     <CTableHeaderCell>Penerima & Catatan</CTableHeaderCell>
                     <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>Nominal</CTableHeaderCell>
-                    <CTableHeaderCell width={70} className="text-center">
-                      Nota
+                    <CTableHeaderCell width={85} className="text-center">
+                      Nota / Bukti
                     </CTableHeaderCell>
                     <CTableHeaderCell width={120}>Aksi</CTableHeaderCell>
                   </CTableRow>
@@ -533,7 +561,13 @@ const ExpenseModal = ({
                   {dailyItems.map((item) => (
                     <CTableRow
                       key={item.id}
-                      className={editingItem?.id === item.id ? 'table-danger' : ''}
+                      className={
+                        editingItem?.id === item.id
+                          ? 'table-danger'
+                          : lastSavedId === item.id
+                          ? 'table-success'
+                          : ''
+                      }
                     >
                       <CTableDataCell>
                         {item.voucher_no && (
@@ -591,21 +625,70 @@ const ExpenseModal = ({
                       <CTableDataCell className="text-danger fw-bold">
                         {formatCurrency(item.amount)}
                       </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        {item.attachment_url ? (
-                          <CButton
-                            size="sm"
-                            color="info"
-                            variant="ghost"
-                            className="p-1 text-info"
-                            title="Lihat Bukti Nota"
-                            onClick={() => {
-                              setReceiptImagePreview(item.attachment_url)
-                              setShowImagePreviewModal(true)
-                            }}
-                          >
-                            <CIcon icon={cilImage} size="lg" />
-                          </CButton>
+                      <CTableDataCell className="text-center align-middle">
+                        {item.attachment_url || item.attachment_path ? (
+                          (() => {
+                            const url =
+                              item.attachment_url || `/storage/${item.attachment_path}`
+                            const isPdf =
+                              url.toLowerCase().includes('.pdf') ||
+                              item.attachment_path?.toLowerCase().endsWith('.pdf')
+
+                            if (isPdf) {
+                              return (
+                                <CButton
+                                  size="sm"
+                                  color="danger"
+                                  variant="ghost"
+                                  className="p-1 text-danger d-inline-flex align-items-center gap-1 border border-danger-subtle rounded bg-danger-subtle"
+                                  title="Buka Dokumen PDF Bukti Pengeluaran"
+                                  onClick={() => {
+                                    setReceiptImagePreview(url)
+                                    setShowImagePreviewModal(true)
+                                  }}
+                                >
+                                  <CIcon icon={cilFile} size="sm" />
+                                  <span style={{ fontSize: '10px', fontWeight: 'bold' }}>PDF</span>
+                                </CButton>
+                              )
+                            }
+
+                            return (
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                title="Klik untuk melihat foto nota penuh"
+                                onClick={() => {
+                                  setReceiptImagePreview(url)
+                                  setShowImagePreviewModal(true)
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    setReceiptImagePreview(url)
+                                    setShowImagePreviewModal(true)
+                                  }
+                                }}
+                                className="d-inline-block position-relative rounded overflow-hidden border shadow-sm cursor-pointer"
+                                style={{
+                                  width: '38px',
+                                  height: '38px',
+                                  verticalAlign: 'middle',
+                                }}
+                              >
+                                <img
+                                  src={url}
+                                  alt="Nota"
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                                <div
+                                  className="position-absolute bottom-0 start-0 end-0 text-center bg-dark bg-opacity-75 text-white"
+                                  style={{ fontSize: '8px', lineHeight: '11px' }}
+                                >
+                                  <CIcon icon={cilZoom} style={{ width: '9px', height: '9px' }} />
+                                </div>
+                              </div>
+                            )
+                          })()
                         ) : (
                           <span className="text-body-secondary small">-</span>
                         )}
@@ -700,122 +783,212 @@ const ExpenseModal = ({
               )}
             </div>
 
-            {/* Fitur OCR Scan Nota / Struk Belanja Modern */}
-            {!editingItem && (
-              <div className="mb-4">
-                {/* Hidden File Input */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/jpeg,image/png,image/webp"
-                  className="d-none"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) processReceiptFile(f)
-                  }}
-                  disabled={scanning || saving}
-                />
+            {/* Unified Bukti Transaksi / Nota Belanja (Drag & Drop, Paste Ctrl+V, Auto OCR) */}
+            <div className="mb-4">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                className="d-none"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) handleReceiptFile(f)
+                }}
+                disabled={scanning || uploadingReceipt || saving}
+              />
 
-                {scanning ? (
-                  /* Loading State */
-                  <div className="receipt-drop-zone text-center">
-                    <CSpinner size="sm" color="primary" className="mb-2" />
-                    <div className="small fw-semibold text-body">
-                      Membaca nota dengan Tesseract OCR...
-                    </div>
-                    <div className="receipt-drop-hint">
-                      Sedang mendeteksi total harga, tanggal, dan nama toko
-                    </div>
+              {scanning || uploadingReceipt ? (
+                /* Loading State */
+                <div className="receipt-drop-zone text-center p-3">
+                  <CSpinner size="sm" color="primary" className="mb-2" />
+                  <div className="small fw-semibold text-body">
+                    {scanning
+                      ? 'Membaca nota dengan Tesseract OCR...'
+                      : 'Mengunggah berkas bukti transaksi...'}
                   </div>
-                ) : scannedReceipt ? (
-                  /* Scanned Result Card with Thumbnail & Metadata */
-                  <div className="p-3 rounded border bg-body">
-                    <div className="d-flex flex-column flex-sm-row gap-3 align-items-start align-items-sm-center justify-content-between">
-                      {/* Left: Thumbnail & Details */}
-                      <div className="d-flex gap-3 align-items-center flex-grow-1">
-                        {receiptImagePreview && (
+                  <div className="receipt-drop-hint">
+                    {scanning
+                      ? 'Sedang mendeteksi total harga, tanggal, dan nama toko'
+                      : 'Menyimpan berkas ke server'}
+                  </div>
+                </div>
+              ) : form.attachment_path || receiptImagePreview ? (
+                /* Attached Receipt Card with Thumbnail & Metadata */
+                <div className="p-3 rounded border bg-body">
+                  <div className="d-flex flex-column flex-sm-row gap-3 align-items-start align-items-sm-center justify-content-between">
+                    {/* Left: Thumbnail & Details */}
+                    <div className="d-flex gap-3 align-items-center flex-grow-1 overflow-hidden">
+                      {Boolean(
+                        form.attachment_path?.toLowerCase().endsWith('.pdf') ||
+                          receiptImagePreview?.toLowerCase().includes('.pdf') ||
+                          scannedReceipt?.fileName?.toLowerCase().endsWith('.pdf'),
+                      ) ? (
+                        <div
+                          className="rounded border d-flex flex-column align-items-center justify-content-center bg-danger-subtle text-danger flex-shrink-0"
+                          style={{ width: '52px', height: '52px' }}
+                        >
+                          <CIcon icon={cilFile} size="xl" />
+                          <span style={{ fontSize: '9px', fontWeight: 'bold' }}>PDF</span>
+                        </div>
+                      ) : receiptImagePreview ? (
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          title="Klik untuk melihat foto penuh"
+                          onClick={() => setShowImagePreviewModal(true)}
+                          onKeyDown={(e) => e.key === 'Enter' && setShowImagePreviewModal(true)}
+                          className="position-relative rounded overflow-hidden border flex-shrink-0 cursor-pointer"
+                          style={{ width: '52px', height: '52px' }}
+                        >
+                          <img
+                            src={receiptImagePreview}
+                            alt="Thumbnail Nota"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
                           <div
-                            role="button"
-                            tabIndex={0}
-                            title="Klik untuk melihat foto penuh"
-                            onClick={() => setShowImagePreviewModal(true)}
-                            onKeyDown={(e) => e.key === 'Enter' && setShowImagePreviewModal(true)}
-                            className="position-relative rounded overflow-hidden border flex-shrink-0 cursor-pointer"
-                            style={{ width: '52px', height: '52px' }}
+                            className="position-absolute bottom-0 start-0 end-0 text-center bg-dark bg-opacity-75 text-white"
+                            style={{ fontSize: '9px', lineHeight: '14px' }}
                           >
-                            <img
-                              src={receiptImagePreview}
-                              alt="Thumbnail Nota"
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                            <div
-                              className="position-absolute bottom-0 start-0 end-0 text-center bg-dark bg-opacity-75 text-white"
-                              style={{ fontSize: '9px', lineHeight: '14px' }}
-                            >
-                              Lihat
-                            </div>
-                          </div>
-                        )}
-
-                        <div>
-                          <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                            <CBadge color="success" className="py-1">
-                              <CIcon icon={cilCheckCircle} className="me-1" />
-                              Pindai Berhasil
-                            </CBadge>
-                            <span className="fw-bold text-body">{scannedReceipt.merchant}</span>
-                          </div>
-
-                          <div className="text-body-secondary small d-flex flex-wrap gap-2 align-items-center">
-                            <span>
-                              Total:{' '}
-                              <strong className="text-danger">
-                                {scannedReceipt.amount
-                                  ? formatCurrency(scannedReceipt.amount)
-                                  : 'Tidak terdeteksi'}
-                              </strong>
-                            </span>
-                            {scannedReceipt.suggested_category_name && (
-                              <span>
-                                &bull; Kategori:{' '}
-                                <strong className="text-primary">
-                                  {scannedReceipt.suggested_category_name}
-                                </strong>
-                              </span>
-                            )}
+                            Lihat
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div
+                          className="rounded border d-flex align-items-center justify-content-center bg-body-secondary flex-shrink-0"
+                          style={{ width: '52px', height: '52px' }}
+                        >
+                          <CIcon icon={cilPaperclip} />
+                        </div>
+                      )}
 
-                      {/* Right: Actions */}
-                      <div className="d-flex gap-2 flex-shrink-0 align-self-end align-self-sm-center">
-                        <CButton
-                          size="sm"
-                          color="secondary"
-                          variant="ghost"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={saving}
-                          title="Ganti file nota"
-                        >
-                          <CIcon icon={cilReload} className="me-1" />
-                          Ganti
-                        </CButton>
-                        <CButton
-                          size="sm"
-                          color="danger"
-                          variant="ghost"
-                          onClick={handleClearScannedReceipt}
-                          disabled={saving}
-                          title="Hapus hasil pindaian nota"
-                        >
-                          <CIcon icon={cilXCircle} className="me-1" />
-                          Reset
-                        </CButton>
+                      <div className="overflow-hidden">
+                        <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                          <CBadge color="success" className="py-1">
+                            <CIcon icon={cilCheckCircle} className="me-1" />
+                            Bukti Terlampir
+                          </CBadge>
+                          {scannedReceipt?.isOcr && (
+                            <CBadge color="info" className="py-1">
+                              ✨ AI OCR
+                            </CBadge>
+                          )}
+                          {scannedReceipt?.merchant && (
+                            <span className="fw-bold text-body small text-truncate">
+                              {scannedReceipt.merchant}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-body-secondary small text-truncate d-flex flex-wrap gap-2 align-items-center">
+                          {scannedReceipt?.amount ? (
+                            <span>
+                              Total Nota:{' '}
+                              <strong className="text-danger">
+                                {formatCurrency(scannedReceipt.amount)}
+                              </strong>
+                            </span>
+                          ) : form.attachment_path ? (
+                            <span className="font-monospace small">
+                              {form.attachment_path.split('/').pop()}
+                            </span>
+                          ) : (
+                            <span>Berkas siap disimpan</span>
+                          )}
+                          {scannedReceipt?.suggested_category_name && (
+                            <span>
+                              &bull; Kategori:{' '}
+                              <strong className="text-primary">
+                                {scannedReceipt.suggested_category_name}
+                              </strong>
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Right: Actions */}
+                    <div className="d-flex gap-2 flex-shrink-0 align-self-end align-self-sm-center">
+                      {Boolean(
+                        form.attachment_path?.toLowerCase().endsWith('.pdf') ||
+                          receiptImagePreview?.toLowerCase().includes('.pdf') ||
+                          scannedReceipt?.fileName?.toLowerCase().endsWith('.pdf'),
+                      ) ? (
+                        <a
+                          href={receiptImagePreview || `/storage/${form.attachment_path}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-outline-primary"
+                          title="Buka dokumen PDF di tab baru"
+                        >
+                          <CIcon icon={cilExternalLink} className="me-1" />
+                          Buka PDF
+                        </a>
+                      ) : (
+                        receiptImagePreview && (
+                          <CButton
+                            size="sm"
+                            color="outline-primary"
+                            onClick={() => setShowImagePreviewModal(true)}
+                            title="Lihat foto penuh"
+                          >
+                            <CIcon icon={cilZoom} className="me-1" />
+                            Lihat
+                          </CButton>
+                        )
+                      )}
+                      <CButton
+                        size="sm"
+                        color="secondary"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={saving || scanning || uploadingReceipt}
+                        title="Ganti file nota"
+                      >
+                        <CIcon icon={cilReload} className="me-1" />
+                        Ganti
+                      </CButton>
+                      <CButton
+                        size="sm"
+                        color="danger"
+                        variant="ghost"
+                        onClick={handleClearReceipt}
+                        disabled={saving || scanning || uploadingReceipt}
+                        title="Hapus lampiran bukti nota"
+                      >
+                        <CIcon icon={cilXCircle} className="me-1" />
+                        Hapus
+                      </CButton>
+                    </div>
                   </div>
-                ) : (
-                  /* Clean Dropzone: Pindai Otomatis */
+                </div>
+              ) : (
+                /* Clean Unified Dropzone */
+                <div className="receipt-drop-zone-wrapper">
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <label className="form-label mb-0 fw-semibold small d-flex align-items-center gap-1">
+                      <CIcon icon={cilPaperclip} className="text-primary" />
+                      Bukti Transaksi / Nota Belanja
+                      <span className="text-body-secondary fw-normal">(Opsional)</span>
+                    </label>
+                    <div className="form-check form-switch mb-0 small">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        id="autoOcrSwitchExpense"
+                        checked={autoOcr}
+                        onChange={(e) => setAutoOcr(e.target.checked)}
+                        disabled={saving}
+                      />
+                      <label
+                        className="form-check-label small text-body-secondary cursor-pointer"
+                        htmlFor="autoOcrSwitchExpense"
+                      >
+                        Pindai otomatis dengan AI OCR
+                      </label>
+                    </div>
+                  </div>
+
                   <div
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -845,17 +1018,19 @@ const ExpenseModal = ({
                         disabled={saving}
                       >
                         <CIcon icon={cilCloudUpload} className="me-1" />
-                        Unggah Nota
+                        Pilih Berkas Nota / Invoice
                       </CButton>
                     </div>
                     <div className="receipt-drop-hint">
-                      Tarik &amp; lepas file nota ke sini, atau tekan <kbd>Ctrl + V</kbd> untuk
-                      menempelkan gambar
+                      Tarik &amp; lepas file ke sini, atau tekan <kbd>Ctrl + V</kbd> untuk menempelkan gambar / slip
+                    </div>
+                    <div className="text-body-secondary small mt-1" style={{ fontSize: '11px' }}>
+                      Mendukung JPG, PNG, WEBP, atau PDF (maks. 25 MB)
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
 
             {/* Input Form Fields */}
             <CForm onSubmit={handleSubmit}>
@@ -1158,82 +1333,6 @@ const ExpenseModal = ({
                   </div>
                 )}
 
-                {/* Attachment / Bukti Nota Fisik Section */}
-                <div className="col-12">
-                  <label className="form-label small fw-semibold d-flex align-items-center gap-1 mb-1">
-                    <CIcon icon={cilPaperclip} className="text-primary" />
-                    Lampiran Bukti Transaksi / Nota Fisik (Opsional)
-                  </label>
-                  <input
-                    type="file"
-                    ref={directFileInputRef}
-                    accept="image/jpeg,image/png,image/webp,application/pdf"
-                    style={{ display: 'none' }}
-                    onChange={handleDirectFileUpload}
-                  />
-                  {form.attachment_path ? (
-                    <div className="d-flex align-items-center justify-content-between p-2 rounded border bg-success-subtle border-success-subtle">
-                      <div className="d-flex align-items-center gap-2 small text-success-emphasis">
-                        <CIcon icon={cilCheckCircle} />
-                        <span>
-                          Bukti nota fisik terlampir dan tersimpan di server.
-                        </span>
-                        {receiptImagePreview && (
-                          <CButton
-                            size="sm"
-                            color="link"
-                            className="p-0 text-success-emphasis fw-bold text-decoration-underline"
-                            onClick={() => setShowImagePreviewModal(true)}
-                          >
-                            (Pratinjau)
-                          </CButton>
-                        )}
-                      </div>
-                      <div className="d-flex gap-2">
-                        <CButton
-                          size="sm"
-                          color="secondary"
-                          variant="outline"
-                          className="py-0 px-2 small"
-                          onClick={() => directFileInputRef.current?.click()}
-                          disabled={uploadingReceipt || saving}
-                        >
-                          Ganti File
-                        </CButton>
-                        <CButton
-                          size="sm"
-                          color="link"
-                          className="text-danger p-0 small text-decoration-none"
-                          onClick={() => {
-                            setForm((prev) => ({ ...prev, attachment_path: '' }))
-                            setReceiptImagePreview(null)
-                            handleClearScannedReceipt()
-                          }}
-                        >
-                          Hapus Bukti
-                        </CButton>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="d-flex align-items-center gap-2">
-                      <CButton
-                        size="sm"
-                        color="secondary"
-                        variant="outline"
-                        onClick={() => directFileInputRef.current?.click()}
-                        disabled={uploadingReceipt || saving}
-                        className="d-inline-flex align-items-center gap-1"
-                      >
-                        <CIcon icon={cilCloudUpload} />
-                        {uploadingReceipt ? 'Mengunggah...' : 'Unggah Bukti Nota / Invoice (JPG, PNG, PDF)'}
-                      </CButton>
-                      {uploadingReceipt && <CSpinner size="sm" />}
-                      <span className="text-muted small">
-                        Maks. 10MB
-                      </span>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Friendly Hint if OCR was used */}
