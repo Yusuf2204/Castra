@@ -69,12 +69,12 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
             <CTableHeaderCell>No. Bukti / Tanggal</CTableHeaderCell>
             <CTableHeaderCell>Sumber Dana</CTableHeaderCell>
             <CTableHeaderCell>Kategori</CTableHeaderCell>
-            <CTableHeaderCell>Nominal</CTableHeaderCell>
             <CTableHeaderCell>Catatan</CTableHeaderCell>
+            <CTableHeaderCell>Nominal</CTableHeaderCell>
             <CTableHeaderCell width={70} className="text-center">
               Bukti
             </CTableHeaderCell>
-            <CTableHeaderCell width={100}>Aksi</CTableHeaderCell>
+            <CTableHeaderCell width={140} className="text-center">Aksi</CTableHeaderCell>
           </CTableRow>
         </CTableHead>
 
@@ -89,34 +89,41 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
               </CTableDataCell>
 
               <CTableDataCell>
-                <CBadge color="primary" variant="outline">
+                <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
                   {item.income_source?.name || '-'}
-                </CBadge>
+                </span>
                 {item.account && (
                   <div className="mt-1">
-                    <CBadge
-                      color={item.account.type === 'petty_cash' ? 'warning' : 'secondary'}
-                      className="small"
+                    <span
+                      className={`badge small ${
+                        item.account.type === 'petty_cash'
+                          ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'
+                          : 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+                      }`}
                     >
                       {item.account.name}
-                    </CBadge>
+                    </span>
                   </div>
                 )}
               </CTableDataCell>
 
               <CTableDataCell>
                 {item.category?.name ? (
-                  <CBadge color="info">{item.category.name}</CBadge>
+                  <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                    {item.category.name}
+                  </span>
                 ) : (
                   <span className="text-body-secondary">-</span>
                 )}
               </CTableDataCell>
 
-              <CTableDataCell className="text-success fw-bold">
-                {formatCurrency(item.amount)}
+              <CTableDataCell>
+                <span className="small text-body-secondary">{item.notes || '-'}</span>
               </CTableDataCell>
 
-              <CTableDataCell>{item.notes || '-'}</CTableDataCell>
+              <CTableDataCell className="text-success fw-semibold">
+                +{formatCurrency(item.amount)}
+              </CTableDataCell>
 
               <CTableDataCell className="text-center align-middle">
                 {item.attachment_url || item.attachment_path ? (
@@ -171,13 +178,13 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
                 )}
               </CTableDataCell>
 
-              <CTableDataCell>
+              <CTableDataCell className="text-nowrap text-center">
                 <CButton
                   size="sm"
                   color="success"
                   variant="ghost"
                   title="Cetak Voucher BKM"
-                  className="me-1 text-success"
+                  className="p-1 me-1 text-success"
                   onClick={() => {
                     setSelectedVoucher(item)
                     setShowVoucherModal(true)
@@ -191,7 +198,7 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
                   color="secondary"
                   variant="ghost"
                   title="Edit"
-                  className="me-1"
+                  className="p-1 me-1"
                   onClick={() => onEdit(item)}
                 >
                   <CIcon icon={cilPencil} />
@@ -202,6 +209,7 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
                   color="danger"
                   variant="ghost"
                   title="Hapus"
+                  className="p-1"
                   onClick={() => onDelete(item.id)}
                 >
                   <CIcon icon={cilTrash} />

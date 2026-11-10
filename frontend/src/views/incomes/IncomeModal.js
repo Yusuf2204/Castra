@@ -20,6 +20,9 @@ import {
   CTableBody,
   CTableDataCell,
   CBadge,
+  CNav,
+  CNavItem,
+  CNavLink,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
 import {
@@ -39,6 +42,7 @@ import {
   cilFile,
   cilExternalLink,
   cilZoom,
+  cilList,
 } from '@coreui/icons'
 import api from '../../services/api'
 import { toastSuccess, toastError, toastWarning } from '../../services/toastService'
@@ -112,6 +116,7 @@ const IncomeModal = ({
   const [uploadingReceipt, setUploadingReceipt] = useState(false)
   const [autoOcr, setAutoOcr] = useState(true)
   const [lastSavedId, setLastSavedId] = useState(null)
+  const [activeTab, setActiveTab] = useState('form')
   const fileInputRef = useRef(null)
 
   // Reset modal state on open/close and fetch accounts
@@ -122,6 +127,7 @@ const IncomeModal = ({
         transaction_date: selectedDate || '',
       })
       setEditingItem(null)
+      setActiveTab('form')
       setScannedProof(null)
       setProofImagePreview(null)
       setShowImagePreviewModal(false)
@@ -378,10 +384,12 @@ const IncomeModal = ({
       setProofImagePreview(`/storage/${item.attachment_path}`)
     }
     setErrors({})
+    setActiveTab('form')
   }
 
   const handleCancelEdit = () => {
     setEditingItem(null)
+    setActiveTab('form')
     handleClearProof()
     setForm({
       ...emptyForm,
@@ -430,6 +438,7 @@ const IncomeModal = ({
 
       setLastSavedId(savedId)
       setEditingItem(null)
+      setActiveTab('form')
       handleClearProof()
       setForm({
         ...emptyForm,
@@ -465,10 +474,10 @@ const IncomeModal = ({
 
   return (
     <>
-      <CModal size="lg" visible={visible} onClose={onClose} backdrop="static">
+      <CModal size="xl" visible={visible} onClose={onClose} backdrop="static">
         <CModalHeader closeButton>
-          <CModalTitle>
-            Pemasukan: {formatDateIndonesian(selectedDate)}
+          <CModalTitle className="d-flex align-items-center gap-2">
+            <span>Pemasukan: {formatDateIndonesian(selectedDate)}</span>
             {totalDaily > 0 && (
               <CBadge color="success" className="ms-2 fs-6">
                 Total: {formatCurrency(totalDaily)}
@@ -477,198 +486,340 @@ const IncomeModal = ({
           </CModalTitle>
         </CModalHeader>
 
-        <CModalBody>
-          {/* Riwayat transaksi pada tanggal ini */}
-          {dailyItems.length > 0 && (
-            <div className="mb-4">
-              <h6 className="fw-bold mb-2">Riwayat Transaksi Hari Ini ({dailyItems.length})</h6>
-              <CTable hover responsive small className="border">
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell>No. Bukti / Sumber Dana</CTableHeaderCell>
-                    <CTableHeaderCell>Masuk ke Akun</CTableHeaderCell>
-                    <CTableHeaderCell>Kategori</CTableHeaderCell>
-                    <CTableHeaderCell>Nominal</CTableHeaderCell>
-                    <CTableHeaderCell>Catatan</CTableHeaderCell>
-                    <CTableHeaderCell width={85} className="text-center">
-                      Bukti
-                    </CTableHeaderCell>
-                    <CTableHeaderCell width={80}>Aksi</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {dailyItems.map((item) => (
-                    <CTableRow
-                      key={item.id}
-                      className={
-                        editingItem?.id === item.id
-                          ? 'table-primary'
-                          : lastSavedId === item.id
-                          ? 'table-success'
-                          : ''
-                      }
-                    >
-                      <CTableDataCell>
-                        {item.voucher_no && (
-                          <div className="small font-monospace text-secondary mb-1">
-                            {item.voucher_no}
-                          </div>
-                        )}
-                        <strong>{item.income_source?.name || '-'}</strong>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {item.account ? (
-                          <CBadge
-                            color={item.account.type === 'petty_cash' ? 'warning' : 'secondary'}
-                          >
-                            {item.account.name}
-                          </CBadge>
-                        ) : (
-                          <span className="text-body-secondary small">-</span>
-                        )}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {item.category?.name ? (
-                          <CBadge color="info">{item.category.name}</CBadge>
-                        ) : (
-                          <span className="text-body-secondary">-</span>
-                        )}
-                      </CTableDataCell>
-                      <CTableDataCell className="text-success fw-bold">
-                        {formatCurrency(item.amount)}
-                      </CTableDataCell>
-                      <CTableDataCell>{item.notes || '-'}</CTableDataCell>
-                      <CTableDataCell className="text-center align-middle">
-                        {item.attachment_url || item.attachment_path ? (
-                          (() => {
-                            const url =
-                              item.attachment_url || `/storage/${item.attachment_path}`
-                            const isPdf =
-                              url.toLowerCase().includes('.pdf') ||
-                              item.attachment_path?.toLowerCase().endsWith('.pdf')
+        <CModalBody className="p-3 p-md-4">
+          {/* Navigation Tabs: Input Transaksi vs Detail Transaksi */}
+          <CNav variant="tabs" className="mb-4">
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 'form'}
+                onClick={() => setActiveTab('form')}
+                className="cursor-pointer fw-semibold d-flex align-items-center gap-2"
+                role="button"
+              >
+                <CIcon icon={cilPencil} className="text-success" />
+                <span>{editingItem ? 'Edit Transaksi' : 'Input Transaksi'}</span>
+                {editingItem && (
+                  <CBadge color="warning" className="small">
+                    Edit
+                  </CBadge>
+                )}
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 'detail'}
+                onClick={() => setActiveTab('detail')}
+                className="cursor-pointer fw-semibold d-flex align-items-center gap-2"
+                role="button"
+              >
+                <CIcon icon={cilList} className="text-secondary" />
+                <span>Detail Transaksi</span>
+                <CBadge
+                  color={dailyItems.length > 0 ? 'success' : 'secondary'}
+                  shape="rounded-pill"
+                >
+                  {dailyItems.length}
+                </CBadge>
+              </CNavLink>
+            </CNavItem>
+          </CNav>
 
-                            if (isPdf) {
+          {/* TAB 2: Detail & Riwayat Transaksi */}
+          {activeTab === 'detail' && (
+            <div className="mb-3">
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 p-3 bg-body-tertiary rounded border">
+                <div>
+                  <h6 className="fw-bold mb-1">Riwayat Pemasukan: {formatDateIndonesian(selectedDate)}</h6>
+                  <div className="text-body-secondary small">
+                    Total tercatat pada tanggal ini: <strong>{dailyItems.length} transaksi</strong>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  {totalDaily > 0 && (
+                    <CBadge color="success" className="fs-6 py-2 px-3">
+                      Total: {formatCurrency(totalDaily)}
+                    </CBadge>
+                  )}
+                  <CButton
+                    size="sm"
+                    color="success"
+                    className="text-white d-flex align-items-center gap-1"
+                    onClick={() => {
+                      handleCancelEdit()
+                      setActiveTab('form')
+                    }}
+                  >
+                    <CIcon icon={cilPlus} />
+                    Catat Pemasukan Baru
+                  </CButton>
+                </div>
+              </div>
+
+              {dailyItems.length === 0 ? (
+                <div className="text-center p-5 border rounded bg-body-tertiary my-2">
+                  <CIcon icon={cilList} size="3xl" className="text-secondary opacity-50 mb-3" />
+                  <h6 className="fw-bold">Belum Ada Transaksi Pemasukan</h6>
+                  <p className="text-body-secondary small mb-3">
+                    Belum ada transaksi pemasukan tercatat pada tanggal {formatDateIndonesian(selectedDate)}.
+                  </p>
+                  <CButton
+                    color="success"
+                    size="sm"
+                    className="text-white"
+                    onClick={() => {
+                      handleCancelEdit()
+                      setActiveTab('form')
+                    }}
+                  >
+                    <CIcon icon={cilPlus} className="me-1" />
+                    Input Transaksi Sekarang
+                  </CButton>
+                </div>
+              ) : (
+                <CTable hover responsive small className="border align-middle">
+                  <CTableHead>
+                    <CTableRow>
+                      <CTableHeaderCell>No. Bukti / Sumber Dana</CTableHeaderCell>
+                      <CTableHeaderCell>Masuk ke Akun</CTableHeaderCell>
+                      <CTableHeaderCell>Kategori</CTableHeaderCell>
+                      <CTableHeaderCell>Catatan</CTableHeaderCell>
+                      <CTableHeaderCell>Nominal</CTableHeaderCell>
+                      <CTableHeaderCell width={85} className="text-center">
+                        Bukti
+                      </CTableHeaderCell>
+                      <CTableHeaderCell width={120} className="text-center">Aksi</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {dailyItems.map((item) => (
+                      <CTableRow
+                        key={item.id}
+                        className={
+                          editingItem?.id === item.id
+                            ? 'bg-primary-subtle bg-opacity-25 border-start border-3 border-primary'
+                            : lastSavedId === item.id
+                            ? 'bg-success-subtle bg-opacity-25 border-start border-3 border-success'
+                            : ''
+                        }
+                      >
+                        <CTableDataCell>
+                          {item.voucher_no && (
+                            <div className="small font-monospace text-secondary mb-1">
+                              {item.voucher_no}
+                            </div>
+                          )}
+                          <div className="d-flex align-items-center gap-1">
+                            <strong>{item.income_source?.name || '-'}</strong>
+                            {editingItem?.id === item.id && (
+                              <span className="badge bg-primary-subtle text-primary border border-primary-subtle py-0 px-1 small" style={{ fontSize: '10px' }}>
+                                Diedit
+                              </span>
+                            )}
+                            {lastSavedId === item.id && (
+                              <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-1 small" style={{ fontSize: '10px' }}>
+                                Disimpan
+                              </span>
+                            )}
+                          </div>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          {item.account ? (
+                            <span
+                              className={`badge small ${
+                                item.account.type === 'petty_cash'
+                                  ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'
+                                  : 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+                              }`}
+                            >
+                              {item.account.name}
+                            </span>
+                          ) : (
+                            <span className="text-body-secondary small">-</span>
+                          )}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          {item.category?.name ? (
+                            <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle small">
+                              {item.category.name}
+                            </span>
+                          ) : (
+                            <span className="text-body-secondary">-</span>
+                          )}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <span className="small text-body-secondary">{item.notes || '-'}</span>
+                        </CTableDataCell>
+                        <CTableDataCell className="text-success fw-semibold">
+                          +{formatCurrency(item.amount)}
+                        </CTableDataCell>
+                        <CTableDataCell className="text-center align-middle">
+                          {item.attachment_url || item.attachment_path ? (
+                            (() => {
+                              const url =
+                                item.attachment_url || `/storage/${item.attachment_path}`
+                              const isPdf =
+                                url.toLowerCase().includes('.pdf') ||
+                                item.attachment_path?.toLowerCase().endsWith('.pdf')
+
+                              if (isPdf) {
+                                return (
+                                  <CButton
+                                    size="sm"
+                                    color="danger"
+                                    variant="ghost"
+                                    className="p-1 text-danger d-inline-flex align-items-center gap-1 border border-danger-subtle rounded bg-danger-subtle"
+                                    title="Buka Dokumen PDF Bukti Pemasukan"
+                                    onClick={() => {
+                                      setProofImagePreview(url)
+                                      setShowImagePreviewModal(true)
+                                    }}
+                                  >
+                                    <CIcon icon={cilFile} size="sm" />
+                                    <span style={{ fontSize: '10px', fontWeight: 'bold' }}>PDF</span>
+                                  </CButton>
+                                )
+                              }
+
                               return (
-                                <CButton
-                                  size="sm"
-                                  color="danger"
-                                  variant="ghost"
-                                  className="p-1 text-danger d-inline-flex align-items-center gap-1 border border-danger-subtle rounded bg-danger-subtle"
-                                  title="Buka Dokumen PDF Bukti Pemasukan"
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  title="Klik untuk melihat bukti penuh"
                                   onClick={() => {
                                     setProofImagePreview(url)
                                     setShowImagePreviewModal(true)
                                   }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      setProofImagePreview(url)
+                                      setShowImagePreviewModal(true)
+                                    }
+                                  }}
+                                  className="d-inline-block position-relative rounded overflow-hidden border shadow-sm cursor-pointer"
+                                  style={{
+                                    width: '38px',
+                                    height: '38px',
+                                    verticalAlign: 'middle',
+                                  }}
                                 >
-                                  <CIcon icon={cilFile} size="sm" />
-                                  <span style={{ fontSize: '10px', fontWeight: 'bold' }}>PDF</span>
-                                </CButton>
-                              )
-                            }
-
-                            return (
-                              <div
-                                role="button"
-                                tabIndex={0}
-                                title="Klik untuk melihat bukti penuh"
-                                onClick={() => {
-                                  setProofImagePreview(url)
-                                  setShowImagePreviewModal(true)
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    setProofImagePreview(url)
-                                    setShowImagePreviewModal(true)
-                                  }
-                                }}
-                                className="d-inline-block position-relative rounded overflow-hidden border shadow-sm cursor-pointer"
-                                style={{
-                                  width: '38px',
-                                  height: '38px',
-                                  verticalAlign: 'middle',
-                                }}
-                              >
-                                <img
-                                  src={url}
-                                  alt="Bukti Transfer"
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                />
-                                <div
-                                  className="position-absolute bottom-0 start-0 end-0 text-center bg-dark bg-opacity-75 text-white"
-                                  style={{ fontSize: '8px', lineHeight: '11px' }}
-                                >
-                                  <CIcon icon={cilZoom} style={{ width: '9px', height: '9px' }} />
+                                  <img
+                                    src={url}
+                                    alt="Bukti Transfer"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  />
+                                  <div
+                                    className="position-absolute bottom-0 start-0 end-0 text-center bg-dark bg-opacity-75 text-white"
+                                    style={{ fontSize: '8px', lineHeight: '11px' }}
+                                  >
+                                    <CIcon icon={cilZoom} style={{ width: '9px', height: '9px' }} />
+                                  </div>
                                 </div>
-                              </div>
-                            )
-                          })()
-                        ) : (
-                          <span className="text-body-secondary small">-</span>
-                        )}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CButton
-                          size="sm"
-                          color="success"
-                          variant="ghost"
-                          title="Cetak Voucher BKM"
-                          onClick={() => {
-                            setVoucherItem(item)
-                            setShowVoucherModal(true)
-                          }}
-                          className="p-1 me-1 text-success"
-                        >
-                          <CIcon icon={cilPrint} />
-                        </CButton>
-                        <CButton
-                          size="sm"
-                          color="secondary"
-                          variant="ghost"
-                          title="Edit"
-                          onClick={() => handleEditClick(item)}
-                          className="p-1 me-1"
-                          disabled={saving || deletingId === item.id}
-                        >
-                          <CIcon icon={cilPencil} />
-                        </CButton>
-                        <CButton
-                          size="sm"
-                          color="danger"
-                          variant="ghost"
-                          title="Hapus"
-                          onClick={() => handleDelete(item.id)}
-                          className="p-1"
-                          disabled={saving || deletingId === item.id}
-                        >
-                          {deletingId === item.id ? (
-                            <CSpinner size="sm" />
+                              )
+                            })()
                           ) : (
-                            <CIcon icon={cilTrash} />
+                            <span className="text-body-secondary small">-</span>
                           )}
-                        </CButton>
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
+                        </CTableDataCell>
+                        <CTableDataCell className="text-nowrap text-center">
+                          <CButton
+                            size="sm"
+                            color="success"
+                            variant="ghost"
+                            title="Cetak Voucher BKM"
+                            onClick={() => {
+                              setVoucherItem(item)
+                              setShowVoucherModal(true)
+                            }}
+                            className="p-1 me-1 text-success"
+                          >
+                            <CIcon icon={cilPrint} />
+                          </CButton>
+                          <CButton
+                            size="sm"
+                            color="secondary"
+                            variant="ghost"
+                            title="Edit"
+                            onClick={() => handleEditClick(item)}
+                            className="p-1 me-1"
+                            disabled={saving || deletingId === item.id}
+                          >
+                            <CIcon icon={cilPencil} />
+                          </CButton>
+                          <CButton
+                            size="sm"
+                            color="danger"
+                            variant="ghost"
+                            title="Hapus"
+                            onClick={() => handleDelete(item.id)}
+                            className="p-1"
+                            disabled={saving || deletingId === item.id}
+                          >
+                            {deletingId === item.id ? (
+                              <CSpinner size="sm" />
+                            ) : (
+                              <CIcon icon={cilTrash} />
+                            )}
+                          </CButton>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              )}
             </div>
           )}
 
-          {/* Formulir Input / Edit */}
-          <div className="border rounded p-3 bg-body-tertiary">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h6 className="fw-bold mb-0">
-                {editingItem ? 'Edit Transaksi Pemasukan' : 'Catat Pemasukan Baru'}
-              </h6>
+          {/* TAB 1: Input / Edit Transaksi */}
+          {activeTab === 'form' && (
+            <div>
               {editingItem && (
-                <CButton size="sm" color="outline-secondary" onClick={handleCancelEdit}>
-                  <CIcon icon={cilPlus} className="me-1" />
-                  Catat Baru
-                </CButton>
+                <div className="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-3 rounded border border-warning-subtle bg-warning-subtle text-warning-emphasis">
+                  <div className="d-flex align-items-center gap-2">
+                    <CIcon icon={cilPencil} size="lg" />
+                    <div>
+                      <div className="fw-bold">Mode Edit Transaksi</div>
+                      <div className="small">
+                        Mengubah transaksi:{' '}
+                        <strong>{editingItem.voucher_no || editingItem.income_source?.name}</strong>{' '}
+                        ({formatCurrency(editingItem.amount)})
+                      </div>
+                    </div>
+                  </div>
+                  <CButton size="sm" color="warning" variant="outline" onClick={handleCancelEdit}>
+                    <CIcon icon={cilPlus} className="me-1" />
+                    Batal Edit &amp; Catat Baru
+                  </CButton>
+                </div>
               )}
-            </div>
 
-            {/* Unified Bukti Transaksi / Slip Pemasukan (Drag & Drop, Paste Ctrl+V, Auto OCR) */}
+              {/* Formulir Input / Edit */}
+              <div className="border rounded p-3 bg-body-tertiary">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="fw-bold mb-0">
+                    {editingItem ? 'Edit Transaksi Pemasukan' : 'Catat Pemasukan Baru'}
+                  </h6>
+                  <div className="d-flex align-items-center gap-2">
+                    {dailyItems.length > 0 && (
+                      <CButton
+                        size="sm"
+                        color="outline-secondary"
+                        onClick={() => setActiveTab('detail')}
+                        className="d-flex align-items-center gap-1"
+                      >
+                        <CIcon icon={cilList} />
+                        Lihat Detail ({dailyItems.length})
+                      </CButton>
+                    )}
+                    {editingItem && (
+                      <CButton size="sm" color="outline-secondary" onClick={handleCancelEdit}>
+                        <CIcon icon={cilPlus} className="me-1" />
+                        Catat Baru
+                      </CButton>
+                    )}
+                  </div>
+                </div>
+
+                {/* Unified Bukti Transaksi / Slip Pemasukan (Drag & Drop, Paste Ctrl+V, Auto OCR) */}
             <div className="mb-4">
               <input
                 type="file"
@@ -1157,13 +1308,39 @@ const IncomeModal = ({
               </div>
             </CForm>
           </div>
-        </CModalBody>
+        </div>
+      )}
+    </CModalBody>
 
-        <CModalFooter>
-          <CButton color="secondary" onClick={onClose} disabled={saving}>
-            Tutup
+    <CModalFooter className="d-flex justify-content-between align-items-center">
+      <div>
+        {activeTab === 'form' ? (
+          <CButton
+            color="link"
+            className="text-decoration-none p-0 text-body-secondary small"
+            onClick={() => setActiveTab('detail')}
+          >
+            <CIcon icon={cilList} className="me-1" />
+            Lihat Detail Transaksi Hari Ini ({dailyItems.length}) &rarr;
           </CButton>
-        </CModalFooter>
+        ) : (
+          <CButton
+            color="link"
+            className="text-decoration-none p-0 text-success small"
+            onClick={() => {
+              handleCancelEdit()
+              setActiveTab('form')
+            }}
+          >
+            &larr; <CIcon icon={cilPencil} className="me-1" />
+            Kembali ke Form Input Transaksi
+          </CButton>
+        )}
+      </div>
+      <CButton color="secondary" onClick={onClose} disabled={saving}>
+        Tutup
+      </CButton>
+    </CModalFooter>
       </CModal>
 
       {/* Lightbox Modal for Full Proof Image Preview */}

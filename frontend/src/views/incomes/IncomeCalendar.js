@@ -1,5 +1,5 @@
 import React from 'react'
-import { CBadge, CSpinner } from '@coreui/react'
+import { CSpinner } from '@coreui/react'
 
 const DAYS_HEADER = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
 
@@ -110,9 +110,11 @@ const IncomeCalendar = ({ year, month, calendarData, loading, onDateClick }) => 
             <div
               key={cell.key}
               onClick={() => onDateClick(cell.dateStr)}
-              className={`border-bottom border-end p-2 position-relative d-flex flex-column justify-content-between transition-all ${
-                cell.isToday ? 'border-primary border-2 bg-primary-subtle' : ''
-              } ${hasIncome ? 'bg-success-subtle' : 'hover-bg-light'}`}
+              className={`border-bottom border-end p-2 position-relative d-flex flex-column justify-content-between transition-all hover-bg-light ${
+                cell.isToday
+                  ? 'border-primary border-2 bg-primary-subtle bg-opacity-10'
+                  : 'bg-body'
+              }`}
               style={{
                 minHeight: '85px',
                 cursor: 'pointer',
@@ -125,29 +127,39 @@ const IncomeCalendar = ({ year, month, calendarData, loading, onDateClick }) => 
               }
             >
               <div className="d-flex justify-content-between align-items-center">
-                <span
-                  className={`badge rounded-circle p-1 ${
-                    cell.isToday
-                      ? 'bg-primary text-white'
-                      : hasIncome
-                        ? 'bg-success text-white'
-                        : 'text-body'
-                  }`}
-                  style={{ width: '24px', height: '24px', lineHeight: '16px' }}
-                >
-                  {cell.day}
-                </span>
+                <div className="d-flex align-items-center gap-1">
+                  <span
+                    className={`d-inline-flex align-items-center justify-content-center rounded-circle small ${
+                      cell.isToday
+                        ? 'bg-primary text-white fw-bold shadow-sm'
+                        : 'text-body fw-semibold'
+                    }`}
+                    style={{ width: '24px', height: '24px', fontSize: '0.82rem' }}
+                  >
+                    {cell.day}
+                  </span>
+                  {hasIncome && (
+                    <span
+                      className="d-inline-block rounded-circle bg-success"
+                      style={{ width: '6px', height: '6px' }}
+                      title={`${cell.dayInfo.count} transaksi`}
+                    />
+                  )}
+                </div>
 
                 {hasIncome && (
-                  <CBadge color="success" className="d-none d-md-inline">
+                  <span
+                    className="badge bg-body-secondary text-secondary border border-secondary-subtle py-0 px-1 d-none d-md-inline"
+                    style={{ fontSize: '10px', fontWeight: 500 }}
+                  >
                     {cell.dayInfo.count} tx
-                  </CBadge>
+                  </span>
                 )}
               </div>
 
               {hasIncome ? (
                 <div className="mt-1 text-end">
-                  <div className="fw-bold text-success" style={{ fontSize: '0.85rem' }}>
+                  <div className="fw-semibold text-success" style={{ fontSize: '0.82rem' }}>
                     <span className="d-none d-lg-inline">
                       {formatCurrencyFull(cell.dayInfo.total)}
                     </span>

@@ -122,21 +122,24 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete, onReload }) =
                 <strong>{item.category?.name || '-'}</strong>
                 {item.account && (
                   <div className="mt-1">
-                    <CBadge
-                      color={item.account.type === 'petty_cash' ? 'warning' : 'secondary'}
-                      className="small"
+                    <span
+                      className={`badge small ${
+                        item.account.type === 'petty_cash'
+                          ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'
+                          : 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+                      }`}
                     >
                       {item.account.name}
-                    </CBadge>
+                    </span>
                   </div>
                 )}
               </CTableDataCell>
 
               <CTableDataCell>
                 {item.category?.budget_group ? (
-                  <CBadge color="info">
+                  <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle small">
                     {item.category.budget_group.name} ({item.category.budget_group.percentage}%)
-                  </CBadge>
+                  </span>
                 ) : (
                   <span className="text-body-secondary">-</span>
                 )}
@@ -151,24 +154,24 @@ const ExpensesTable = ({ expenses = [], loading, onEdit, onDelete, onReload }) =
 
               <CTableDataCell>
                 {item.status === 'approved' ? (
-                  <CBadge color="success">Disetujui</CBadge>
+                  <span className="badge bg-success-subtle text-success border border-success-subtle">Disetujui</span>
                 ) : item.status === 'submitted' ? (
-                  <CBadge color="warning">Menunggu</CBadge>
+                  <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Menunggu</span>
                 ) : item.status === 'rejected' ? (
-                  <CBadge color="danger">Ditolak</CBadge>
+                  <span className="badge bg-danger-subtle text-danger border border-danger-subtle">Ditolak</span>
                 ) : (
-                  <CBadge color="secondary">Draft</CBadge>
+                  <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Draft</span>
                 )}
                 {item.children && item.children.length > 0 && (
                   <div className="mt-1">
-                    <CBadge color="info" className="small">
+                    <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle small">
                       Split ({item.children.length})
-                    </CBadge>
+                    </span>
                   </div>
                 )}
               </CTableDataCell>
 
-              <CTableDataCell className="text-danger fw-bold">
+              <CTableDataCell className="text-danger fw-semibold">
                 -{formatCurrency(item.amount)}
               </CTableDataCell>
 

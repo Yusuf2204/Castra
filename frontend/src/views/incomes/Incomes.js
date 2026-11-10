@@ -296,19 +296,19 @@ const Incomes = () => {
           </div>
 
           {/* Month Summary Banner */}
-          <div className="mt-3 p-2 px-3 rounded bg-success-subtle border border-success-subtle d-flex flex-wrap justify-content-between align-items-center">
-            <div className="text-success-emphasis">
-              <small className="text-uppercase fw-semibold d-block">
-                Total Pemasukan {MONTH_NAMES[month - 1]} {year}
-              </small>
-              <h4 className="fw-bold mb-0 text-success">
-                {formatCurrency(calendarData?.total_month || 0)}
+          <div className="mt-3 p-3 rounded bg-body-tertiary border d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <span className="text-secondary text-uppercase fw-semibold small d-block mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+                Total Pemasukan &bull; {MONTH_NAMES[month - 1]} {year}
+              </span>
+              <h4 className="fw-bold mb-0 text-success d-flex align-items-baseline gap-1">
+                <span>{formatCurrency(calendarData?.total_month || 0)}</span>
               </h4>
             </div>
             <div>
-              <CBadge color="success" className="fs-6 px-3 py-2">
+              <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6 fw-semibold">
                 {calendarData?.transaction_count || 0} Transaksi Masuk
-              </CBadge>
+              </span>
             </div>
           </div>
         </CCardHeader>
