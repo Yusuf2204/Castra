@@ -114,9 +114,13 @@ const PettyCashBookReport = () => {
         const res = await api.get('/accounts', { params: { all: 1, is_active: 1 } })
         const list = res.data?.data || []
         setAccounts(list)
-        const petty = list.find((a) => a.type === 'petty_cash') || list[0]
-        if (petty) {
-          setSelectedAccountId(String(petty.id))
+        const savedAccId = localStorage.getItem('castra_last_petty_cash_account_id')
+        const savedAcc = list.find((a) => String(a.id) === String(savedAccId))
+        const withBalance = list.find((a) => Number(a.current_balance) > 0)
+        const petty = list.find((a) => a.type === 'petty_cash')
+        const chosen = savedAcc || withBalance || petty || list[0]
+        if (chosen) {
+          setSelectedAccountId(String(chosen.id))
         }
       } catch {
         setAccounts([])
@@ -401,7 +405,13 @@ const PettyCashBookReport = () => {
               </label>
               <CustomSelect
                 value={selectedAccountId}
-                onChange={(e) => setSelectedAccountId(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setSelectedAccountId(val)
+                  try {
+                    localStorage.setItem('castra_last_petty_cash_account_id', String(val))
+                  } catch {}
+                }}
                 options={accountOptions}
                 placeholder="-- Pilih Akun Kas / Bank --"
                 disabled={loading || downloadingPdf}
@@ -637,7 +647,12 @@ const PettyCashBookReport = () => {
                   {data.transactions.length === 0 ? (
                     <CTableRow>
                       <CTableDataCell colSpan={10} className="text-center py-4 text-muted">
-                        Tidak ada transaksi mutasi kas pada rentang tanggal ini.
+                        <div>Tidak ada transaksi mutasi kas pada rentang tanggal ini untuk akun <strong>{data?.account?.name}</strong>.</div>
+                        {accounts.length > 1 && (
+                          <div className="small mt-1 text-secondary">
+                            Jika transaksi Anda dicatat di akun lain, pilih akun tersebut pada dropdown di atas.
+                          </div>
+                        )}
                       </CTableDataCell>
                     </CTableRow>
                   ) : (

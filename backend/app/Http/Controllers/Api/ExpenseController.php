@@ -115,6 +115,7 @@ class ExpenseController extends Controller
         $monthDate = Carbon::createFromFormat('Y-m', $validated['month']);
 
         $query = $request->user()->expenseTransactions()
+            ->whereNull('parent_id')
             ->with(['category.budgetGroup', 'account'])
             ->whereYear('transaction_date', $monthDate->year)
             ->whereMonth('transaction_date', $monthDate->month);

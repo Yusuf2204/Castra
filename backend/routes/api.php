@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('budget-groups', BudgetGroupController::class);
     Route::get('budget-periods/{budget_period}/allocations', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'getAllocations']);
     Route::put('budget-periods/{budget_period}/allocations', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'updateAllocations']);
+    Route::post('budget-periods/{budget_period}/auto-distribute', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'autoDistributeAllocations']);
     Route::apiResource('budget-periods', \App\Http\Controllers\Api\BudgetPeriodController::class);
 
     // Mutasi Kas (Fund Transfers / Top-Up Kas Kecil)

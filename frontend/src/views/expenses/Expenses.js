@@ -154,13 +154,14 @@ const Expenses = () => {
   }, [monthStr, tablePage, filters])
 
   useEffect(() => {
-    if (viewMode === 'calendar' || modalVisible) {
-      fetchCalendar()
-    }
+    fetchCalendar()
+  }, [fetchCalendar])
+
+  useEffect(() => {
     if (viewMode === 'table') {
       fetchTable()
     }
-  }, [viewMode, modalVisible, fetchCalendar, fetchTable])
+  }, [viewMode, fetchTable])
 
   // Month Navigation
   const handlePrevMonth = () => {
@@ -270,7 +271,10 @@ const Expenses = () => {
               <CButton
                 size="sm"
                 color="outline-secondary"
-                onClick={viewMode === 'calendar' ? fetchCalendar : fetchTable}
+                onClick={() => {
+                  fetchCalendar()
+                  if (viewMode === 'table') fetchTable()
+                }}
                 title="Muat Ulang"
               >
                 <CIcon icon={cilReload} />
@@ -313,9 +317,14 @@ const Expenses = () => {
                 <span>{formatCurrency(calendarData?.total_month || 0)}</span>
               </h4>
             </div>
-            <div>
+            <div className="d-flex align-items-center gap-2">
+              {viewMode === 'table' && (filters.search || filters.category_id || filters.budget_group_id) && tableMeta && (
+                <span className="badge bg-secondary-subtle text-body border border-secondary-subtle px-3 py-2 fs-6 fw-normal">
+                  Hasil Filter: <strong>{tableMeta.total}</strong> transaksi
+                </span>
+              )}
               <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 fw-semibold">
-                {calendarData?.transaction_count || 0} Transaksi Keluar
+                {calendarData?.transaction_count || 0} Transaksi Keluar Bulan Ini
               </span>
             </div>
           </div>
@@ -381,7 +390,7 @@ const Expenses = () => {
                 loading={loadingTable}
                 onEdit={handleEditItemFromTable}
                 onDelete={handleDeleteItemFromTable}
-                onReload={fetchTableData}
+                onReload={fetchTable}
               />
 
               {tableMeta && (

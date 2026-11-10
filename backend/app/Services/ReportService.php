@@ -37,6 +37,7 @@ class ReportService
                 ->sum('amount');
 
             $expense = (float) $user->expenseTransactions()
+                ->whereNull('parent_id')
                 ->whereYear('transaction_date', $year)
                 ->whereMonth('transaction_date', $m)
                 ->sum('amount');
@@ -119,6 +120,7 @@ class ReportService
                     : (float) $cat->monthly_estimate;
 
                 $actual = (float) $user->expenseTransactions()
+                    ->whereNull('parent_id')
                     ->where('category_id', $cat->id)
                     ->whereBetween('transaction_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
                     ->sum('amount');
@@ -188,6 +190,7 @@ class ReportService
         foreach ($categories as $cat) {
             $estimate = (float) $cat->monthly_estimate;
             $actual = (float) $user->expenseTransactions()
+                ->whereNull('parent_id')
                 ->where('category_id', $cat->id)
                 ->whereYear('transaction_date', $date->year)
                 ->whereMonth('transaction_date', $date->month)
@@ -249,6 +252,7 @@ class ReportService
         $date = Carbon::createFromFormat('Y-m', $monthStr);
 
         $totalMonthExpense = (float) $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->whereYear('transaction_date', $date->year)
             ->whereMonth('transaction_date', $date->month)
             ->sum('amount');
@@ -263,6 +267,7 @@ class ReportService
 
         foreach ($categories as $cat) {
             $actual = (float) $user->expenseTransactions()
+                ->whereNull('parent_id')
                 ->where('category_id', $cat->id)
                 ->whereYear('transaction_date', $date->year)
                 ->whereMonth('transaction_date', $date->month)
@@ -327,6 +332,7 @@ class ReportService
             ->sum('amount');
 
         $monthExpense = (float) $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->whereYear('transaction_date', $now->year)
             ->whereMonth('transaction_date', $now->month)
             ->sum('amount');
@@ -335,7 +341,7 @@ class ReportService
 
         // All-Time KPIs
         $allTimeIncome = (float) $user->incomeTransactions()->sum('amount');
-        $allTimeExpense = (float) $user->expenseTransactions()->sum('amount');
+        $allTimeExpense = (float) $user->expenseTransactions()->whereNull('parent_id')->sum('amount');
         $allTimeNet = $allTimeIncome - $allTimeExpense;
 
         // Budget comparison (uses active period if exists, otherwise current month)
@@ -361,6 +367,7 @@ class ReportService
             ]);
 
         $recentExpenses = $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->with(['category.budgetGroup'])
             ->orderByDesc('transaction_date')
             ->orderByDesc('id')
@@ -427,6 +434,7 @@ class ReportService
             ->sum('amount');
 
         $priorExpenses = (float) $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->where('account_id', $accountId)
             ->where('transaction_date', '<', $startDate)
             ->sum('amount');
@@ -451,6 +459,7 @@ class ReportService
             ->get();
 
         $expenses = $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->where('account_id', $accountId)
             ->whereBetween('transaction_date', [$startDate, $endDate])
             ->with(['category'])

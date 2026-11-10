@@ -33,7 +33,7 @@ class UserTemplateInitializer
                 'type' => 'petty_cash',
                 'currency' => 'IDR',
                 'initial_balance' => 0.00,
-                'imprest_limit' => 2000000.00,
+                'imprest_limit' => null,
                 'is_active' => true,
             ],
             [

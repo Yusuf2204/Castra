@@ -216,11 +216,15 @@ const ExpenseModal = ({
         .then((res) => {
           const accList = res.data?.data || []
           setAccounts(accList)
-          const petty = accList.find((a) => a.type === 'petty_cash') || accList[0]
-          if (petty) {
+          const savedAccId = localStorage.getItem('castra_last_expense_account_id')
+          const savedAcc = accList.find((a) => String(a.id) === String(savedAccId))
+          const positiveAcc = accList.find((a) => Number(a.current_balance) > 0)
+          const petty = accList.find((a) => a.type === 'petty_cash')
+          const chosen = savedAcc || positiveAcc || petty || accList[0]
+          if (chosen) {
             setForm((prev) => ({
               ...prev,
-              account_id: prev.account_id || String(petty.id),
+              account_id: prev.account_id || String(chosen.id),
             }))
           }
         })
@@ -521,6 +525,12 @@ const ExpenseModal = ({
         const res = await api.post('/expenses', payload)
         savedId = res.data?.data?.id
         toastSuccess('Transaksi pengeluaran berhasil dicatat')
+      }
+
+      if (payload.account_id) {
+        try {
+          localStorage.setItem('castra_last_expense_account_id', String(payload.account_id))
+        } catch {}
       }
 
       setLastSavedId(savedId)
