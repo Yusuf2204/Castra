@@ -9,10 +9,12 @@ import {
   CModalFooter,
   CButton,
   CBadge,
+  CSpinner,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilPrint, cilCheckCircle, cilFile, cilExternalLink, cilPaperclip } from '@coreui/icons'
+import { cilPrint, cilCheckCircle, cilFile, cilExternalLink, cilPaperclip, cilCloudDownload } from '@coreui/icons'
 import { terbilang } from '../../utils/terbilang'
+import api from '../../services/api'
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return 'Rp 0'
@@ -38,6 +40,7 @@ const formatDateLong = (dateStr) => {
 const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
   const company = useSelector((state) => state.company)
   const [includeReceipt, setIncludeReceipt] = useState(true)
+  const [downloading, setDownloading] = useState(false)
 
   if (!transaction) return null
 
@@ -60,8 +63,46 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
     ? transaction.payee || '-'
     : transaction.income_source?.name || transaction.payee || '-'
 
+  const handleDownloadPdf = async (stream = false) => {
+    try {
+      setDownloading(true)
+      const endpoint = isExpense
+        ? `/expenses/${transaction.id}/pdf`
+        : `/incomes/${transaction.id}/pdf`
+
+      const response = await api.get(endpoint, {
+        params: {
+          include_receipt: includeReceipt ? 1 : 0,
+          download: stream ? 0 : 1,
+        },
+        responseType: 'blob',
+      })
+
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const blobUrl = window.URL.createObjectURL(blob)
+
+      if (stream) {
+        window.open(blobUrl, '_blank')
+      } else {
+        const link = document.createElement('a')
+        link.href = blobUrl
+        const cleanNo = (transaction.voucher_no || (isExpense ? `BKK_${transaction.id}` : `BKM_${transaction.id}`)).replace(/[^A-Za-z0-9_\-]/g, '_')
+        link.download = `Voucher_${cleanNo}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000)
+    } catch (err) {
+      console.error('Failed to generate PDF:', err)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const handlePrint = () => {
-    window.print()
+    handleDownloadPdf(true)
   }
 
   return (
@@ -193,14 +234,12 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
 
         {/* Voucher Container Sheet */}
         <div className="voucher-paper-sheet border border-2 border-dark p-4 bg-white text-dark rounded-1">
-          {/* Header Kop Surat / Perusahaan */}
-          <div className="d-flex justify-content-between align-items-start border-bottom border-dark pb-3 mb-3">
+          {/* Title Dokumen (Tanpa Kop Surat sesuai arahan) */}
+          <div className="d-flex justify-content-between align-items-center border-bottom border-dark pb-3 mb-3">
             <div>
-              <h5 className="fw-bold mb-0 text-uppercase">
-                {company?.comp_name || 'UNIT PENGELOLA KEUANGAN / KAS KECIL'}
-              </h5>
+              <h4 className="fw-bold mb-0 text-uppercase tracking-wide">{voucherTitle}</h4>
               <div className="small text-muted">
-                Sistem Pencatatan Keuangan Terpadu &bull; Castra Petty Cash
+                Akun: <strong>{transaction.account?.name || (isExpense ? 'Kas Kecil' : 'Kas Utama')}</strong>
               </div>
             </div>
             <div className="text-end">
@@ -229,17 +268,6 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
               <div className="small text-muted mt-1">
                 Tanggal: {formatDateLong(transaction.transaction_date)}
               </div>
-            </div>
-          </div>
-
-          {/* Title Dokumen */}
-          <div className="text-center my-3">
-            <h5 className="fw-bold text-decoration-underline mb-1 tracking-wide">{voucherTitle}</h5>
-            <div className="small text-muted">
-              Akun Kas:{' '}
-              <strong>
-                {transaction.account?.name || (isExpense ? 'Kas Kecil' : 'Kas Utama')}
-              </strong>
             </div>
           </div>
 
@@ -435,12 +463,33 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
           )}
         </div>
         <div className="d-flex gap-2">
-          <CButton color="secondary" variant="outline" onClick={onClose}>
+          <CButton color="secondary" variant="outline" onClick={onClose} disabled={downloading}>
             Tutup
           </CButton>
-          <CButton color="primary" onClick={handlePrint}>
-            <CIcon icon={cilPrint} className="me-1" />
-            Cetak Voucher
+          <CButton
+            color="success"
+            className="text-white"
+            onClick={() => handleDownloadPdf(false)}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <CSpinner size="sm" className="me-1" />
+            ) : (
+              <CIcon icon={cilCloudDownload} className="me-1" />
+            )}
+            Unduh PDF
+          </CButton>
+          <CButton
+            color="primary"
+            onClick={() => handleDownloadPdf(true)}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <CSpinner size="sm" className="me-1" />
+            ) : (
+              <CIcon icon={cilPrint} className="me-1" />
+            )}
+            Cetak / Buka PDF
           </CButton>
         </div>
       </CModalFooter>

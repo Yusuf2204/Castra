@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\TerbilangHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IncomeTransactionResource;
 use App\Models\Account;
 use App\Models\IncomeTransaction;
 use App\Services\ReceiptOcrService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -381,5 +383,55 @@ class IncomeController extends Controller
             'message' => 'Bukti transaksi berhasil diunggah',
             'errors' => null,
         ]);
+    }
+
+    /**
+     * Generate official BKM PDF voucher.
+     */
+    public function exportPdf(Request $request, IncomeTransaction $income)
+    {
+        $user = $request->user();
+
+        if ($income->user_id !== $user->id) {
+            return response()->json([
+                'data' => null,
+                'message' => 'Transaksi tidak ditemukan',
+                'errors' => null,
+            ], 404);
+        }
+
+        $income->load(['incomeSource', 'category', 'account', 'user']);
+
+        $terbilang = TerbilangHelper::make($income->amount);
+
+        $receiptBase64 = null;
+        $includeReceipt = $request->boolean('include_receipt', true);
+
+        if ($includeReceipt && $income->attachment_path) {
+            $path = $income->attachment_path;
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                if (Storage::disk('public')->exists($path)) {
+                    $mime = Storage::disk('public')->mimeType($path) ?? 'image/jpeg';
+                    $raw = Storage::disk('public')->get($path);
+                    $receiptBase64 = 'data:' . $mime . ';base64,' . base64_encode($raw);
+                }
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.voucher_bkm', [
+            'transaction' => $income,
+            'terbilang' => $terbilang,
+            'receiptBase64' => $receiptBase64,
+        ])->setPaper('a4', 'portrait');
+
+        $cleanNo = preg_replace('/[^A-Za-z0-9_\-]/', '_', $income->voucher_no ?: 'BKM_' . $income->id);
+        $fileName = 'Voucher_' . $cleanNo . '.pdf';
+
+        if ($request->boolean('download')) {
+            return $pdf->download($fileName);
+        }
+
+        return $pdf->stream($fileName);
     }
 }

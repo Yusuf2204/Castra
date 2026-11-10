@@ -562,6 +562,7 @@ class ReportService
             $item['running_balance'] = $currentRunning;
             $totalIn += $item['amount_in'];
             $totalOut += $item['amount_out'];
+            $item['has_receipt'] = !empty($item['attachment_path']);
         }
         unset($item);
 

@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('incomes/calendar', [IncomeController::class, 'calendar']);
     Route::post('incomes/scan-receipt', [IncomeController::class, 'scanReceipt']);
     Route::post('incomes/upload-receipt', [IncomeController::class, 'uploadReceipt']);
+    Route::get('incomes/{income}/pdf', [IncomeController::class, 'exportPdf']);
     Route::apiResource('incomes', IncomeController::class);
 
     // Pengeluaran
@@ -61,11 +62,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('expenses/{expense}/approve', [ExpenseController::class, 'approve']);
     Route::post('expenses/{expense}/reject', [ExpenseController::class, 'reject']);
     Route::post('expenses/{expense}/submit', [ExpenseController::class, 'submit']);
+    Route::get('expenses/{expense}/pdf', [ExpenseController::class, 'exportPdf']);
     Route::apiResource('expenses', ExpenseController::class);
 
     // Laporan
     Route::get('reports/cash-flow', [ReportController::class, 'cashFlow']);
     Route::get('reports/budget-comparison', [ReportController::class, 'budgetComparison']);
     Route::get('reports/category-breakdown', [ReportController::class, 'categoryBreakdown']);
+    Route::get('reports/account-statement/pdf', [ReportController::class, 'accountStatementPdf']);
     Route::get('reports/account-statement', [ReportController::class, 'accountStatement']);
 });
