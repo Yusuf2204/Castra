@@ -62,7 +62,8 @@ const BudgetGroupsForm = ({ budgetGroup, onReset, onSaved }) => {
     setSaving(true)
     setErrors({})
 
-    const parseAmount = (val) => (typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val))
+    const parseAmount = (val) =>
+      typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val)
 
     const payload = {
       code: form.code.trim().toLowerCase(),
@@ -95,7 +96,7 @@ const BudgetGroupsForm = ({ budgetGroup, onReset, onSaved }) => {
       <CFormInput
         label="Kode Kelompok"
         name="code"
-        placeholder="Contoh: need, fun, saving"
+        placeholder="Kode unik kelompok..."
         maxLength={50}
         value={form.code}
         onChange={handleChange}
@@ -108,7 +109,7 @@ const BudgetGroupsForm = ({ budgetGroup, onReset, onSaved }) => {
       <CFormInput
         label="Nama Kelompok"
         name="name"
-        placeholder="Contoh: Kebutuhan Pokok"
+        placeholder="Nama kelompok anggaran..."
         maxLength={100}
         value={form.name}
         onChange={handleChange}

@@ -93,7 +93,9 @@ else
 fi
 
 # ── artisan commands above ran as root — hand storage & nginx back ──
-chown -R www-data:www-data storage bootstrap/cache /var/lib/nginx /run/nginx 2>/dev/null || true
+mkdir -p /var/lib/nginx/tmp/client_body /var/lib/nginx/tmp/fastcgi /var/lib/nginx/tmp/proxy /var/lib/nginx/tmp/scgi /var/lib/nginx/tmp/uwsgi /run/nginx
+chown -R www-data:www-data storage bootstrap/cache /var/lib/nginx /var/log/nginx /run/nginx 2>/dev/null || true
+chmod -R 775 /var/lib/nginx /run/nginx 2>/dev/null || true
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Backend is ready — starting services"

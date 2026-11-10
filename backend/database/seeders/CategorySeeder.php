@@ -12,15 +12,14 @@ class CategorySeeder extends Seeder
     /**
      * Run the database seeds.
      *
-     * Seeds categories based on reference sheet (Keuangan_September_2026.xlsx)
-     * with exact monthly estimates and budget group mappings.
+     * Seeds simplified, clear, non-redundant categories for expenses and incomes
+     * aligned with 50/30/20 budgeting.
      */
     public function run(): void
     {
         $users = User::all();
 
         foreach ($users as $user) {
-            // Mapping budget groups untuk user ini
             $budgetGroups = BudgetGroup::where('user_id', $user->id)
                 ->pluck('id', 'code')
                 ->all();
@@ -31,82 +30,75 @@ class CategorySeeder extends Seeder
             $emergencyId = $budgetGroups['emergency'] ?? null;
 
             $categories = [
-                // === PENGELUARAN (EXPENSE) DARI SHEET ===
-                // 1. Need (50%)
+                // === PENGELUARAN (EXPENSE) ===
+                // 1. Need (50%) - Kebutuhan Pokok Esensial
                 [
-                    'name' => 'Makan',
+                    'name' => 'Makanan & Minuman',
                     'type' => 'expense',
                     'budget_group_id' => $needId,
                     'monthly_estimate' => 1240000.00,
                     'is_active' => true,
                 ],
                 [
-                    'name' => 'Bensin',
+                    'name' => 'Transportasi & Bensin',
+                    'type' => 'expense',
+                    'budget_group_id' => $needId,
+                    'monthly_estimate' => 300000.00,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Tagihan & Utilitas',
                     'type' => 'expense',
                     'budget_group_id' => $needId,
                     'monthly_estimate' => 250000.00,
                     'is_active' => true,
                 ],
                 [
-                    'name' => 'Kuota',
+                    'name' => 'Kebutuhan Rumah Tangga & Operasional',
                     'type' => 'expense',
                     'budget_group_id' => $needId,
-                    'monthly_estimate' => 100000.00,
-                    'is_active' => true,
-                ],
-                [
-                    'name' => 'BPJS',
-                    'type' => 'expense',
-                    'budget_group_id' => $needId,
-                    'monthly_estimate' => 150000.00,
-                    'is_active' => true,
-                ],
-                [
-                    'name' => 'Laundry',
-                    'type' => 'expense',
-                    'budget_group_id' => $needId,
-                    'monthly_estimate' => 100000.00,
-                    'is_active' => true,
-                ],
-
-                // 2. Fun (30%)
-                [
-                    'name' => 'Skincare',
-                    'type' => 'expense',
-                    'budget_group_id' => $funId,
                     'monthly_estimate' => 200000.00,
                     'is_active' => true,
                 ],
+
+                // 2. Fun (30%) - Gaya Hidup & Rekreasi
                 [
-                    'name' => 'Jajan',
+                    'name' => 'Jajan & Kuliner',
                     'type' => 'expense',
                     'budget_group_id' => $funId,
                     'monthly_estimate' => 300000.00,
                     'is_active' => true,
                 ],
                 [
-                    'name' => 'Lainnya',
+                    'name' => 'Belanja & Hiburan',
                     'type' => 'expense',
                     'budget_group_id' => $funId,
+                    'monthly_estimate' => 400000.00,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Perawatan Diri & Skincare',
+                    'type' => 'expense',
+                    'budget_group_id' => $funId,
+                    'monthly_estimate' => 250000.00,
+                    'is_active' => true,
+                ],
+
+                // 3. Cadangan / Emergency
+                [
+                    'name' => 'Pengeluaran Lainnya & Tak Terduga',
+                    'type' => 'expense',
+                    'budget_group_id' => $emergencyId ?: $funId,
                     'monthly_estimate' => 500000.00,
                     'is_active' => true,
                 ],
 
-                // 3. Saving (20%)
+                // 4. Saving
                 [
-                    'name' => 'Tabungan Rutin',
+                    'name' => 'Tabungan & Investasi',
                     'type' => 'expense',
-                    'budget_group_id' => $savingId,
+                    'budget_group_id' => $savingId ?: $needId,
                     'monthly_estimate' => 790272.00,
-                    'is_active' => true,
-                ],
-
-                // 4. Emergency
-                [
-                    'name' => 'Dana Darurat',
-                    'type' => 'expense',
-                    'budget_group_id' => $emergencyId,
-                    'monthly_estimate' => 337089.60,
                     'is_active' => true,
                 ],
 
@@ -115,11 +107,25 @@ class CategorySeeder extends Seeder
                     'name' => 'Gaji Pokok',
                     'type' => 'income',
                     'budget_group_id' => null,
-                    'monthly_estimate' => 3971362.00,
+                    'monthly_estimate' => 4000000.00,
                     'is_active' => true,
                 ],
                 [
                     'name' => 'Bonus & Tunjangan',
+                    'type' => 'income',
+                    'budget_group_id' => null,
+                    'monthly_estimate' => 0.00,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Usaha & Freelance',
+                    'type' => 'income',
+                    'budget_group_id' => null,
+                    'monthly_estimate' => 0.00,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Hasil Investasi',
                     'type' => 'income',
                     'budget_group_id' => null,
                     'monthly_estimate' => 0.00,

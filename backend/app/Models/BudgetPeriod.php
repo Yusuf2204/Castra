@@ -47,4 +47,3 @@ class BudgetPeriod extends Model
         return $this->hasMany(CategoryBudgetAllocation::class, 'budget_period_id');
     }
 }
-

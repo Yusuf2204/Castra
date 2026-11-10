@@ -109,8 +109,19 @@ class BudgetPeriodController extends Controller
                         'allocated_amount' => $amount,
                     ]);
                 }
+            } elseif (! empty($periodData['total_income_allocated']) && $periodData['total_income_allocated'] > 0) {
+                // Auto generate based on dynamic budget group percentages
+                $dynamicMap = $this->computeDynamicAllocations($user, (float) $periodData['total_income_allocated'], $expenseCategories);
+                foreach ($expenseCategories as $cat) {
+                    $amount = $dynamicMap[$cat->id] ?? (float) $cat->monthly_estimate;
+                    $period->allocations()->create([
+                        'user_id' => $user->id,
+                        'category_id' => $cat->id,
+                        'allocated_amount' => $amount,
+                    ]);
+                }
             } else {
-                // Auto generate based on baseline estimate or envelope groups
+                // Fallback to baseline estimate
                 foreach ($expenseCategories as $cat) {
                     $amount = (float) $cat->monthly_estimate;
                     $period->allocations()->create([
@@ -260,5 +271,127 @@ class BudgetPeriodController extends Controller
             'errors' => null,
         ]);
     }
-}
 
+    /**
+     * Compute dynamic allocations based on total income and budget group percentages.
+     */
+    public function computeDynamicAllocations($user, float $totalIncome, $expenseCategories): array
+    {
+        if ($totalIncome <= 0) {
+            $result = [];
+            foreach ($expenseCategories as $cat) {
+                $result[$cat->id] = (float) $cat->monthly_estimate;
+            }
+            return $result;
+        }
+
+        // Group categories by budget_group_id
+        $grouped = $expenseCategories->groupBy(function ($cat) {
+            return $cat->budget_group_id ?: 'unassigned';
+        });
+
+        $allocations = [];
+
+        foreach ($grouped as $groupId => $catsInGroup) {
+            if ($groupId === 'unassigned') {
+                foreach ($catsInGroup as $cat) {
+                    $allocations[$cat->id] = (float) $cat->monthly_estimate;
+                }
+                continue;
+            }
+
+            $firstCat = $catsInGroup->first();
+            $percentage = (float) ($firstCat->budgetGroup?->percentage ?? 0);
+
+            if ($percentage <= 0) {
+                foreach ($catsInGroup as $cat) {
+                    $allocations[$cat->id] = 0.0;
+                }
+                continue;
+            }
+
+            $groupPool = round($totalIncome * ($percentage / 100), 2);
+
+            $totalBaseline = (float) $catsInGroup->sum(function ($c) {
+                return (float) $c->monthly_estimate;
+            });
+
+            $groupAllocatedSum = 0.0;
+            $maxCatId = null;
+            $maxAmount = -1;
+
+            foreach ($catsInGroup as $cat) {
+                if ($totalBaseline > 0) {
+                    $catAmount = round(((float) $cat->monthly_estimate / $totalBaseline) * $groupPool, 2);
+                } else {
+                    $catAmount = round($groupPool / $catsInGroup->count(), 2);
+                }
+
+                $allocations[$cat->id] = $catAmount;
+                $groupAllocatedSum += $catAmount;
+
+                if ($catAmount > $maxAmount) {
+                    $maxAmount = $catAmount;
+                    $maxCatId = $cat->id;
+                }
+            }
+
+            // Correct any rounding difference to ensure exact match with group pool
+            $roundingDiff = round($groupPool - $groupAllocatedSum, 2);
+            if ($roundingDiff != 0 && $maxCatId) {
+                $allocations[$maxCatId] = round($allocations[$maxCatId] + $roundingDiff, 2);
+            }
+        }
+
+        return $allocations;
+    }
+
+    /**
+     * Auto distribute budget allocations based on total income and budget group percentages.
+     */
+    public function autoDistributeAllocations(Request $request, BudgetPeriod $budgetPeriod)
+    {
+        if ($budgetPeriod->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        $user = $request->user();
+        $totalIncome = (float) ($request->input('total_income_allocated') ?? $budgetPeriod->total_income_allocated ?? 0);
+
+        if ($request->has('total_income_allocated')) {
+            $budgetPeriod->update(['total_income_allocated' => $totalIncome]);
+        }
+
+        $expenseCategories = $user->categories()
+            ->where('type', 'expense')
+            ->where('is_active', true)
+            ->with('budgetGroup')
+            ->get();
+
+        $dynamicMap = $this->computeDynamicAllocations($user, $totalIncome, $expenseCategories);
+
+        DB::transaction(function () use ($user, $budgetPeriod, $expenseCategories, $dynamicMap) {
+            foreach ($expenseCategories as $cat) {
+                $amount = $dynamicMap[$cat->id] ?? 0.0;
+                CategoryBudgetAllocation::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'budget_period_id' => $budgetPeriod->id,
+                        'category_id' => $cat->id,
+                    ],
+                    [
+                        'allocated_amount' => $amount,
+                    ]
+                );
+            }
+        });
+
+        $budgetPeriod->load(['allocations.category.budgetGroup']);
+
+        return response()->json([
+            'data' => CategoryBudgetAllocationResource::collection($budgetPeriod->allocations)->resolve(),
+            'message' => 'Alokasi berhasil dihitung dan dibagi otomatis sesuai porsi gaji',
+            'errors' => null,
+        ]);
+    }
+}

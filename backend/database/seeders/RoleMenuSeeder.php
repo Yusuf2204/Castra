@@ -35,7 +35,7 @@ class RoleMenuSeeder extends Seeder
                 '/expenses',
                 '/reports',
                 '/master',
-                '/master/income-sources',
+                '/master/accounts',
                 '/master/categories',
                 '/master/budget-groups',
                 '/master/budget-periods',

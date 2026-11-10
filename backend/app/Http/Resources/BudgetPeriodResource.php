@@ -25,4 +25,3 @@ class BudgetPeriodResource extends JsonResource
         ];
     }
 }
-

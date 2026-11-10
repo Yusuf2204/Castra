@@ -28,4 +28,3 @@ class CategoryBudgetAllocationResource extends JsonResource
         ];
     }
 }
-

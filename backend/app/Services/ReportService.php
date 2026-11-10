@@ -37,6 +37,7 @@ class ReportService
                 ->sum('amount');
 
             $expense = (float) $user->expenseTransactions()
+                ->whereNull('parent_id')
                 ->whereYear('transaction_date', $year)
                 ->whereMonth('transaction_date', $m)
                 ->sum('amount');
@@ -119,6 +120,7 @@ class ReportService
                     : (float) $cat->monthly_estimate;
 
                 $actual = (float) $user->expenseTransactions()
+                    ->whereNull('parent_id')
                     ->where('category_id', $cat->id)
                     ->whereBetween('transaction_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
                     ->sum('amount');
@@ -188,6 +190,7 @@ class ReportService
         foreach ($categories as $cat) {
             $estimate = (float) $cat->monthly_estimate;
             $actual = (float) $user->expenseTransactions()
+                ->whereNull('parent_id')
                 ->where('category_id', $cat->id)
                 ->whereYear('transaction_date', $date->year)
                 ->whereMonth('transaction_date', $date->month)
@@ -249,6 +252,7 @@ class ReportService
         $date = Carbon::createFromFormat('Y-m', $monthStr);
 
         $totalMonthExpense = (float) $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->whereYear('transaction_date', $date->year)
             ->whereMonth('transaction_date', $date->month)
             ->sum('amount');
@@ -263,6 +267,7 @@ class ReportService
 
         foreach ($categories as $cat) {
             $actual = (float) $user->expenseTransactions()
+                ->whereNull('parent_id')
                 ->where('category_id', $cat->id)
                 ->whereYear('transaction_date', $date->year)
                 ->whereMonth('transaction_date', $date->month)
@@ -327,6 +332,7 @@ class ReportService
             ->sum('amount');
 
         $monthExpense = (float) $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->whereYear('transaction_date', $now->year)
             ->whereMonth('transaction_date', $now->month)
             ->sum('amount');
@@ -335,7 +341,7 @@ class ReportService
 
         // All-Time KPIs
         $allTimeIncome = (float) $user->incomeTransactions()->sum('amount');
-        $allTimeExpense = (float) $user->expenseTransactions()->sum('amount');
+        $allTimeExpense = (float) $user->expenseTransactions()->whereNull('parent_id')->sum('amount');
         $allTimeNet = $allTimeIncome - $allTimeExpense;
 
         // Budget comparison (uses active period if exists, otherwise current month)
@@ -361,6 +367,7 @@ class ReportService
             ]);
 
         $recentExpenses = $user->expenseTransactions()
+            ->whereNull('parent_id')
             ->with(['category.budgetGroup'])
             ->orderByDesc('transaction_date')
             ->orderByDesc('id')
@@ -375,6 +382,12 @@ class ReportService
                 'notes' => $tx->notes,
             ]);
 
+        $accounts = $user->accounts()->where('is_active', true)->get();
+        $totalCashBalance = (float) $accounts->sum('current_balance');
+        $pettyCashAccount = $accounts->where('type', 'petty_cash')->first();
+        $pettyCashBalance = $pettyCashAccount ? (float) $pettyCashAccount->current_balance : 0.0;
+        $pettyCashLimit = $pettyCashAccount ? (float) $pettyCashAccount->imprest_limit : null;
+
         return [
             'month' => $currentMonthStr,
             'kpis' => [
@@ -384,13 +397,203 @@ class ReportService
                 'all_time_income' => $allTimeIncome,
                 'all_time_expense' => $allTimeExpense,
                 'all_time_net' => $allTimeNet,
+                'total_cash_balance' => $totalCashBalance,
+                'petty_cash_balance' => $pettyCashBalance,
+                'petty_cash_limit' => $pettyCashLimit,
+                'petty_cash_account_id' => $pettyCashAccount?->id,
                 'total_budget_estimate' => $budgetComparison['total_estimated'],
                 'budget_usage_percentage' => $budgetComparison['overall_usage_percentage'],
                 'period_mode' => $budgetComparison['period_mode'],
                 'active_period' => $budgetComparison['period'] ?? null,
             ],
+            'accounts' => $accounts->map(fn ($acc) => [
+                'id' => $acc->id,
+                'name' => $acc->name,
+                'type' => $acc->type,
+                'currency' => $acc->currency,
+                'current_balance' => (float) $acc->current_balance,
+                'imprest_limit' => $acc->imprest_limit !== null ? (float) $acc->imprest_limit : null,
+            ])->values()->all(),
             'recent_incomes' => $recentIncomes,
             'recent_expenses' => $recentExpenses,
+        ];
+    }
+
+    public function getAccountStatement(User $user, int $accountId, ?string $startDate = null, ?string $endDate = null): array
+    {
+        $account = $user->accounts()->findOrFail($accountId);
+
+        $now = Carbon::now();
+        $startDate = $startDate ?: $now->startOfMonth()->format('Y-m-d');
+        $endDate = $endDate ?: $now->endOfMonth()->format('Y-m-d');
+
+        // Opening balance calculation before $startDate
+        $priorIncomes = (float) $user->incomeTransactions()
+            ->where('account_id', $accountId)
+            ->where('transaction_date', '<', $startDate)
+            ->sum('amount');
+
+        $priorExpenses = (float) $user->expenseTransactions()
+            ->whereNull('parent_id')
+            ->where('account_id', $accountId)
+            ->where('transaction_date', '<', $startDate)
+            ->sum('amount');
+
+        $priorTransfersIn = (float) $user->fundTransfers()
+            ->where('to_account_id', $accountId)
+            ->where('transfer_date', '<', $startDate)
+            ->sum('amount');
+
+        $priorTransfersOut = (float) $user->fundTransfers()
+            ->where('from_account_id', $accountId)
+            ->where('transfer_date', '<', $startDate)
+            ->sum('amount');
+
+        $openingBalance = (float) $account->initial_balance + $priorIncomes - $priorExpenses + $priorTransfersIn - $priorTransfersOut;
+
+        // Transactions within date range
+        $incomes = $user->incomeTransactions()
+            ->where('account_id', $accountId)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->with(['incomeSource', 'category'])
+            ->get();
+
+        $expenses = $user->expenseTransactions()
+            ->whereNull('parent_id')
+            ->where('account_id', $accountId)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->with(['category'])
+            ->get();
+
+        $transfersIn = $user->fundTransfers()
+            ->where('to_account_id', $accountId)
+            ->whereBetween('transfer_date', [$startDate, $endDate])
+            ->with(['fromAccount'])
+            ->get();
+
+        $transfersOut = $user->fundTransfers()
+            ->where('from_account_id', $accountId)
+            ->whereBetween('transfer_date', [$startDate, $endDate])
+            ->with(['toAccount'])
+            ->get();
+
+        $merged = [];
+
+        foreach ($incomes as $inc) {
+            $date = $inc->transaction_date?->format('Y-m-d') ?? (string) $inc->transaction_date;
+            $merged[] = [
+                'id' => $inc->id,
+                'source_type' => 'income',
+                'date' => $date,
+                'voucher_no' => $inc->voucher_no,
+                'type' => 'Masuk',
+                'category' => $inc->category?->name ?? 'Pemasukan',
+                'description' => $inc->notes ?: ($inc->incomeSource?->name ?? 'Penerimaan Dana'),
+                'payee' => $inc->incomeSource?->name ?? '-',
+                'amount_in' => (float) $inc->amount,
+                'amount_out' => 0.0,
+                'attachment_path' => $inc->attachment_path,
+                'attachment_url' => $inc->attachment_url,
+            ];
+        }
+
+        foreach ($expenses as $exp) {
+            $date = $exp->transaction_date?->format('Y-m-d') ?? (string) $exp->transaction_date;
+            $merged[] = [
+                'id' => $exp->id,
+                'source_type' => 'expense',
+                'date' => $date,
+                'voucher_no' => $exp->voucher_no,
+                'type' => 'Keluar',
+                'category' => $exp->category?->name ?? 'Pengeluaran',
+                'description' => $exp->notes ?: ($exp->category?->name ?? 'Pengeluaran Kas'),
+                'payee' => $exp->payee ?: '-',
+                'amount_in' => 0.0,
+                'amount_out' => (float) $exp->amount,
+                'attachment_path' => $exp->attachment_path,
+                'attachment_url' => $exp->attachment_url,
+            ];
+        }
+
+        foreach ($transfersIn as $trf) {
+            $date = $trf->transfer_date?->format('Y-m-d') ?? (string) $trf->transfer_date;
+            $merged[] = [
+                'id' => $trf->id,
+                'source_type' => 'transfer_in',
+                'date' => $date,
+                'voucher_no' => $trf->reference_no,
+                'type' => 'Transfer Masuk',
+                'category' => 'Mutasi Kas',
+                'description' => $trf->notes ?: ('Transfer dari '.($trf->fromAccount?->name ?? 'Akun Lain')),
+                'payee' => $trf->fromAccount?->name ?? '-',
+                'amount_in' => (float) $trf->amount,
+                'amount_out' => 0.0,
+                'attachment_path' => $trf->attachment_path,
+                'attachment_url' => $trf->attachment_url,
+            ];
+        }
+
+        foreach ($transfersOut as $trf) {
+            $date = $trf->transfer_date?->format('Y-m-d') ?? (string) $trf->transfer_date;
+            $merged[] = [
+                'id' => $trf->id,
+                'source_type' => 'transfer_out',
+                'date' => $date,
+                'voucher_no' => $trf->reference_no,
+                'type' => 'Transfer Keluar',
+                'category' => 'Mutasi Kas',
+                'description' => $trf->notes ?: ('Transfer ke '.($trf->toAccount?->name ?? 'Akun Lain')),
+                'payee' => $trf->toAccount?->name ?? '-',
+                'amount_in' => 0.0,
+                'amount_out' => (float) $trf->amount,
+                'attachment_path' => $trf->attachment_path,
+                'attachment_url' => $trf->attachment_url,
+            ];
+        }
+
+        // Sort chronologically by date ascending, then source_type, then id
+        usort($merged, function ($a, $b) {
+            $dateCmp = strcmp($a['date'], $b['date']);
+            if ($dateCmp !== 0) {
+                return $dateCmp;
+            }
+
+            return $a['id'] <=> $b['id'];
+        });
+
+        // Compute running balance
+        $currentRunning = $openingBalance;
+        $totalIn = 0.0;
+        $totalOut = 0.0;
+
+        foreach ($merged as &$item) {
+            $currentRunning = $currentRunning + $item['amount_in'] - $item['amount_out'];
+            $item['running_balance'] = $currentRunning;
+            $totalIn += $item['amount_in'];
+            $totalOut += $item['amount_out'];
+            $item['has_receipt'] = !empty($item['attachment_path']);
+        }
+        unset($item);
+
+        return [
+            'account' => [
+                'id' => $account->id,
+                'name' => $account->name,
+                'type' => $account->type,
+                'account_number' => $account->account_number,
+                'bank_name' => $account->bank_name,
+                'imprest_limit' => $account->imprest_limit !== null ? (float) $account->imprest_limit : null,
+                'current_balance' => (float) $account->current_balance,
+            ],
+            'period' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
+            'opening_balance' => $openingBalance,
+            'total_in' => $totalIn,
+            'total_out' => $totalOut,
+            'closing_balance' => $currentRunning,
+            'transactions' => $merged,
         ];
     }
 }

@@ -37,25 +37,39 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('company', [CompanyController::class, 'update']);
 
     // Master Keuangan
+    Route::apiResource('accounts', \App\Http\Controllers\Api\AccountController::class);
     Route::apiResource('income-sources', IncomeSourceController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('budget-groups', BudgetGroupController::class);
     Route::get('budget-periods/{budget_period}/allocations', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'getAllocations']);
     Route::put('budget-periods/{budget_period}/allocations', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'updateAllocations']);
+    Route::post('budget-periods/{budget_period}/auto-distribute', [\App\Http\Controllers\Api\BudgetPeriodController::class, 'autoDistributeAllocations']);
     Route::apiResource('budget-periods', \App\Http\Controllers\Api\BudgetPeriodController::class);
+
+    // Mutasi Kas (Fund Transfers / Top-Up Kas Kecil)
+    Route::apiResource('fund-transfers', \App\Http\Controllers\Api\FundTransferController::class)->except(['update']);
 
     // Pemasukan
     Route::get('incomes/calendar', [IncomeController::class, 'calendar']);
     Route::post('incomes/scan-receipt', [IncomeController::class, 'scanReceipt']);
+    Route::post('incomes/upload-receipt', [IncomeController::class, 'uploadReceipt']);
+    Route::get('incomes/{income}/pdf', [IncomeController::class, 'exportPdf']);
     Route::apiResource('incomes', IncomeController::class);
 
     // Pengeluaran
     Route::get('expenses/calendar', [ExpenseController::class, 'calendar']);
     Route::post('expenses/scan-receipt', [ExpenseController::class, 'scanReceipt']);
+    Route::post('expenses/upload-receipt', [ExpenseController::class, 'uploadReceipt']);
+    Route::post('expenses/{expense}/approve', [ExpenseController::class, 'approve']);
+    Route::post('expenses/{expense}/reject', [ExpenseController::class, 'reject']);
+    Route::post('expenses/{expense}/submit', [ExpenseController::class, 'submit']);
+    Route::get('expenses/{expense}/pdf', [ExpenseController::class, 'exportPdf']);
     Route::apiResource('expenses', ExpenseController::class);
 
     // Laporan
     Route::get('reports/cash-flow', [ReportController::class, 'cashFlow']);
     Route::get('reports/budget-comparison', [ReportController::class, 'budgetComparison']);
     Route::get('reports/category-breakdown', [ReportController::class, 'categoryBreakdown']);
+    Route::get('reports/account-statement/pdf', [ReportController::class, 'accountStatementPdf']);
+    Route::get('reports/account-statement', [ReportController::class, 'accountStatement']);
 });

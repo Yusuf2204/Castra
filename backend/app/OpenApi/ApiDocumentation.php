@@ -603,9 +603,11 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(
  *         property="allocations",
  *         type="array",
+ *
  *         @OA\Items(
  *             type="object",
  *             required={"category_id","allocated_amount"},
+ *
  *             @OA\Property(property="category_id", type="integer", example=27),
  *             @OA\Property(property="allocated_amount", type="number", format="float", example=1250000.0),
  *             @OA\Property(property="notes", type="string", nullable=true, example="Penyesuaian")
@@ -2114,6 +2116,7 @@ class ApiDocumentation
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/BudgetPeriodRequest")
      *     ),
      *
@@ -2122,6 +2125,7 @@ class ApiDocumentation
      *         description="Budget period created",
      *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
      *             @OA\Property(property="message", type="string", example="Periode anggaran berhasil dibuat"),
      *             @OA\Property(property="errors", nullable=true, example=null)
@@ -2148,6 +2152,7 @@ class ApiDocumentation
      *         description="Budget period detail",
      *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
      *             @OA\Property(property="message", type="string", example="OK"),
      *             @OA\Property(property="errors", nullable=true, example=null)
@@ -2168,6 +2173,7 @@ class ApiDocumentation
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/BudgetPeriodRequest")
      *     ),
      *
@@ -2176,6 +2182,7 @@ class ApiDocumentation
      *         description="Budget period updated",
      *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
      *             @OA\Property(property="message", type="string", example="Periode anggaran berhasil diperbarui"),
      *             @OA\Property(property="errors", nullable=true, example=null)
@@ -2200,6 +2207,7 @@ class ApiDocumentation
      *         description="Budget period deleted",
      *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", nullable=true, example=null),
      *             @OA\Property(property="message", type="string", example="Periode anggaran berhasil dihapus"),
      *             @OA\Property(property="errors", nullable=true, example=null)
@@ -2223,6 +2231,7 @@ class ApiDocumentation
      *         description="List of category allocations",
      *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/CategoryBudgetAllocation")),
      *             @OA\Property(property="message", type="string", example="OK"),
      *             @OA\Property(property="errors", nullable=true, example=null)
@@ -2243,6 +2252,7 @@ class ApiDocumentation
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/CategoryBudgetAllocationBatchRequest")
      *     ),
      *
@@ -2251,6 +2261,7 @@ class ApiDocumentation
      *         description="Allocations updated",
      *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", ref="#/components/schemas/BudgetPeriod"),
      *             @OA\Property(property="message", type="string", example="Alokasi anggaran kategori berhasil disimpan"),
      *             @OA\Property(property="errors", nullable=true, example=null)
@@ -2340,10 +2351,13 @@ class ApiDocumentation
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
+     *
      *             @OA\Schema(
      *                 required={"receipt"},
+     *
      *                 @OA\Property(property="receipt", type="string", format="binary", description="Proof of transfer/income image file (jpeg, png, webp)")
      *             )
      *         )
@@ -2352,7 +2366,9 @@ class ApiDocumentation
      *     @OA\Response(
      *         response=200,
      *         description="Income proof parsed successfully",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -2370,6 +2386,7 @@ class ApiDocumentation
      *             @OA\Property(property="errors", nullable=true, example=null)
      *         )
      *     ),
+     *
      *     @OA\Response(response=401, description="Unauthorized"),
      *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
      * )
@@ -2569,10 +2586,13 @@ class ApiDocumentation
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
+     *
      *             @OA\Schema(
      *                 required={"receipt"},
+     *
      *                 @OA\Property(property="receipt", type="string", format="binary", description="Receipt image file (jpeg, png, webp)")
      *             )
      *         )
@@ -2581,7 +2601,9 @@ class ApiDocumentation
      *     @OA\Response(
      *         response=200,
      *         description="Receipt parsed successfully",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -2597,6 +2619,7 @@ class ApiDocumentation
      *             @OA\Property(property="errors", nullable=true, example=null)
      *         )
      *     ),
+     *
      *     @OA\Response(response=401, description="Unauthorized"),
      *     @OA\Response(response=422, description="Validation error")
      * )

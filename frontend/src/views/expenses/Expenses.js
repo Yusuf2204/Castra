@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import {
   CCard,
   CCardBody,
@@ -25,6 +25,7 @@ import ExpensesTable from './ExpensesTable'
 import ExpenseModal from './ExpenseModal'
 import api from '../../services/api'
 import { toastError, toastSuccess } from '../../services/toastService'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const MONTH_NAMES = [
   'Januari',
@@ -79,6 +80,13 @@ const Expenses = () => {
     category_id: '',
     budget_group_id: '',
   })
+
+  const categoryFilterOptions = useMemo(() => {
+    return categories.map((c) => ({
+      value: c.id,
+      label: c.name,
+    }))
+  }, [categories])
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false)
@@ -146,12 +154,14 @@ const Expenses = () => {
   }, [monthStr, tablePage, filters])
 
   useEffect(() => {
-    if (viewMode === 'calendar') {
-      fetchCalendar()
-    } else {
+    fetchCalendar()
+  }, [fetchCalendar])
+
+  useEffect(() => {
+    if (viewMode === 'table') {
       fetchTable()
     }
-  }, [viewMode, fetchCalendar, fetchTable])
+  }, [viewMode, fetchTable])
 
   // Month Navigation
   const handlePrevMonth = () => {
@@ -197,11 +207,8 @@ const Expenses = () => {
   }
 
   const handleSaved = () => {
-    if (viewMode === 'calendar') {
-      fetchCalendar()
-    } else {
-      fetchTable()
-    }
+    fetchCalendar()
+    fetchTable()
   }
 
   const handleEditItemFromTable = (item) => {
@@ -264,7 +271,10 @@ const Expenses = () => {
               <CButton
                 size="sm"
                 color="outline-secondary"
-                onClick={viewMode === 'calendar' ? fetchCalendar : fetchTable}
+                onClick={() => {
+                  fetchCalendar()
+                  if (viewMode === 'table') fetchTable()
+                }}
                 title="Muat Ulang"
               >
                 <CIcon icon={cilReload} />
@@ -298,19 +308,24 @@ const Expenses = () => {
           </div>
 
           {/* Month Summary Banner */}
-          <div className="mt-3 p-2 px-3 rounded bg-danger-subtle border border-danger-subtle d-flex flex-wrap justify-content-between align-items-center">
-            <div className="text-danger-emphasis">
-              <small className="text-uppercase fw-semibold d-block">
-                Total Pengeluaran {MONTH_NAMES[month - 1]} {year}
-              </small>
-              <h4 className="fw-bold mb-0 text-danger">
-                {formatCurrency(calendarData?.total_month || 0)}
+          <div className="mt-3 p-3 rounded bg-body-tertiary border d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <span className="text-secondary text-uppercase fw-semibold small d-block mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+                Total Pengeluaran &bull; {MONTH_NAMES[month - 1]} {year}
+              </span>
+              <h4 className="fw-bold mb-0 text-danger d-flex align-items-baseline gap-1">
+                <span>{formatCurrency(calendarData?.total_month || 0)}</span>
               </h4>
             </div>
-            <div>
-              <CBadge color="danger" className="fs-6 px-3 py-2">
-                {calendarData?.transaction_count || 0} Transaksi Keluar
-              </CBadge>
+            <div className="d-flex align-items-center gap-2">
+              {viewMode === 'table' && (filters.search || filters.category_id || filters.budget_group_id) && tableMeta && (
+                <span className="badge bg-secondary-subtle text-body border border-secondary-subtle px-3 py-2 fs-6 fw-normal">
+                  Hasil Filter: <strong>{tableMeta.total}</strong> transaksi
+                </span>
+              )}
+              <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 fw-semibold">
+                {calendarData?.transaction_count || 0} Transaksi Keluar Bulan Ini
+              </span>
             </div>
           </div>
         </CCardHeader>
@@ -340,20 +355,16 @@ const Expenses = () => {
                 </CCol>
 
                 <CCol md={3}>
-                  <CFormSelect
+                  <CustomSelect
                     value={filters.category_id}
                     onChange={(e) => {
                       setTablePage(1)
                       setFilters((prev) => ({ ...prev, category_id: e.target.value }))
                     }}
-                  >
-                    <option value="">Semua Kategori</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                    options={categoryFilterOptions}
+                    placeholder="Semua Kategori"
+                    isClearable
+                  />
                 </CCol>
 
                 <CCol md={3}>
@@ -379,6 +390,7 @@ const Expenses = () => {
                 loading={loadingTable}
                 onEdit={handleEditItemFromTable}
                 onDelete={handleDeleteItemFromTable}
+                onReload={fetchTable}
               />
 
               {tableMeta && (

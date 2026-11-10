@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import {
   CCard,
   CCardBody,
@@ -39,7 +39,7 @@ import {
   cilWarning,
 } from '@coreui/icons'
 import api from '../../../services/api'
-import { toastSuccess, toastError } from '../../../services/toastService'
+import { toastSuccess, toastError, toastWarning } from '../../../services/toastService'
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return 'Rp 0'
@@ -140,7 +140,8 @@ const BudgetPeriods = () => {
       name: period.name || '',
       start_date: period.start_date || '',
       end_date: period.end_date || '',
-      total_income_allocated: period.total_income_allocated != null ? String(period.total_income_allocated) : '',
+      total_income_allocated:
+        period.total_income_allocated != null ? String(period.total_income_allocated) : '',
       is_active: Boolean(period.is_active),
       notes: period.notes || '',
     })
@@ -234,10 +235,52 @@ const BudgetPeriods = () => {
 
   const totalAllocatedInModal = allocationsList.reduce(
     (sum, a) => sum + Number(a.allocated_amount || 0),
-    0
+    0,
   )
   const incomeAllocated = selectedPeriod?.total_income_allocated || 0
   const unallocatedDifference = incomeAllocated - totalAllocatedInModal
+
+  const groupSummary = useMemo(() => {
+    if (!allocationsList || allocationsList.length === 0) return []
+    const groupsMap = {}
+    allocationsList.forEach((item) => {
+      const g = item.budget_group
+      if (g && g.id && !groupsMap[g.id]) {
+        const percentage = Number(g.percentage || 0)
+        const pool = incomeAllocated > 0 ? Math.round(incomeAllocated * (percentage / 100)) : 0
+        groupsMap[g.id] = {
+          id: g.id,
+          name: g.name,
+          percentage,
+          pool,
+        }
+      }
+    })
+    return Object.values(groupsMap)
+  }, [allocationsList, incomeAllocated])
+
+  const handleAutoDistribute = async () => {
+    if (!selectedPeriod) return
+    if (incomeAllocated <= 0) {
+      toastWarning('Pemasukan / Target Gaji pada siklus ini belum diisi (masih Rp 0).')
+      return
+    }
+
+    try {
+      setSavingAllocations(true)
+      const res = await api.post(`/budget-periods/${selectedPeriod.id}/auto-distribute`, {
+        total_income_allocated: incomeAllocated,
+      })
+      const list = res.data?.data || []
+      setAllocationsList(list.map((item) => ({ ...item })))
+      toastSuccess('Pagu berhasil dihitung dan dibagi otomatis sesuai persentase kelompok anggaran!')
+      fetchPeriods()
+    } catch (err) {
+      toastError(err.userMessage || 'Gagal menghitung alokasi anggaran otomatis')
+    } finally {
+      setSavingAllocations(false)
+    }
+  }
 
   return (
     <div>
@@ -247,7 +290,9 @@ const BudgetPeriods = () => {
         <div>
           <div className="fw-bold">Anggaran Berbasis Siklus Gajian</div>
           <small>
-            Tanggal gajian Anda bisa bergeser setiap bulannya. Tentukan rentang tanggal siklus di sini dan sesuaikan batas nominal estimasi pengeluaran per kategori secara fleksibel mengikuti penghasilan utama Anda.
+            Tanggal gajian Anda bisa bergeser setiap bulannya. Tentukan rentang tanggal siklus di
+            sini dan sesuaikan batas nominal estimasi pengeluaran per kategori secara fleksibel
+            mengikuti penghasilan utama Anda.
           </small>
         </div>
       </CAlert>
@@ -259,7 +304,13 @@ const BudgetPeriods = () => {
             <CCardHeader className="d-flex justify-content-between align-items-center bg-transparent py-3">
               <span className="fw-semibold">Daftar Siklus Anggaran</span>
               <div className="d-flex gap-2">
-                <CButton size="sm" color="secondary" variant="outline" onClick={fetchPeriods} title="Muat Ulang">
+                <CButton
+                  size="sm"
+                  color="secondary"
+                  variant="outline"
+                  onClick={fetchPeriods}
+                  title="Muat Ulang"
+                >
                   <CIcon icon={cilReload} />
                 </CButton>
                 <CButton size="sm" color="primary" onClick={handleOpenCreatePeriod}>
@@ -296,7 +347,7 @@ const BudgetPeriods = () => {
                       return (
                         <CTableRow
                           key={p.id}
-                          className={isSelected ? 'table-primary bg-opacity-25' : ''}
+                          className={isSelected ? 'table-primary border-start border-3 border-primary' : ''}
                           style={{ cursor: 'pointer' }}
                           onClick={() => setSelectedPeriod(p)}
                         >
@@ -365,7 +416,8 @@ const BudgetPeriods = () => {
                 <span className="fw-semibold">Pagu Kategori Terpilih</span>
                 {selectedPeriod && (
                   <div className="small text-body-secondary">
-                    {selectedPeriod.name} ({formatDateShort(selectedPeriod.start_date)} - {formatDateShort(selectedPeriod.end_date)})
+                    {selectedPeriod.name} ({formatDateShort(selectedPeriod.start_date)} -{' '}
+                    {formatDateShort(selectedPeriod.end_date)})
                   </div>
                 )}
               </div>
@@ -392,14 +444,20 @@ const BudgetPeriods = () => {
                   <div className="p-3 bg-body-tertiary border rounded mb-3">
                     <div className="d-flex justify-content-between mb-1">
                       <span className="small text-body-secondary">Gaji/Pemasukan Pokok:</span>
-                      <span className="fw-bold text-body">{formatCurrency(selectedPeriod.total_income_allocated)}</span>
+                      <span className="fw-bold text-body">
+                        {formatCurrency(selectedPeriod.total_income_allocated)}
+                      </span>
                     </div>
                     <div className="d-flex justify-content-between mb-1">
                       <span className="small text-body-secondary">Total Pagu Kategori:</span>
-                      <span className="fw-bold text-primary">{formatCurrency(selectedPeriod.total_allocated)}</span>
+                      <span className="fw-bold text-primary">
+                        {formatCurrency(selectedPeriod.total_allocated)}
+                      </span>
                     </div>
                     <div className="d-flex justify-content-between pt-1 border-top">
-                      <span className="small text-body-secondary">Sisa Cadangan / Belum Terbagi:</span>
+                      <span className="small text-body-secondary">
+                        Sisa Cadangan / Belum Terbagi:
+                      </span>
                       <span
                         className={`fw-bold ${
                           selectedPeriod.total_income_allocated - selectedPeriod.total_allocated < 0
@@ -407,7 +465,9 @@ const BudgetPeriods = () => {
                             : 'text-success'
                         }`}
                       >
-                        {formatCurrency(selectedPeriod.total_income_allocated - selectedPeriod.total_allocated)}
+                        {formatCurrency(
+                          selectedPeriod.total_income_allocated - selectedPeriod.total_allocated,
+                        )}
                       </span>
                     </div>
                   </div>
@@ -444,7 +504,10 @@ const BudgetPeriods = () => {
                         ))
                       ) : (
                         <CTableRow>
-                          <CTableDataCell colSpan={3} className="text-center py-3 text-body-secondary">
+                          <CTableDataCell
+                            colSpan={3}
+                            className="text-center py-3 text-body-secondary"
+                          >
                             Belum ada alokasi kategori untuk siklus ini.
                           </CTableDataCell>
                         </CTableRow>
@@ -461,7 +524,9 @@ const BudgetPeriods = () => {
       {/* Modal Buat / Edit Siklus */}
       <CModal visible={periodModalOpen} onClose={() => setPeriodModalOpen(false)}>
         <CModalHeader>
-          <CModalTitle>{editingPeriodId ? 'Ubah Siklus Anggaran' : 'Buat Siklus Anggaran Baru'}</CModalTitle>
+          <CModalTitle>
+            {editingPeriodId ? 'Ubah Siklus Anggaran' : 'Buat Siklus Anggaran Baru'}
+          </CModalTitle>
         </CModalHeader>
         <CForm onSubmit={handleSavePeriod}>
           <CModalBody>
@@ -471,7 +536,7 @@ const BudgetPeriods = () => {
                 required
                 value={periodForm.name}
                 onChange={(e) => setPeriodForm({ ...periodForm, name: e.target.value })}
-                placeholder="Contoh: Siklus 5 Okt - 4 Nov 2026"
+                placeholder="Nama siklus anggaran..."
               />
             </div>
 
@@ -500,7 +565,9 @@ const BudgetPeriods = () => {
             </CRow>
 
             <div className="mb-3">
-              <label className="form-label fw-semibold">Gaji Pokok / Pemasukan yang Dialokasikan</label>
+              <label className="form-label fw-semibold">
+                Gaji Pokok / Pemasukan yang Dialokasikan
+              </label>
               <CInputGroup>
                 <CInputGroupText>Rp</CInputGroupText>
                 <CFormInput
@@ -508,7 +575,9 @@ const BudgetPeriods = () => {
                   min="0"
                   placeholder="0"
                   value={periodForm.total_income_allocated}
-                  onChange={(e) => setPeriodForm({ ...periodForm, total_income_allocated: e.target.value })}
+                  onChange={(e) =>
+                    setPeriodForm({ ...periodForm, total_income_allocated: e.target.value })
+                  }
                 />
               </CInputGroup>
             </div>
@@ -519,7 +588,7 @@ const BudgetPeriods = () => {
                 rows={2}
                 value={periodForm.notes}
                 onChange={(e) => setPeriodForm({ ...periodForm, notes: e.target.value })}
-                placeholder="Contoh: Gaji mundur 2 hari karena akhir pekan"
+                placeholder="Catatan siklus anggaran (opsional)..."
               />
             </div>
 
@@ -541,28 +610,67 @@ const BudgetPeriods = () => {
       </CModal>
 
       {/* Modal Edit Alokasi Pagu Kategori */}
-      <CModal size="lg" visible={allocationsModalOpen} onClose={() => setAllocationsModalOpen(false)}>
+      <CModal
+        size="lg"
+        visible={allocationsModalOpen}
+        onClose={() => setAllocationsModalOpen(false)}
+      >
         <CModalHeader>
-          <CModalTitle>
-            Penyesuaian Pagu Kategori: {selectedPeriod?.name}
-          </CModalTitle>
+          <CModalTitle>Penyesuaian Pagu Kategori: {selectedPeriod?.name}</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <div className="p-3 bg-body-tertiary border rounded mb-3 d-flex justify-content-between align-items-center">
-            <div>
-              <span className="small text-body-secondary d-block">Target Gaji:</span>
-              <strong className="fs-6 text-body">{formatCurrency(incomeAllocated)}</strong>
+          <div className="p-3 bg-body-tertiary border rounded mb-3">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                <span className="small text-body-secondary d-block">Target Gaji:</span>
+                <strong className="fs-6 text-body">{formatCurrency(incomeAllocated)}</strong>
+              </div>
+              <div>
+                <span className="small text-body-secondary d-block">Total Pagu Terbagi:</span>
+                <strong className="fs-6 text-primary">{formatCurrency(totalAllocatedInModal)}</strong>
+              </div>
+              <div>
+                <span className="small text-body-secondary d-block">Sisa / Selisih:</span>
+                <strong
+                  className={`fs-6 ${unallocatedDifference < 0 ? 'text-danger' : 'text-success'}`}
+                >
+                  {formatCurrency(unallocatedDifference)}
+                </strong>
+              </div>
             </div>
-            <div>
-              <span className="small text-body-secondary d-block">Total Pagu Terbagi:</span>
-              <strong className="fs-6 text-primary">{formatCurrency(totalAllocatedInModal)}</strong>
-            </div>
-            <div>
-              <span className="small text-body-secondary d-block">Sisa / Selisih:</span>
-              <strong className={`fs-6 ${unallocatedDifference < 0 ? 'text-danger' : 'text-success'}`}>
-                {formatCurrency(unallocatedDifference)}
-              </strong>
-            </div>
+
+            {groupSummary.length > 0 && (
+              <div className="pt-2 border-top d-flex flex-wrap gap-2 align-items-center">
+                <span className="small text-body-secondary me-1">Porsi Master:</span>
+                {groupSummary.map((g) => (
+                  <span
+                    key={g.id}
+                    className="badge bg-body text-body border py-1 px-2"
+                    title={`Porsi ${g.percentage}% dari Target Gaji`}
+                  >
+                    <span className="fw-semibold">{g.name}</span> ({g.percentage}%):{' '}
+                    <strong className="text-primary">{formatCurrency(g.pool)}</strong>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="small text-body-secondary fw-semibold">
+              Rincian Alokasi Kategori Belanja:
+            </span>
+            <CButton
+              size="sm"
+              color="primary"
+              variant="outline"
+              onClick={handleAutoDistribute}
+              disabled={incomeAllocated <= 0 || savingAllocations}
+              className="d-flex align-items-center gap-1"
+            >
+              <CIcon icon={cilReload} />
+              Hitung Otomatis dari Porsi Gaji
+            </CButton>
           </div>
 
           <CTable hover responsive align="middle">
@@ -581,9 +689,7 @@ const BudgetPeriods = () => {
                     {item.category_name}
                   </CTableDataCell>
                   <CTableDataCell>
-                    <small className="badge bg-secondary">
-                      {item.budget_group?.name || '-'}
-                    </small>
+                    <small className="badge bg-secondary">{item.budget_group?.name || '-'}</small>
                   </CTableDataCell>
                   <CTableDataCell className="text-body-secondary">
                     {formatCurrency(item.baseline_estimate)}
@@ -620,7 +726,8 @@ const BudgetPeriods = () => {
           <CModalTitle>Konfirmasi Hapus Siklus</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          Apakah Anda yakin ingin menghapus siklus anggaran ini beserta seluruh data alokasi kategorinya?
+          Apakah Anda yakin ingin menghapus siklus anggaran ini beserta seluruh data alokasi
+          kategorinya?
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" variant="ghost" onClick={() => setDeleteId(null)}>
@@ -636,4 +743,3 @@ const BudgetPeriods = () => {
 }
 
 export default BudgetPeriods
-

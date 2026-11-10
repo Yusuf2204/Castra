@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import {
   CCard,
   CCardBody,
@@ -25,6 +25,7 @@ import IncomesTable from './IncomesTable'
 import IncomeModal from './IncomeModal'
 import api from '../../services/api'
 import { toastError, toastSuccess } from '../../services/toastService'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const MONTH_NAMES = [
   'Januari',
@@ -58,7 +59,7 @@ const Incomes = () => {
   const [viewMode, setViewMode] = useState('calendar') // 'calendar' | 'table'
 
   // Master options
-  const [incomeSources, setIncomeSources] = useState([])
+  const [accounts, setAccounts] = useState([])
   const [categories, setCategories] = useState([])
 
   // Calendar State
@@ -76,9 +77,23 @@ const Incomes = () => {
   const [tablePage, setTablePage] = useState(1)
   const [filters, setFilters] = useState({
     search: '',
-    income_source_id: '',
+    account_id: '',
     category_id: '',
   })
+
+  const accountFilterOptions = useMemo(() => {
+    return accounts.map((acc) => ({
+      value: acc.id,
+      label: acc.name,
+    }))
+  }, [accounts])
+
+  const categoryFilterOptions = useMemo(() => {
+    return categories.map((c) => ({
+      value: c.id,
+      label: c.name,
+    }))
+  }, [categories])
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false)
@@ -89,13 +104,13 @@ const Incomes = () => {
   // Fetch Master Data for dropdowns
   const fetchMasters = useCallback(async () => {
     try {
-      const [sourcesRes, categoriesRes] = await Promise.all([
-        api.get('/income-sources', { params: { per_page: 100 } }),
+      const [accRes, categoriesRes] = await Promise.all([
+        api.get('/accounts', { params: { all: 1, is_active: 1 } }),
         api.get('/categories', { params: { type: 'income', all: 1 } }),
       ])
 
-      const sData = sourcesRes.data?.data
-      setIncomeSources(Array.isArray(sData) ? sData : sData?.data || [])
+      const aData = accRes.data?.data
+      setAccounts(Array.isArray(aData) ? aData : [])
 
       const cData = categoriesRes.data?.data
       setCategories(Array.isArray(cData) ? cData : cData?.data || [])
@@ -131,7 +146,7 @@ const Incomes = () => {
         per_page: 15,
       }
       if (filters.search) params.search = filters.search
-      if (filters.income_source_id) params.income_source_id = filters.income_source_id
+      if (filters.account_id) params.account_id = filters.account_id
       if (filters.category_id) params.category_id = filters.category_id
 
       const res = await api.get('/incomes', { params })
@@ -146,12 +161,14 @@ const Incomes = () => {
   }, [monthStr, tablePage, filters])
 
   useEffect(() => {
-    if (viewMode === 'calendar') {
-      fetchCalendar()
-    } else {
+    fetchCalendar()
+  }, [fetchCalendar])
+
+  useEffect(() => {
+    if (viewMode === 'table') {
       fetchTable()
     }
-  }, [viewMode, fetchCalendar, fetchTable])
+  }, [viewMode, fetchTable])
 
   // Month Navigation
   const handlePrevMonth = () => {
@@ -197,11 +214,8 @@ const Incomes = () => {
   }
 
   const handleSaved = () => {
-    if (viewMode === 'calendar') {
-      fetchCalendar()
-    } else {
-      fetchTable()
-    }
+    fetchCalendar()
+    fetchTable()
   }
 
   const handleEditItemFromTable = (item) => {
@@ -264,7 +278,10 @@ const Incomes = () => {
               <CButton
                 size="sm"
                 color="outline-secondary"
-                onClick={viewMode === 'calendar' ? fetchCalendar : fetchTable}
+                onClick={() => {
+                  fetchCalendar()
+                  if (viewMode === 'table') fetchTable()
+                }}
                 title="Muat Ulang"
               >
                 <CIcon icon={cilReload} />
@@ -298,19 +315,24 @@ const Incomes = () => {
           </div>
 
           {/* Month Summary Banner */}
-          <div className="mt-3 p-2 px-3 rounded bg-success-subtle border border-success-subtle d-flex flex-wrap justify-content-between align-items-center">
-            <div className="text-success-emphasis">
-              <small className="text-uppercase fw-semibold d-block">
-                Total Pemasukan {MONTH_NAMES[month - 1]} {year}
-              </small>
-              <h4 className="fw-bold mb-0 text-success">
-                {formatCurrency(calendarData?.total_month || 0)}
+          <div className="mt-3 p-3 rounded bg-body-tertiary border d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <span className="text-secondary text-uppercase fw-semibold small d-block mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+                Total Pemasukan &bull; {MONTH_NAMES[month - 1]} {year}
+              </span>
+              <h4 className="fw-bold mb-0 text-success d-flex align-items-baseline gap-1">
+                <span>{formatCurrency(calendarData?.total_month || 0)}</span>
               </h4>
             </div>
-            <div>
-              <CBadge color="success" className="fs-6 px-3 py-2">
-                {calendarData?.transaction_count || 0} Transaksi Masuk
-              </CBadge>
+            <div className="d-flex align-items-center gap-2">
+              {viewMode === 'table' && (filters.search || filters.income_source_id || filters.category_id) && tableMeta && (
+                <span className="badge bg-secondary-subtle text-body border border-secondary-subtle px-3 py-2 fs-6 fw-normal">
+                  Hasil Filter: <strong>{tableMeta.total}</strong> transaksi
+                </span>
+              )}
+              <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6 fw-semibold">
+                {calendarData?.transaction_count || 0} Transaksi Masuk Bulan Ini
+              </span>
             </div>
           </div>
         </CCardHeader>
@@ -330,7 +352,7 @@ const Incomes = () => {
               <CRow className="g-2 mb-3">
                 <CCol md={5}>
                   <CFormInput
-                    placeholder="Cari catatan, sumber dana, kategori..."
+                    placeholder="Cari catatan, nomor bukti, kategori..."
                     value={filters.search}
                     onChange={(e) => {
                       setTablePage(1)
@@ -340,37 +362,29 @@ const Incomes = () => {
                 </CCol>
 
                 <CCol md={4}>
-                  <CFormSelect
-                    value={filters.income_source_id}
+                  <CustomSelect
+                    value={filters.account_id}
                     onChange={(e) => {
                       setTablePage(1)
-                      setFilters((prev) => ({ ...prev, income_source_id: e.target.value }))
+                      setFilters((prev) => ({ ...prev, account_id: e.target.value }))
                     }}
-                  >
-                    <option value="">Semua Sumber Dana</option>
-                    {incomeSources.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                    options={accountFilterOptions}
+                    placeholder="Semua Akun / Rekening"
+                    isClearable
+                  />
                 </CCol>
 
                 <CCol md={3}>
-                  <CFormSelect
+                  <CustomSelect
                     value={filters.category_id}
                     onChange={(e) => {
                       setTablePage(1)
                       setFilters((prev) => ({ ...prev, category_id: e.target.value }))
                     }}
-                  >
-                    <option value="">Semua Kategori</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                    options={categoryFilterOptions}
+                    placeholder="Semua Kategori"
+                    isClearable
+                  />
                 </CCol>
               </CRow>
 
@@ -420,7 +434,6 @@ const Incomes = () => {
         onClose={() => setModalVisible(false)}
         selectedDate={selectedDate}
         dailyItems={dailyItemsForSelectedDate}
-        incomeSources={incomeSources}
         categories={categories}
         onSaved={handleSaved}
       />

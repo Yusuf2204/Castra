@@ -2,19 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\IncomeSource;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
 
 class ReceiptOcrService
 {
     /**
      * Scan and parse receipt image into structured transaction data.
      *
-     * @param UploadedFile $file
-     * @param \App\Models\User $user
-     * @return array
+     * @param  \App\Models\User  $user
      */
     public function scan(UploadedFile $file, $user): array
     {
@@ -35,9 +33,7 @@ class ReceiptOcrService
     /**
      * Scan an uploaded receipt or transfer proof image for Income transactions.
      *
-     * @param UploadedFile $file
-     * @param \App\Models\User $user
-     * @return array
+     * @param  \App\Models\User  $user
      */
     public function scanIncome(UploadedFile $file, $user): array
     {
@@ -61,12 +57,12 @@ class ReceiptOcrService
      */
     protected function preprocessImage(string $sourcePath): string
     {
-        if (!extension_loaded('gd')) {
+        if (! extension_loaded('gd')) {
             return $sourcePath;
         }
 
         $imageInfo = @getimagesize($sourcePath);
-        if (!$imageInfo) {
+        if (! $imageInfo) {
             return $sourcePath;
         }
 
@@ -78,7 +74,7 @@ class ReceiptOcrService
             default => null,
         };
 
-        if (!$src) {
+        if (! $src) {
             return $sourcePath;
         }
 
@@ -104,7 +100,7 @@ class ReceiptOcrService
         // Enhance contrast (negative value in GD increases contrast)
         imagefilter($processed, IMG_FILTER_CONTRAST, -30);
 
-        $tempPath = tempnam(sys_get_temp_dir(), 'castra_ocr_') . '.png';
+        $tempPath = tempnam(sys_get_temp_dir(), 'castra_ocr_').'.png';
         imagepng($processed, $tempPath);
         imagedestroy($processed);
 
@@ -121,7 +117,7 @@ class ReceiptOcrService
         $command = "tesseract {$escapedPath} stdout -l ind+eng --oem 1 --psm 6 2>/dev/null";
         $output = shell_exec($command);
 
-        if (!$output || trim($output) === '') {
+        if (! $output || trim($output) === '') {
             // Fallback to auto page segmentation (PSM 3)
             $command = "tesseract {$escapedPath} stdout -l ind+eng --oem 1 --psm 3 2>/dev/null";
             $output = shell_exec($command);
@@ -161,6 +157,7 @@ class ReceiptOcrService
         $sender = $this->parseMerchant($rawText);
         $incomeSource = $this->suggestIncomeSource($rawText, $sender, $user);
         $category = $this->suggestIncomeCategory($rawText, $sender, $user);
+        $account = $this->suggestAccount($rawText, $user);
 
         $notes = $sender !== 'Pengeluaran Nota' ? $sender : 'Pemasukan';
 
@@ -173,6 +170,8 @@ class ReceiptOcrService
             'suggested_income_source_name' => $incomeSource?->name,
             'suggested_category_id' => $category?->id,
             'suggested_category_name' => $category?->name,
+            'suggested_account_id' => $account?->id,
+            'suggested_account_name' => $account?->name,
             'raw_text' => $rawText,
         ];
     }
@@ -316,7 +315,7 @@ class ReceiptOcrService
             }
         }
 
-        if (!empty($candidates)) {
+        if (! empty($candidates)) {
             return $candidates[0];
         }
 
@@ -344,6 +343,7 @@ class ReceiptOcrService
                 return true;
             }
         }
+
         return false;
     }
 
@@ -501,7 +501,7 @@ class ReceiptOcrService
             $hasQuantity = (bool) preg_match('/^[a-z0-9\s]*?[0-9]+\s*[xX*]/i', $line);
             $hasPrice = (bool) preg_match('/(?:rp\.?|idr)?\s*[0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{2})?$/i', $line);
 
-            if (!$hasQuantity && !$hasPrice && empty($candidateItems)) {
+            if (! $hasQuantity && ! $hasPrice && empty($candidateItems)) {
                 $cleaned = trim(preg_replace('/[^\p{L}\p{N}\s\-\.&]/u', '', $line));
                 if (mb_strlen($cleaned) >= 3) {
                     return $cleaned;
@@ -517,12 +517,12 @@ class ReceiptOcrService
             $cleaned = trim(preg_replace('/[^\p{L}\p{N}\s\-\.&]/u', '', $cleaned));
 
             // Exclude note lines like "Pedas , Telur Ceplok"
-            if (mb_strlen($cleaned) >= 3 && !preg_match('/^(pedas|sedang|manis|ceplok|dadar|level|porsi)/i', $cleaned)) {
+            if (mb_strlen($cleaned) >= 3 && ! preg_match('/^(pedas|sedang|manis|ceplok|dadar|level|porsi)/i', $cleaned)) {
                 $candidateItems[] = $cleaned;
             }
         }
 
-        if (!empty($candidateItems)) {
+        if (! empty($candidateItems)) {
             return implode(', ', array_slice($candidateItems, 0, 2));
         }
 
@@ -550,7 +550,7 @@ class ReceiptOcrService
             'makan' => [
                 'makan', 'minum', 'kopi', 'cafe', 'resto', 'bakso', 'ayam', 'mie', 'bread',
                 'roti', 'snack', 'food', 'warung', 'soto', 'ketoprak', 'gorengan', 'gofood',
-                'grabfood', 'shopeefood', 'martabak', 'geprek', 'nasi', 'bebek', 'pizza', 'burger'
+                'grabfood', 'shopeefood', 'martabak', 'geprek', 'nasi', 'bebek', 'pizza', 'burger',
             ],
             'transport' => ['spbu', 'pertamina', 'shell', 'bensin', 'pertalite', 'pertamax', 'parkir', 'toll', 'tol', 'gojek', 'grab', 'ojek'],
             'belanja' => ['indomaret', 'alfamart', 'superindo', 'hypermart', 'yomart', 'transmart', 'sabun', 'shampoo', 'sembako', 'minimarket'],
@@ -565,6 +565,7 @@ class ReceiptOcrService
                     // Find matching category in user's categories
                     $matched = $userCategories->first(function ($cat) use ($categoryType, $kw) {
                         $catName = strtolower($cat->name);
+
                         return str_contains($catName, $categoryType) || str_contains($catName, $kw);
                     });
 
@@ -616,6 +617,7 @@ class ReceiptOcrService
                 if (str_contains($haystack, $kw)) {
                     $matched = $sources->first(function ($src) use ($key, $kw) {
                         $srcName = strtolower($src->name);
+
                         return str_contains($srcName, $key) || str_contains($srcName, $kw);
                     });
 
@@ -664,6 +666,7 @@ class ReceiptOcrService
                 if (str_contains($haystack, $kw)) {
                     $matched = $categories->first(function ($cat) use ($type, $kw) {
                         $catName = strtolower($cat->name);
+
                         return str_contains($catName, $type) || str_contains($catName, $kw);
                     });
 
@@ -676,5 +679,59 @@ class ReceiptOcrService
 
         return $categories->first();
     }
-}
 
+    /**
+     * Suggest user's account (Cash, Bank, E-Wallet) based on proof/receipt text.
+     */
+    protected function suggestAccount(string $text, $user): ?Account
+    {
+        $accounts = Account::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
+
+        if ($accounts->isEmpty()) {
+            return null;
+        }
+
+        $haystack = strtolower($text);
+
+        $bankKeywords = [
+            'bca' => ['bca', 'bank central asia', 'klikbca', 'mybca'],
+            'mandiri' => ['mandiri', 'livin'],
+            'bri' => ['bri', 'brimo'],
+            'bni' => ['bni', 'wondr'],
+            'jago' => ['jago', 'bank jago'],
+            'seabank' => ['seabank', 'sea bank'],
+            'gopay' => ['gopay', 'gojek'],
+            'ovo' => ['ovo'],
+            'dana' => ['dana'],
+            'shopeepay' => ['shopeepay', 'shopee pay'],
+            'kas' => ['tunai', 'cash', 'kas kecil', 'petty cash'],
+        ];
+
+        foreach ($bankKeywords as $key => $keywords) {
+            foreach ($keywords as $kw) {
+                if (str_contains($haystack, $kw)) {
+                    $matched = $accounts->first(function ($acc) use ($key, $kw) {
+                        $accName = strtolower($acc->name);
+
+                        return str_contains($accName, $key) || str_contains($accName, $kw);
+                    });
+
+                    if ($matched) {
+                        return $matched;
+                    }
+                }
+            }
+        }
+
+        foreach ($accounts as $account) {
+            $accName = strtolower($account->name);
+            if (mb_strlen($accName) >= 3 && str_contains($haystack, $accName)) {
+                return $account;
+            }
+        }
+
+        return $accounts->first();
+    }
+}

@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\TerbilangHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IncomeTransactionResource;
+use App\Models\Account;
 use App\Models\IncomeTransaction;
 use App\Services\ReceiptOcrService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /**
@@ -17,7 +21,7 @@ class IncomeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = $request->user()->incomeTransactions()->with(['incomeSource', 'category']);
+        $query = $request->user()->incomeTransactions()->with(['incomeSource', 'category', 'account']);
 
         if ($request->filled('month')) {
             try {
@@ -37,6 +41,10 @@ class IncomeController extends Controller
             $query->where('transaction_date', '<=', $request->input('end_date'));
         }
 
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->input('account_id'));
+        }
+
         if ($request->filled('income_source_id')) {
             $query->where('income_source_id', $request->input('income_source_id'));
         }
@@ -49,6 +57,7 @@ class IncomeController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('notes', 'like', "%{$search}%")
+                    ->orWhere('voucher_no', 'like', "%{$search}%")
                     ->orWhereHas('incomeSource', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%");
                     })
@@ -91,15 +100,20 @@ class IncomeController extends Controller
     {
         $validated = $request->validate([
             'month' => ['required', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+            'account_id' => ['nullable', 'integer'],
             'income_source_id' => ['nullable', 'integer'],
         ]);
 
         $monthDate = Carbon::createFromFormat('Y-m', $validated['month']);
 
         $query = $request->user()->incomeTransactions()
-            ->with(['incomeSource', 'category'])
+            ->with(['incomeSource', 'category', 'account'])
             ->whereYear('transaction_date', $monthDate->year)
             ->whereMonth('transaction_date', $monthDate->month);
+
+        if (! empty($validated['account_id'])) {
+            $query->where('account_id', $validated['account_id']);
+        }
 
         if (! empty($validated['income_source_id'])) {
             $query->where('income_source_id', $validated['income_source_id']);
@@ -149,25 +163,55 @@ class IncomeController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'income_source_id' => [
+            'account_id' => [
                 'required',
                 'integer',
-                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
+                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
             ],
             'category_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('ms_categories', 'id')->where(function ($query) use ($user) {
                     $query->where('user_id', $user->id)->where('type', 'income');
                 }),
             ],
+            'income_source_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
+            ],
             'transaction_date' => ['required', 'date_format:Y-m-d'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
+            'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'attachment_path' => ['nullable', 'string', 'max:255'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
+        if (empty($validated['account_id'])) {
+            $defaultAcc = $user->accounts()->where('type', 'petty_cash')->where('is_active', true)->first()
+                ?? $user->accounts()->where('is_active', true)->first();
+            if ($defaultAcc) {
+                $validated['account_id'] = $defaultAcc->id;
+            }
+        }
+
+        if ($request->hasFile('attachment')) {
+            $validated['attachment_path'] = $request->file('attachment')->store('receipts', 'public');
+        }
+        unset($validated['attachment']);
+
+        if (empty($validated['voucher_no'])) {
+            $ym = Carbon::parse($validated['transaction_date'])->format('Ym');
+            $count = $user->incomeTransactions()
+                ->where('transaction_date', 'like', Carbon::parse($validated['transaction_date'])->format('Y-m').'%')
+                ->count() + 1;
+            $validated['voucher_no'] = sprintf('BKM-%s-%04d', $ym, $count);
+        }
+
         $income = $user->incomeTransactions()->create($validated);
-        $income->load(['incomeSource', 'category']);
+        $income->load(['incomeSource', 'category', 'account']);
+        $income->account?->recalculateBalance();
 
         return response()->json([
             'data' => (new IncomeTransactionResource($income))->resolve(),
@@ -186,7 +230,7 @@ class IncomeController extends Controller
             ], 404);
         }
 
-        $income->load(['incomeSource', 'category']);
+        $income->load(['incomeSource', 'category', 'account']);
 
         return response()->json([
             'data' => (new IncomeTransactionResource($income))->resolve(),
@@ -208,26 +252,46 @@ class IncomeController extends Controller
         }
 
         $validated = $request->validate([
-            'income_source_id' => [
+            'account_id' => [
                 'sometimes',
                 'required',
                 'integer',
-                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
+                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
             ],
             'category_id' => [
-                'nullable',
+                'sometimes',
+                'required',
                 'integer',
                 Rule::exists('ms_categories', 'id')->where(function ($query) use ($user) {
                     $query->where('user_id', $user->id)->where('type', 'income');
                 }),
             ],
+            'income_source_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
+            ],
             'transaction_date' => ['sometimes', 'required', 'date_format:Y-m-d'],
             'amount' => ['sometimes', 'required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
+            'voucher_no' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'attachment_path' => ['nullable', 'string', 'max:255'],
+            'attachment' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
+        if ($request->hasFile('attachment')) {
+            $validated['attachment_path'] = $request->file('attachment')->store('receipts', 'public');
+        }
+        unset($validated['attachment']);
+
+        $oldAccountId = $income->account_id;
         $income->update($validated);
-        $income->load(['incomeSource', 'category']);
+        $income->load(['incomeSource', 'category', 'account']);
+
+        if ($oldAccountId && $oldAccountId !== $income->account_id) {
+            Account::find($oldAccountId)?->recalculateBalance();
+        }
+        $income->account?->recalculateBalance();
 
         return response()->json([
             'data' => (new IncomeTransactionResource($income))->resolve(),
@@ -246,7 +310,9 @@ class IncomeController extends Controller
             ], 404);
         }
 
+        $account = $income->account;
         $income->delete();
+        $account?->recalculateBalance();
 
         return response()->json([
             'data' => null,
@@ -261,16 +327,112 @@ class IncomeController extends Controller
     public function scanReceipt(Request $request, ReceiptOcrService $ocrService)
     {
         $request->validate([
-            'receipt' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
         ]);
 
         $file = $request->file('receipt');
-        $parsed = $ocrService->scanIncome($file, $request->user());
+        $isPdf = $file->getClientMimeType() === 'application/pdf' || strtolower($file->getClientOriginalExtension()) === 'pdf';
+
+        if ($isPdf) {
+            $storedPath = $file->store('receipts', 'public');
+            return response()->json([
+                'data' => [
+                    'attachment_path' => $storedPath,
+                    'attachment_url' => '/storage/' . ltrim($storedPath, '/'),
+                    'file_name' => $file->getClientOriginalName(),
+                ],
+                'message' => 'Dokumen PDF bukti pemasukan berhasil dilampirkan',
+                'errors' => null,
+            ]);
+        }
+
+        try {
+            $parsed = $ocrService->scanIncome($file, $request->user());
+        } catch (\Throwable $e) {
+            $parsed = [];
+        }
+
+        $storedPath = $file->store('receipts', 'public');
+        $parsed['attachment_path'] = $storedPath;
+        $parsed['attachment_url'] = '/storage/' . ltrim($storedPath, '/');
 
         return response()->json([
             'data' => $parsed,
             'message' => 'Bukti pemasukan berhasil dipindai',
             'errors' => null,
         ]);
+    }
+
+    /**
+     * Direct upload receipt/proof file (image or PDF) without OCR.
+     */
+    public function uploadReceipt(Request $request)
+    {
+        $request->validate([
+            'receipt' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:25600'],
+        ]);
+
+        $file = $request->file('receipt');
+        $storedPath = $file->store('receipts', 'public');
+
+        return response()->json([
+            'data' => [
+                'attachment_path' => $storedPath,
+                'attachment_url' => '/storage/' . ltrim($storedPath, '/'),
+                'file_name' => $file->getClientOriginalName(),
+            ],
+            'message' => 'Bukti transaksi berhasil diunggah',
+            'errors' => null,
+        ]);
+    }
+
+    /**
+     * Generate official BKM PDF voucher.
+     */
+    public function exportPdf(Request $request, IncomeTransaction $income)
+    {
+        $user = $request->user();
+
+        if ($income->user_id !== $user->id) {
+            return response()->json([
+                'data' => null,
+                'message' => 'Transaksi tidak ditemukan',
+                'errors' => null,
+            ], 404);
+        }
+
+        $income->load(['incomeSource', 'category', 'account', 'user']);
+
+        $terbilang = TerbilangHelper::make($income->amount);
+
+        $receiptBase64 = null;
+        $includeReceipt = $request->boolean('include_receipt', true);
+
+        if ($includeReceipt && $income->attachment_path) {
+            $path = $income->attachment_path;
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                if (Storage::disk('public')->exists($path)) {
+                    $mime = Storage::disk('public')->mimeType($path) ?? 'image/jpeg';
+                    $raw = Storage::disk('public')->get($path);
+                    $receiptBase64 = 'data:' . $mime . ';base64,' . base64_encode($raw);
+                }
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.voucher_bkm', [
+            'transaction' => $income,
+            'terbilang' => $terbilang,
+            'receiptBase64' => $receiptBase64,
+        ])->setPaper('a4', 'portrait');
+
+        $cleanNo = preg_replace('/[^A-Za-z0-9_\-]/', '_', $income->voucher_no ?: 'BKM_' . $income->id);
+        $fileName = 'Voucher_' . $cleanNo . '.pdf';
+
+        if ($request->boolean('download')) {
+            return $pdf->download($fileName);
+        }
+
+        return $pdf->stream($fileName);
     }
 }

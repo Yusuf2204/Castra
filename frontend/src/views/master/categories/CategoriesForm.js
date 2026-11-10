@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   CForm,
   CFormInput,
@@ -12,6 +12,7 @@ import {
 import api from '../../../services/api'
 import { toastSuccess } from '../../../services/toastService'
 import { getFieldError } from '../../../utils/formErrors'
+import CustomSelect from '../../../components/common/CustomSelect'
 
 const emptyForm = {
   name: '',
@@ -24,6 +25,13 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+
+  const budgetGroupOptions = useMemo(() => {
+    return budgetGroups.map((bg) => ({
+      value: bg.id,
+      label: `${bg.name} (${bg.percentage}%)`,
+    }))
+  }, [budgetGroups])
 
   useEffect(() => {
     if (category) {
@@ -68,7 +76,8 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
       is_active: form.is_active,
     }
 
-    const parseAmount = (val) => (typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val))
+    const parseAmount = (val) =>
+      typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val)
 
     if (type === 'expense') {
       payload.budget_group_id = form.budget_group_id ? Number(form.budget_group_id) : null
@@ -98,7 +107,7 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
       <CFormInput
         label="Nama Kategori"
         name="name"
-        placeholder="Contoh: Makan Siang, Bensin..."
+        placeholder="Masukkan nama kategori transaksi..."
         maxLength={100}
         value={form.name}
         onChange={handleChange}
@@ -110,23 +119,20 @@ const CategoriesForm = ({ category, type, budgetGroups = [], onReset, onSaved })
 
       {type === 'expense' && (
         <>
-          <CFormSelect
-            label="Kelompok Anggaran"
-            name="budget_group_id"
-            value={form.budget_group_id}
-            onChange={handleChange}
-            invalid={Boolean(getFieldError(errors, 'budget_group_id'))}
-            feedbackInvalid={getFieldError(errors, 'budget_group_id')}
-            disabled={saving}
-            className="mb-3"
-          >
-            <option value="">-- Pilih Kelompok Anggaran --</option>
-            {budgetGroups.map((bg) => (
-              <option key={bg.id} value={bg.id}>
-                {bg.name} ({bg.percentage}%)
-              </option>
-            ))}
-          </CFormSelect>
+          <div className="mb-3">
+            <label className="form-label">Kelompok Anggaran</label>
+            <CustomSelect
+              name="budget_group_id"
+              value={form.budget_group_id}
+              onChange={handleChange}
+              options={budgetGroupOptions}
+              placeholder="-- Pilih Kelompok Anggaran --"
+              isClearable
+              invalid={Boolean(getFieldError(errors, 'budget_group_id'))}
+              feedbackInvalid={getFieldError(errors, 'budget_group_id')}
+              disabled={saving}
+            />
+          </div>
 
           <div className="mb-3">
             <label className="form-label">

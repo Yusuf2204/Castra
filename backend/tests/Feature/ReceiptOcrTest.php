@@ -14,6 +14,7 @@ class ReceiptOcrTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Category $category;
 
     protected function setUp(): void
@@ -55,13 +56,13 @@ class ReceiptOcrTest extends TestCase
         $bg = imagecolorallocate($im, 255, 255, 255);
         $black = imagecolorallocate($im, 0, 0, 0);
         imagefilledrectangle($im, 0, 0, 400, 250, $bg);
-        imagestring($im, 5, 80, 20, "WARUNG MAKAN SEDAP", $black);
-        imagestring($im, 4, 60, 70, "TANGGAL: 21/10/2026", $black);
-        imagestring($im, 4, 40, 120, "NASI AYAM BAKAR        25.000", $black);
-        imagestring($im, 4, 40, 150, "ES TEH MANIS            5.000", $black);
-        imagestring($im, 5, 40, 190, "TOTAL BAYAR : Rp 30.000", $black);
+        imagestring($im, 5, 80, 20, 'WARUNG MAKAN SEDAP', $black);
+        imagestring($im, 4, 60, 70, 'TANGGAL: 21/10/2026', $black);
+        imagestring($im, 4, 40, 120, 'NASI AYAM BAKAR        25.000', $black);
+        imagestring($im, 4, 40, 150, 'ES TEH MANIS            5.000', $black);
+        imagestring($im, 5, 40, 190, 'TOTAL BAYAR : Rp 30.000', $black);
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'test_rcpt_') . '.png';
+        $tempFile = tempnam(sys_get_temp_dir(), 'test_rcpt_').'.png';
         imagepng($im, $tempFile);
         imagedestroy($im);
 
@@ -91,7 +92,7 @@ class ReceiptOcrTest extends TestCase
     public function test_scan_receipt_handles_subtotal_discount_and_service_fees(): void
     {
         $fixturePath = base_path('tests/Fixtures/nota.png');
-        if (!file_exists($fixturePath)) {
+        if (! file_exists($fixturePath)) {
             $this->markTestSkipped('Fixture nota.png not found');
         }
 
@@ -133,12 +134,12 @@ class ReceiptOcrTest extends TestCase
         $bg = imagecolorallocate($im, 255, 255, 255);
         $black = imagecolorallocate($im, 0, 0, 0);
         imagefilledrectangle($im, 0, 0, 400, 220, $bg);
-        imagestring($im, 5, 80, 20, "TRANSFER BERHASIL", $black);
-        imagestring($im, 4, 40, 60, "PENGIRIM: PT MAJU MUNDUR", $black);
-        imagestring($im, 4, 40, 100, "TANGGAL: 21/10/2026", $black);
-        imagestring($im, 5, 40, 140, "JUMLAH TRANSFER: Rp 8.500.000", $black);
+        imagestring($im, 5, 80, 20, 'TRANSFER BERHASIL', $black);
+        imagestring($im, 4, 40, 60, 'PENGIRIM: PT MAJU MUNDUR', $black);
+        imagestring($im, 4, 40, 100, 'TANGGAL: 21/10/2026', $black);
+        imagestring($im, 5, 40, 140, 'JUMLAH TRANSFER: Rp 8.500.000', $black);
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'test_inc_') . '.png';
+        $tempFile = tempnam(sys_get_temp_dir(), 'test_inc_').'.png';
         imagepng($im, $tempFile);
         imagedestroy($im);
 
@@ -164,5 +165,29 @@ class ReceiptOcrTest extends TestCase
             ->assertJsonPath('data.suggested_income_source_id', $incomeSource->id)
             ->assertJsonPath('data.suggested_category_id', $incomeCategory->id);
     }
-}
 
+    public function test_user_can_directly_upload_expense_and_income_receipts(): void
+    {
+        $fakePdf = UploadedFile::fake()->create('invoice_tagihan.pdf', 250, 'application/pdf');
+
+        $expRes = $this->actingAs($this->user)
+            ->postJson('/api/expenses/upload-receipt', [
+                'receipt' => $fakePdf,
+            ]);
+
+        $expRes->assertStatus(200)
+            ->assertJsonPath('message', 'Bukti transaksi berhasil diunggah')
+            ->assertJsonStructure(['data' => ['attachment_path', 'attachment_url', 'file_name']]);
+
+        $fakePng = UploadedFile::fake()->image('bukti_transfer.png', 200, 200);
+
+        $incRes = $this->actingAs($this->user)
+            ->postJson('/api/incomes/upload-receipt', [
+                'receipt' => $fakePng,
+            ]);
+
+        $incRes->assertStatus(200)
+            ->assertJsonPath('message', 'Bukti transaksi berhasil diunggah')
+            ->assertJsonStructure(['data' => ['attachment_path', 'attachment_url', 'file_name']]);
+    }
+}

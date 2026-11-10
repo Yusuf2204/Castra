@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   CRow,
   CCol,
@@ -10,11 +10,13 @@ import {
   CFormInput,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilReload, cilChartLine, cilBalanceScale, cilChartPie } from '@coreui/icons'
+import { cilReload, cilChartLine, cilBalanceScale, cilChartPie, cilWallet } from '@coreui/icons'
 import CashFlowReport from './CashFlowReport'
 import BudgetComparisonReport from './BudgetComparisonReport'
 import CategoryBreakdownReport from './CategoryBreakdownReport'
+import PettyCashBookReport from './PettyCashBookReport'
 import api from '../../services/api'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const Reports = () => {
   const today = new Date()
@@ -30,6 +32,13 @@ const Reports = () => {
   const [budgetMode, setBudgetMode] = useState('period')
   const [budgetPeriods, setBudgetPeriods] = useState([])
   const [selectedPeriodId, setSelectedPeriodId] = useState('')
+
+  const budgetPeriodOptions = useMemo(() => {
+    return budgetPeriods.map((bp) => ({
+      value: bp.id,
+      label: `${bp.name} ${bp.is_active ? '★ (Aktif)' : ''}`,
+    }))
+  }, [budgetPeriods])
 
   const handleReload = () => {
     setReloadKey((k) => k + 1)
@@ -56,11 +65,11 @@ const Reports = () => {
   return (
     <div className="mb-4">
       {/* Top Row: Filter Bar (Pola 3) */}
-      <CCard className="mb-4 shadow-sm">
+      <CCard className="mb-4 shadow-sm d-print-none">
         <CCardBody className="py-3">
           <CRow className="g-3 align-items-center justify-content-between">
             {/* Left: Tab Navigator */}
-            <CCol lg={6}>
+            <CCol lg={7}>
               <CButtonGroup size="sm" className="w-100 flex-wrap">
                 <CButton
                   color={activeTab === 'cash-flow' ? 'primary' : 'outline-secondary'}
@@ -68,7 +77,7 @@ const Reports = () => {
                   className="py-2"
                 >
                   <CIcon icon={cilChartLine} className="me-1" />
-                  Arus Kas Bulanan
+                  Arus Kas
                 </CButton>
                 <CButton
                   color={activeTab === 'budget-comparison' ? 'primary' : 'outline-secondary'}
@@ -76,7 +85,7 @@ const Reports = () => {
                   className="py-2"
                 >
                   <CIcon icon={cilBalanceScale} className="me-1" />
-                  Realisasi Anggaran
+                  Anggaran
                 </CButton>
                 <CButton
                   color={activeTab === 'category-breakdown' ? 'primary' : 'outline-secondary'}
@@ -84,13 +93,24 @@ const Reports = () => {
                   className="py-2"
                 >
                   <CIcon icon={cilChartPie} className="me-1" />
-                  Rincian Kategori
+                  Kategori
+                </CButton>
+                <CButton
+                  color={activeTab === 'petty-cash-book' ? 'primary' : 'outline-secondary'}
+                  onClick={() => setActiveTab('petty-cash-book')}
+                  className="py-2"
+                >
+                  <CIcon icon={cilWallet} className="me-1" />
+                  Buku Kas / Petty Cash
                 </CButton>
               </CButtonGroup>
             </CCol>
 
             {/* Right: Period Filter Controls */}
-            <CCol lg={6} className="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
+            <CCol
+              lg={5}
+              className="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap"
+            >
               {activeTab === 'cash-flow' && (
                 <div className="d-flex align-items-center gap-2">
                   <label className="text-nowrap small text-body-secondary fw-semibold">
@@ -131,22 +151,16 @@ const Reports = () => {
                   </CButtonGroup>
 
                   {budgetMode === 'period' ? (
-                    <CFormSelect
-                      size="sm"
-                      value={selectedPeriodId}
-                      onChange={(e) => setSelectedPeriodId(e.target.value)}
-                      style={{ minWidth: '180px', maxWidth: '240px' }}
-                    >
-                      {budgetPeriods.length === 0 ? (
-                        <option value="">(Belum ada siklus)</option>
-                      ) : (
-                        budgetPeriods.map((bp) => (
-                          <option key={bp.id} value={bp.id}>
-                            {bp.name} {bp.is_active ? '★ (Aktif)' : ''}
-                          </option>
-                        ))
-                      )}
-                    </CFormSelect>
+                    <div style={{ minWidth: '220px', maxWidth: '300px' }}>
+                      <CustomSelect
+                        size="sm"
+                        value={selectedPeriodId}
+                        onChange={(e) => setSelectedPeriodId(e.target.value)}
+                        options={budgetPeriodOptions}
+                        placeholder="Pilih Siklus Anggaran..."
+                        isDisabled={budgetPeriods.length === 0}
+                      />
+                    </div>
                   ) : (
                     <CFormInput
                       type="month"
@@ -198,7 +212,9 @@ const Reports = () => {
             <BudgetComparisonReport
               key={`bc-${budgetMode}-${budgetMode === 'period' ? selectedPeriodId : selectedMonth}-${reloadKey}`}
               month={budgetMode === 'month' ? selectedMonth : null}
-              periodId={budgetMode === 'period' && selectedPeriodId ? Number(selectedPeriodId) : null}
+              periodId={
+                budgetMode === 'period' && selectedPeriodId ? Number(selectedPeriodId) : null
+              }
             />
           )}
           {activeTab === 'category-breakdown' && (
@@ -207,6 +223,7 @@ const Reports = () => {
               month={selectedMonth}
             />
           )}
+          {activeTab === 'petty-cash-book' && <PettyCashBookReport key={`pcb-${reloadKey}`} />}
         </CCol>
       </CRow>
     </div>

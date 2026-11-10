@@ -21,11 +21,13 @@ import {
   cilArrowBottom,
   cilArrowTop,
   cilChartPie,
+  cilPlus,
   cilReload,
   cilWallet,
 } from '@coreui/icons'
 import { Link } from 'react-router-dom'
 import api from '../../services/api'
+import FundTransferModal from '../transfers/FundTransferModal'
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('id-ID', {
@@ -52,6 +54,7 @@ const SummaryCard = ({ color, icon, label, value, subtext, loading }) => (
 )
 
 const Dashboard = () => {
+  const [transferModalVisible, setTransferModalVisible] = useState(false)
   const [data, setData] = useState({
     finance: {
       month: '',
@@ -126,6 +129,61 @@ const Dashboard = () => {
         </CButton>
       </div>
 
+      {/* Petty Cash & Cash Accounts Banner */}
+      <CCard className="mb-4 border-0 shadow-sm bg-body-tertiary">
+        <CCardBody className="p-3">
+          <CRow className="align-items-center g-3">
+            <CCol md={6} lg={4}>
+              <div className="d-flex align-items-center gap-3">
+                <div className="p-3 rounded-circle bg-warning bg-opacity-10 text-warning">
+                  <CIcon icon={cilWallet} size="xl" />
+                </div>
+                <div>
+                  <div className="text-body-secondary small fw-semibold text-uppercase">
+                    Saldo Kas Kecil (Petty Cash)
+                  </div>
+                  <div className="fs-3 fw-bold text-body">
+                    {loading ? <CSpinner size="sm" /> : formatCurrency(kpis.petty_cash_balance)}
+                  </div>
+                  {kpis.petty_cash_limit > 0 && (
+                    <div className="small text-body-secondary">
+                      Plafon: {formatCurrency(kpis.petty_cash_limit)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CCol>
+
+            <CCol md={6} lg={4}>
+              <div className="d-flex align-items-center gap-3">
+                <div className="p-3 rounded-circle bg-primary bg-opacity-10 text-primary">
+                  <CIcon icon={cilWallet} size="xl" />
+                </div>
+                <div>
+                  <div className="text-body-secondary small fw-semibold text-uppercase">
+                    Total Saldo Kas & Bank
+                  </div>
+                  <div className="fs-3 fw-bold text-primary">
+                    {loading ? <CSpinner size="sm" /> : formatCurrency(kpis.total_cash_balance)}
+                  </div>
+                  <div className="small text-body-secondary">Total seluruh akun kas aktif</div>
+                </div>
+              </div>
+            </CCol>
+
+            <CCol lg={4} className="d-flex justify-content-lg-end gap-2 flex-wrap">
+              <CButton color="primary" onClick={() => setTransferModalVisible(true)}>
+                <CIcon icon={cilPlus} className="me-2" />
+                Isi Kas Kecil (Top-Up)
+              </CButton>
+              <Link to="/master/accounts" className="btn btn-outline-secondary">
+                Kelola Akun
+              </Link>
+            </CCol>
+          </CRow>
+        </CCardBody>
+      </CCard>
+
       {/* Row 1: Financial KPI Cards */}
       <CRow className="g-3 mb-4">
         <CCol sm={6} xl={3}>
@@ -160,11 +218,13 @@ const Dashboard = () => {
         </CCol>
         <CCol sm={6} xl={3}>
           <SummaryCard
-            label={kpis.active_period ? `Realisasi (${kpis.active_period.name})` : 'Realisasi Anggaran'}
+            label={
+              kpis.active_period ? 'Realisasi Siklus Anggaran' : 'Realisasi Anggaran'
+            }
             value={`${budgetPct}%`}
             subtext={
               kpis.active_period
-                ? `Pagu Siklus: ${formatCurrency(kpis.total_budget_estimate)}`
+                ? `${kpis.active_period.name}`
                 : `Estimasi: ${formatCurrency(kpis.total_budget_estimate)}`
             }
             icon={cilChartPie}
@@ -284,6 +344,13 @@ const Dashboard = () => {
           </CCard>
         </CCol>
       </CRow>
+
+      {/* Modal Mutasi / Top-Up Kas Kecil */}
+      <FundTransferModal
+        visible={transferModalVisible}
+        onClose={() => setTransferModalVisible(false)}
+        onSaved={loadDashboard}
+      />
     </>
   )
 }
