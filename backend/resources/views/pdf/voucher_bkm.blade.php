@@ -182,7 +182,7 @@
             <td class="meta-label">Diterima Dari</td>
             <td class="meta-separator">:</td>
             <td class="meta-value">
-                <strong>{{ $transaction->incomeSource->name ?? ($transaction->payee ?? '-') }}</strong>
+                <strong>{{ $transaction->category->name ?? ($transaction->incomeSource->name ?? ($transaction->payee ?? '-')) }}</strong>
             </td>
             <td class="meta-label">Masuk ke Akun</td>
             <td class="meta-separator">:</td>
@@ -260,7 +260,7 @@
             <td class="sign-space"></td>
         </tr>
         <tr>
-            <td class="name-space">{{ $transaction->incomeSource->name ?? '( ........................ )' }}</td>
+            <td class="name-space">{{ $transaction->category->name ?? ($transaction->incomeSource->name ?? '( ........................ )') }}</td>
             <td class="name-space">{{ $transaction->user->name ?? '( ........................ )' }}</td>
             <td class="name-space">( ........................ )</td>
         </tr>

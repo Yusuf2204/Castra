@@ -58,7 +58,7 @@ const Incomes = () => {
   const [viewMode, setViewMode] = useState('calendar') // 'calendar' | 'table'
 
   // Master options
-  const [incomeSources, setIncomeSources] = useState([])
+  const [accounts, setAccounts] = useState([])
   const [categories, setCategories] = useState([])
 
   // Calendar State
@@ -76,7 +76,7 @@ const Incomes = () => {
   const [tablePage, setTablePage] = useState(1)
   const [filters, setFilters] = useState({
     search: '',
-    income_source_id: '',
+    account_id: '',
     category_id: '',
   })
 
@@ -89,13 +89,13 @@ const Incomes = () => {
   // Fetch Master Data for dropdowns
   const fetchMasters = useCallback(async () => {
     try {
-      const [sourcesRes, categoriesRes] = await Promise.all([
-        api.get('/income-sources', { params: { per_page: 100 } }),
+      const [accRes, categoriesRes] = await Promise.all([
+        api.get('/accounts', { params: { all: 1, is_active: 1 } }),
         api.get('/categories', { params: { type: 'income', all: 1 } }),
       ])
 
-      const sData = sourcesRes.data?.data
-      setIncomeSources(Array.isArray(sData) ? sData : sData?.data || [])
+      const aData = accRes.data?.data
+      setAccounts(Array.isArray(aData) ? aData : [])
 
       const cData = categoriesRes.data?.data
       setCategories(Array.isArray(cData) ? cData : cData?.data || [])
@@ -131,7 +131,7 @@ const Incomes = () => {
         per_page: 15,
       }
       if (filters.search) params.search = filters.search
-      if (filters.income_source_id) params.income_source_id = filters.income_source_id
+      if (filters.account_id) params.account_id = filters.account_id
       if (filters.category_id) params.category_id = filters.category_id
 
       const res = await api.get('/incomes', { params })
@@ -328,7 +328,7 @@ const Incomes = () => {
               <CRow className="g-2 mb-3">
                 <CCol md={5}>
                   <CFormInput
-                    placeholder="Cari catatan, sumber dana, kategori..."
+                    placeholder="Cari catatan, nomor bukti, kategori..."
                     value={filters.search}
                     onChange={(e) => {
                       setTablePage(1)
@@ -339,16 +339,16 @@ const Incomes = () => {
 
                 <CCol md={4}>
                   <CFormSelect
-                    value={filters.income_source_id}
+                    value={filters.account_id}
                     onChange={(e) => {
                       setTablePage(1)
-                      setFilters((prev) => ({ ...prev, income_source_id: e.target.value }))
+                      setFilters((prev) => ({ ...prev, account_id: e.target.value }))
                     }}
                   >
-                    <option value="">Semua Sumber Dana</option>
-                    {incomeSources.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
+                    <option value="">Semua Akun / Rekening</option>
+                    {accounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name}
                       </option>
                     ))}
                   </CFormSelect>
@@ -418,7 +418,6 @@ const Incomes = () => {
         onClose={() => setModalVisible(false)}
         selectedDate={selectedDate}
         dailyItems={dailyItemsForSelectedDate}
-        incomeSources={incomeSources}
         categories={categories}
         onSaved={handleSaved}
       />

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\IncomeSource;
 use Illuminate\Http\UploadedFile;
@@ -156,6 +157,7 @@ class ReceiptOcrService
         $sender = $this->parseMerchant($rawText);
         $incomeSource = $this->suggestIncomeSource($rawText, $sender, $user);
         $category = $this->suggestIncomeCategory($rawText, $sender, $user);
+        $account = $this->suggestAccount($rawText, $user);
 
         $notes = $sender !== 'Pengeluaran Nota' ? $sender : 'Pemasukan';
 
@@ -168,6 +170,8 @@ class ReceiptOcrService
             'suggested_income_source_name' => $incomeSource?->name,
             'suggested_category_id' => $category?->id,
             'suggested_category_name' => $category?->name,
+            'suggested_account_id' => $account?->id,
+            'suggested_account_name' => $account?->name,
             'raw_text' => $rawText,
         ];
     }
@@ -674,5 +678,60 @@ class ReceiptOcrService
         }
 
         return $categories->first();
+    }
+
+    /**
+     * Suggest user's account (Cash, Bank, E-Wallet) based on proof/receipt text.
+     */
+    protected function suggestAccount(string $text, $user): ?Account
+    {
+        $accounts = Account::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
+
+        if ($accounts->isEmpty()) {
+            return null;
+        }
+
+        $haystack = strtolower($text);
+
+        $bankKeywords = [
+            'bca' => ['bca', 'bank central asia', 'klikbca', 'mybca'],
+            'mandiri' => ['mandiri', 'livin'],
+            'bri' => ['bri', 'brimo'],
+            'bni' => ['bni', 'wondr'],
+            'jago' => ['jago', 'bank jago'],
+            'seabank' => ['seabank', 'sea bank'],
+            'gopay' => ['gopay', 'gojek'],
+            'ovo' => ['ovo'],
+            'dana' => ['dana'],
+            'shopeepay' => ['shopeepay', 'shopee pay'],
+            'kas' => ['tunai', 'cash', 'kas kecil', 'petty cash'],
+        ];
+
+        foreach ($bankKeywords as $key => $keywords) {
+            foreach ($keywords as $kw) {
+                if (str_contains($haystack, $kw)) {
+                    $matched = $accounts->first(function ($acc) use ($key, $kw) {
+                        $accName = strtolower($acc->name);
+
+                        return str_contains($accName, $key) || str_contains($accName, $kw);
+                    });
+
+                    if ($matched) {
+                        return $matched;
+                    }
+                }
+            }
+        }
+
+        foreach ($accounts as $account) {
+            $accName = strtolower($account->name);
+            if (mb_strlen($accName) >= 3 && str_contains($haystack, $accName)) {
+                return $account;
+            }
+        }
+
+        return $accounts->first();
     }
 }

@@ -8,18 +8,19 @@ Aplikasi ini dibangun di atas 4 pilar utama: **Master**, **Pemasukan**, **Pengel
 Referensi historis awal berasal dari konsep envelope budgeting `docs/Keuangan_September_2026.xlsx`.
 Castra memisahkan fungsi spreadsheet menjadi modul web transaksional modern yang modular:
 
-- **Pemasukan (`in_`)**: Titik awal arus kas. Setiap uang masuk dicatat berdasarkan sumber dana (`ms_income_sources`) dan kategori pemasukan.
-- **Pengeluaran (`out_`)**: Catatan pemakaian harian. Pengeluaran diklasifikasikan ke dalam kategori (`ms_categories` tipe `expense`) yang berada di bawah amplop alokasi anggaran (`ms_budget_groups`). Pengeluaran **tidak** terikat dengan sumber dana.
-- **Master (`ms_`)**: Data referensi mandiri untuk sumber dana, kategori pos transaksi, dan alokasi anggaran bulanan.
+- **Pemasukan (`in_`)**: Titik awal arus kas. Setiap uang masuk dicatat berdasarkan rekening/kas tujuan (`ms_accounts`) dan kategori pemasukan (`ms_categories` tipe `income`).
+- **Pengeluaran (`out_`)**: Catatan pemakaian harian. Pengeluaran diklasifikasikan ke dalam kategori (`ms_categories` tipe `expense`) yang berada di bawah amplop alokasi anggaran (`ms_budget_groups`) dan akun sumber dana (`ms_accounts`).
+- **Master (`ms_`)**: Data referensi mandiri untuk akun kas & bank, kategori pos transaksi, kelompok anggaran, dan siklus anggaran.
 - **Laporan (`rpt_`)**: Rekapitulasi agregasi arus kas bulanan, perbandingan realisasi terhadap estimasi anggaran, dan rincian alokasi.
 
 ## Istilah Domain
 
 | Istilah | Tabel Terkait | Makna |
 | --- | --- | --- |
-| Sumber Dana | `ms_income_sources` | Asal atau kanal uang masuk (contoh: Gaji, Bonus, Freelance, Dividen) |
+| Akun Kas & Bank | `ms_accounts` | Rekening, dompet tunai, atau kas kecil tempat uang disimpan aktual |
 | Kategori | `ms_categories` | Pos transaksi untuk pemasukan (`income`) atau pengeluaran (`expense`) |
 | Alokasi Anggaran | `ms_budget_groups` | Kelompok amplop anggaran (default: Need, Fun, Saving, Emergency) |
+| Mutasi Kas | `fund_transfers` | Pemindahan dana antar akun/kantong uang (misal: Bank BCA ke Tabungan/Kas Kecil) |
 | Pemasukan | `in_transactions` | Riwayat transaksi dana masuk aktual per tanggal |
 | Pengeluaran | `out_transactions` | Riwayat transaksi dana keluar harian aktual per tanggal |
 | Ringkasan Bulanan | `rpt_monthly_summaries` | Agregasi total pemasukan, total pengeluaran, dan arus kas bersih bulanan |
@@ -31,8 +32,8 @@ Menu aplikasi diatur secara hierarkis melalui `menus` dan `role_menus`:
 
 1. `Dashboard` (`/dashboard`) - Ringkasan finansial (Net Cash Flow, Total Incomes, Total Expenses, Realisasi Anggaran), transaksi terkini, dan status sesi/sistem.
 2. `Master`
-   - `Sumber Dana` (`/master/income-sources`)
-   - `Kategori` (`/master/categories`)
+   - `Akun Kas & Bank` (`/master/accounts`)
+   - `Kategori Transaksi` (`/master/categories`)
    - `Kelompok Anggaran` (`/master/budget-groups`)
    - `Siklus Anggaran Dinamis` (`/master/budget-periods`)
 3. `Pemasukan` (`/incomes`) - Tampilan kalender interaktif uang masuk & modal form pencatatan pemasukan.
@@ -49,12 +50,12 @@ Menu aplikasi diatur secara hierarkis melalui `menus` dan `role_menus`:
 ## Logika & Aturan Bisnis Inti
 
 1. **Pencatatan Pemasukan**:
-   - Memerlukan `income_source_id` yang valid milik user aktif.
-   - Kolom `category_id` bersifat opsional (harus bertipe `income`).
+   - Memerlukan `account_id` yang valid milik user aktif (rekening/kas penerima).
+   - Memerlukan `category_id` yang valid milik user aktif dengan tipe `income`.
    - Nominal `amount` selalu bernilai positif.
 2. **Pencatatan Pengeluaran**:
    - Memerlukan `category_id` yang valid milik user aktif dengan tipe `expense`.
-   - **TIDAK** memiliki `income_source_id` (pengeluaran murni diklasifikasikan berdasarkan kategori pos belanja).
+   - Memerlukan `account_id` yang valid milik user aktif (sumber kas/rekening penarik).
    - Nominal `amount` selalu bernilai positif di database dan API.
 3. **Kategori & Estimasi Baseline**:
    - Kategori pengeluaran (`expense`) wajib terhubung ke salah satu `budget_group_id`.

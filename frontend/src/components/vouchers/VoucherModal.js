@@ -61,7 +61,7 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
   const partyLabel = isExpense ? 'Dibayarkan Kepada' : 'Diterima Dari'
   const partyValue = isExpense
     ? transaction.payee || '-'
-    : transaction.income_source?.name || transaction.payee || '-'
+    : transaction.category?.name || transaction.income_source?.name || transaction.payee || '-'
 
   const handleDownloadPdf = async (stream = false) => {
     try {

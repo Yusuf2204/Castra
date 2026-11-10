@@ -73,7 +73,6 @@ const formatDateIndonesian = (dateStr) => {
 
 const emptyForm = {
   account_id: '',
-  income_source_id: '',
   category_id: '',
   amount: '',
   voucher_no: '',
@@ -86,8 +85,8 @@ const emptyOcrFlags = {
   amount: false,
   transaction_date: false,
   notes: false,
-  income_source_id: false,
   category_id: false,
+  account_id: false,
 }
 
 const IncomeModal = ({
@@ -204,8 +203,8 @@ const IncomeModal = ({
             amount: data.amount != null,
             transaction_date: Boolean(data.transaction_date),
             notes: Boolean(data.notes),
-            income_source_id: Boolean(data.suggested_income_source_id),
             category_id: Boolean(data.suggested_category_id),
+            account_id: Boolean(data.suggested_account_id),
           }
 
           setForm((prev) => ({
@@ -213,12 +212,12 @@ const IncomeModal = ({
             amount: data.amount != null ? String(data.amount) : prev.amount,
             transaction_date: data.transaction_date || prev.transaction_date,
             notes: data.notes || prev.notes,
-            income_source_id: data.suggested_income_source_id
-              ? String(data.suggested_income_source_id)
-              : prev.income_source_id,
             category_id: data.suggested_category_id
               ? String(data.suggested_category_id)
               : prev.category_id,
+            account_id: data.suggested_account_id
+              ? String(data.suggested_account_id)
+              : prev.account_id,
             attachment_path: data.attachment_path || prev.attachment_path,
           }))
 
@@ -228,8 +227,8 @@ const IncomeModal = ({
             sender: data.merchant || 'Bukti Pemasukan',
             amount: data.amount,
             transaction_date: data.transaction_date,
-            suggested_income_source_name: data.suggested_income_source_name,
             suggested_category_name: data.suggested_category_name,
+            suggested_account_name: data.suggested_account_name,
             fileName: file.name,
             attachment_url: data.attachment_url,
             isOcr: true,
@@ -371,8 +370,7 @@ const IncomeModal = ({
     setForm({
       account_id: item.account_id ? String(item.account_id) : '',
       transaction_date: item.transaction_date || selectedDate,
-      income_source_id: item.income_source_id || '',
-      category_id: item.category_id || '',
+      category_id: item.category_id ? String(item.category_id) : '',
       amount: item.amount != null ? String(item.amount) : '',
       voucher_no: item.voucher_no || '',
       notes: item.notes || '',
@@ -415,9 +413,8 @@ const IncomeModal = ({
 
     const payload = {
       account_id: form.account_id ? Number(form.account_id) : null,
-      transaction_date: form.transaction_date,
-      income_source_id: Number(form.income_source_id),
       category_id: form.category_id ? Number(form.category_id) : null,
+      transaction_date: form.transaction_date,
       amount: parseAmount(form.amount),
       voucher_no: form.voucher_no ? form.voucher_no.trim() : null,
       notes: form.notes ? form.notes.trim() : null,
@@ -579,9 +576,9 @@ const IncomeModal = ({
                 <CTable hover responsive small className="border align-middle">
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell>No. Bukti / Sumber Dana</CTableHeaderCell>
+                      <CTableHeaderCell>No. Bukti / Tanggal</CTableHeaderCell>
                       <CTableHeaderCell>Masuk ke Akun</CTableHeaderCell>
-                      <CTableHeaderCell>Kategori</CTableHeaderCell>
+                      <CTableHeaderCell>Kategori Pemasukan</CTableHeaderCell>
                       <CTableHeaderCell>Catatan</CTableHeaderCell>
                       <CTableHeaderCell>Nominal</CTableHeaderCell>
                       <CTableHeaderCell width={85} className="text-center">
@@ -609,7 +606,7 @@ const IncomeModal = ({
                             </div>
                           )}
                           <div className="d-flex align-items-center gap-1">
-                            <strong>{item.income_source?.name || '-'}</strong>
+                            <strong>{item.transaction_date || '-'}</strong>
                             {editingItem?.id === item.id && (
                               <span className="badge bg-primary-subtle text-primary border border-primary-subtle py-0 px-1 small" style={{ fontSize: '10px' }}>
                                 Diedit
@@ -1077,6 +1074,12 @@ const IncomeModal = ({
                     <label className="form-label mb-0 fw-semibold small">
                       Masuk ke Rekening / Kas *
                     </label>
+                    {ocrAutoFilled.account_id && (
+                      <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2 small">
+                        <CIcon icon={cilCheck} size="sm" className="me-1" />
+                        Disarankan dari Bukti
+                      </span>
+                    )}
                   </div>
                   <CFormSelect
                     name="account_id"
@@ -1101,40 +1104,12 @@ const IncomeModal = ({
                   </CFormSelect>
                 </div>
 
-                {/* Income Source */}
-                <div className="col-md-6">
-                  <div className="d-flex align-items-center justify-content-between mb-1">
-                    <label className="form-label mb-0 fw-semibold small">Sumber Dana *</label>
-                    {ocrAutoFilled.income_source_id && (
-                      <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2 small">
-                        <CIcon icon={cilCheck} size="sm" className="me-1" />
-                        Disarankan dari Bukti
-                      </span>
-                    )}
-                  </div>
-                  <CFormSelect
-                    name="income_source_id"
-                    value={form.income_source_id}
-                    onChange={handleChange}
-                    invalid={Boolean(getFieldError(errors, 'income_source_id'))}
-                    feedbackInvalid={getFieldError(errors, 'income_source_id')}
-                    disabled={saving}
-                  >
-                    <option value="">-- Pilih Sumber Dana --</option>
-                    {incomeSources
-                      .filter((s) => s.is_active || s.id === Number(form.income_source_id))
-                      .map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                  </CFormSelect>
-                </div>
-
                 {/* Income Category */}
                 <div className="col-md-6">
                   <div className="d-flex align-items-center justify-content-between mb-1">
-                    <label className="form-label mb-0 fw-semibold small">Kategori Pemasukan</label>
+                    <label className="form-label mb-0 fw-semibold small">
+                      Kategori Pemasukan *
+                    </label>
                     {ocrAutoFilled.category_id && (
                       <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2 small">
                         <CIcon icon={cilCheck} size="sm" className="me-1" />
@@ -1150,7 +1125,7 @@ const IncomeModal = ({
                     feedbackInvalid={getFieldError(errors, 'category_id')}
                     disabled={saving}
                   >
-                    <option value="">-- Tanpa Kategori --</option>
+                    <option value="">-- Pilih Kategori Pemasukan --</option>
                     {categories
                       .filter((c) => c.is_active || c.id === Number(form.category_id))
                       .map((c) => (

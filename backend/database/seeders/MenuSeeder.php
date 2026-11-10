@@ -71,6 +71,9 @@ class MenuSeeder extends Seeder
             ]
         );
 
+        // Delete legacy/redundant income sources menu
+        Menus::where('menu_path', '/master/income-sources')->delete();
+
         Menus::updateOrCreate(
             ['menu_path' => '/master/accounts'],
             [
@@ -81,20 +84,11 @@ class MenuSeeder extends Seeder
         );
 
         Menus::updateOrCreate(
-            ['menu_path' => '/master/income-sources'],
-            [
-                'menu_name' => 'Sumber Dana',
-                'menu_parent_id' => $master->id,
-                'menu_order' => 2,
-            ]
-        );
-
-        Menus::updateOrCreate(
             ['menu_path' => '/master/categories'],
             [
-                'menu_name' => 'Kategori',
+                'menu_name' => 'Kategori Transaksi',
                 'menu_parent_id' => $master->id,
-                'menu_order' => 3,
+                'menu_order' => 2,
             ]
         );
 
@@ -103,7 +97,7 @@ class MenuSeeder extends Seeder
             [
                 'menu_name' => 'Kelompok Anggaran',
                 'menu_parent_id' => $master->id,
-                'menu_order' => 4,
+                'menu_order' => 3,
             ]
         );
 
@@ -112,7 +106,7 @@ class MenuSeeder extends Seeder
             [
                 'menu_name' => 'Siklus Anggaran',
                 'menu_parent_id' => $master->id,
-                'menu_order' => 5,
+                'menu_order' => 4,
             ]
         );
 

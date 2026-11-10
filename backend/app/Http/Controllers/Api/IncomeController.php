@@ -164,21 +164,21 @@ class IncomeController extends Controller
 
         $validated = $request->validate([
             'account_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
             ],
-            'income_source_id' => [
-                'required',
-                'integer',
-                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
-            ],
             'category_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('ms_categories', 'id')->where(function ($query) use ($user) {
                     $query->where('user_id', $user->id)->where('type', 'income');
                 }),
+            ],
+            'income_source_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
             ],
             'transaction_date' => ['required', 'date_format:Y-m-d'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999999.99'],
@@ -253,22 +253,23 @@ class IncomeController extends Controller
 
         $validated = $request->validate([
             'account_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
-            ],
-            'income_source_id' => [
                 'sometimes',
                 'required',
                 'integer',
-                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
+                Rule::exists('ms_accounts', 'id')->where('user_id', $user->id),
             ],
             'category_id' => [
-                'nullable',
+                'sometimes',
+                'required',
                 'integer',
                 Rule::exists('ms_categories', 'id')->where(function ($query) use ($user) {
                     $query->where('user_id', $user->id)->where('type', 'income');
                 }),
+            ],
+            'income_source_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ms_income_sources', 'id')->where('user_id', $user->id),
             ],
             'transaction_date' => ['sometimes', 'required', 'date_format:Y-m-d'],
             'amount' => ['sometimes', 'required', 'numeric', 'min:0.01', 'max:9999999999999.99'],

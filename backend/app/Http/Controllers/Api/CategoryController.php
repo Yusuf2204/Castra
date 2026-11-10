@@ -158,11 +158,14 @@ class CategoryController extends Controller
     {
         $category = $request->user()->categories()->findOrFail($id);
 
-        // Check if category has transactions
-        if (\Illuminate\Support\Facades\DB::table('transactions')->where('category_id', $category->id)->exists()) {
+        // Check if category has transactions in expenses or incomes
+        $hasTransactions = \Illuminate\Support\Facades\DB::table('out_transactions')->where('category_id', $category->id)->exists()
+            || \Illuminate\Support\Facades\DB::table('in_transactions')->where('category_id', $category->id)->exists();
+
+        if ($hasTransactions) {
             return response()->json([
                 'data' => null,
-                'message' => 'Kategori tidak dapat dihapus karena sudah dipakai dalam transaksi.',
+                'message' => 'Kategori tidak dapat dihapus karena sudah dipakai dalam riwayat transaksi.',
                 'errors' => ['category' => ['Kategori sudah memiliki riwayat transaksi.']],
             ], 422);
         }

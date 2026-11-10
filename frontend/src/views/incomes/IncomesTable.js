@@ -67,8 +67,8 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>No. Bukti / Tanggal</CTableHeaderCell>
-            <CTableHeaderCell>Sumber Dana</CTableHeaderCell>
-            <CTableHeaderCell>Kategori</CTableHeaderCell>
+            <CTableHeaderCell>Masuk ke Akun</CTableHeaderCell>
+            <CTableHeaderCell>Kategori Pemasukan</CTableHeaderCell>
             <CTableHeaderCell>Catatan</CTableHeaderCell>
             <CTableHeaderCell>Nominal</CTableHeaderCell>
             <CTableHeaderCell width={70} className="text-center">
@@ -89,31 +89,30 @@ const IncomesTable = ({ incomes = [], loading, onEdit, onDelete }) => {
               </CTableDataCell>
 
               <CTableDataCell>
-                <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
-                  {item.income_source?.name || '-'}
-                </span>
-                {item.account && (
-                  <div className="mt-1">
-                    <span
-                      className={`badge small ${
-                        item.account.type === 'petty_cash'
-                          ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'
-                          : 'bg-secondary-subtle text-secondary border border-secondary-subtle'
-                      }`}
-                    >
-                      {item.account.name}
-                    </span>
-                  </div>
+                {item.account ? (
+                  <span
+                    className={`badge ${
+                      item.account.type === 'petty_cash'
+                        ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'
+                        : item.account.type === 'bank'
+                        ? 'bg-primary-subtle text-primary border border-primary-subtle'
+                        : 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+                    }`}
+                  >
+                    {item.account.name}
+                  </span>
+                ) : (
+                  <span className="text-body-secondary small">-</span>
                 )}
               </CTableDataCell>
 
               <CTableDataCell>
                 {item.category?.name ? (
-                  <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                  <span className="badge bg-success-subtle text-success border border-success-subtle">
                     {item.category.name}
                   </span>
                 ) : (
-                  <span className="text-body-secondary">-</span>
+                  <span className="text-body-secondary">{item.income_source?.name || '-'}</span>
                 )}
               </CTableDataCell>
 
