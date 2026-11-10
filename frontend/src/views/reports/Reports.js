@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   CRow,
   CCol,
@@ -16,6 +16,7 @@ import BudgetComparisonReport from './BudgetComparisonReport'
 import CategoryBreakdownReport from './CategoryBreakdownReport'
 import PettyCashBookReport from './PettyCashBookReport'
 import api from '../../services/api'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const Reports = () => {
   const today = new Date()
@@ -31,6 +32,13 @@ const Reports = () => {
   const [budgetMode, setBudgetMode] = useState('period')
   const [budgetPeriods, setBudgetPeriods] = useState([])
   const [selectedPeriodId, setSelectedPeriodId] = useState('')
+
+  const budgetPeriodOptions = useMemo(() => {
+    return budgetPeriods.map((bp) => ({
+      value: bp.id,
+      label: `${bp.name} ${bp.is_active ? '★ (Aktif)' : ''}`,
+    }))
+  }, [budgetPeriods])
 
   const handleReload = () => {
     setReloadKey((k) => k + 1)
@@ -143,22 +151,16 @@ const Reports = () => {
                   </CButtonGroup>
 
                   {budgetMode === 'period' ? (
-                    <CFormSelect
-                      size="sm"
-                      value={selectedPeriodId}
-                      onChange={(e) => setSelectedPeriodId(e.target.value)}
-                      style={{ minWidth: '180px', maxWidth: '240px' }}
-                    >
-                      {budgetPeriods.length === 0 ? (
-                        <option value="">(Belum ada siklus)</option>
-                      ) : (
-                        budgetPeriods.map((bp) => (
-                          <option key={bp.id} value={bp.id}>
-                            {bp.name} {bp.is_active ? '★ (Aktif)' : ''}
-                          </option>
-                        ))
-                      )}
-                    </CFormSelect>
+                    <div style={{ minWidth: '220px', maxWidth: '300px' }}>
+                      <CustomSelect
+                        size="sm"
+                        value={selectedPeriodId}
+                        onChange={(e) => setSelectedPeriodId(e.target.value)}
+                        options={budgetPeriodOptions}
+                        placeholder="Pilih Siklus Anggaran..."
+                        isDisabled={budgetPeriods.length === 0}
+                      />
+                    </div>
                   ) : (
                     <CFormInput
                       type="month"

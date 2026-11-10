@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import {
   CModal,
   CModalHeader,
@@ -19,6 +19,7 @@ import { cilLoopCircular, cilPaperclip, cilXCircle, cilCloudUpload, cilCheckCirc
 import api from '../../services/api'
 import { toastSuccess, toastError } from '../../services/toastService'
 import { getFieldError } from '../../utils/formErrors'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return 'Rp 0'
@@ -50,6 +51,42 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef(null)
+
+  const fromAccountOptions = useMemo(() => {
+    return accounts.map((acc) => {
+      const typeLabel =
+        acc.type === 'petty_cash'
+          ? 'Kas Kecil'
+          : acc.type === 'bank'
+            ? 'Bank'
+            : acc.type === 'e_wallet'
+              ? 'E-Wallet'
+              : 'Tunai'
+      return {
+        value: acc.id,
+        label: `${acc.name} (${typeLabel}) - Saldo: ${formatCurrency(acc.current_balance)}`,
+      }
+    })
+  }, [accounts])
+
+  const toAccountOptions = useMemo(() => {
+    return accounts
+      .filter((acc) => String(acc.id) !== String(form.from_account_id))
+      .map((acc) => {
+        const typeLabel =
+          acc.type === 'petty_cash'
+            ? 'Kas Kecil'
+            : acc.type === 'bank'
+              ? 'Bank'
+              : acc.type === 'e_wallet'
+                ? 'E-Wallet'
+                : 'Tunai'
+        return {
+          value: acc.id,
+          label: `${acc.name} (${typeLabel}) - Saldo: ${formatCurrency(acc.current_balance)}`,
+        }
+      })
+  }, [accounts, form.from_account_id])
 
   const handleProcessAttachment = (file) => {
     if (!file) return
@@ -239,22 +276,16 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
               {/* Dari Akun */}
               <div className="col-md-6">
                 <label className="form-label small fw-semibold">Dari Akun (Sumber Dana) *</label>
-                <CFormSelect
+                <CustomSelect
                   name="from_account_id"
                   value={form.from_account_id}
                   onChange={handleChange}
+                  options={fromAccountOptions}
+                  placeholder="-- Pilih Akun Asal --"
                   invalid={Boolean(getFieldError(errors, 'from_account_id'))}
                   feedbackInvalid={getFieldError(errors, 'from_account_id')}
                   disabled={saving}
-                  required
-                >
-                  <option value="">-- Pilih Akun Asal --</option>
-                  {accounts.map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.name} ({formatCurrency(acc.current_balance)})
-                    </option>
-                  ))}
-                </CFormSelect>
+                />
                 {selectedFrom && (
                   <div className="form-text small">
                     Saldo saat ini: <strong>{formatCurrency(selectedFrom.current_balance)}</strong>
@@ -267,22 +298,16 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
                 <label className="form-label small fw-semibold">
                   Ke Akun (Tujuan / Kas Kecil) *
                 </label>
-                <CFormSelect
+                <CustomSelect
                   name="to_account_id"
                   value={form.to_account_id}
                   onChange={handleChange}
+                  options={toAccountOptions}
+                  placeholder="-- Pilih Akun Tujuan --"
                   invalid={Boolean(getFieldError(errors, 'to_account_id'))}
                   feedbackInvalid={getFieldError(errors, 'to_account_id')}
                   disabled={saving}
-                  required
-                >
-                  <option value="">-- Pilih Akun Tujuan --</option>
-                  {accounts.map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.name} ({formatCurrency(acc.current_balance)})
-                    </option>
-                  ))}
-                </CFormSelect>
+                />
                 {selectedTo && (
                   <div className="form-text small">
                     Saldo saat ini: <strong>{formatCurrency(selectedTo.current_balance)}</strong>
@@ -340,7 +365,7 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
                 <CFormInput
                   type="text"
                   name="reference_no"
-                  placeholder="Contoh: REF-BCA-10293, Cek #012"
+                  placeholder="Nomor referensi atau bukti transfer (opsional)..."
                   value={form.reference_no}
                   onChange={handleChange}
                   invalid={Boolean(getFieldError(errors, 'reference_no'))}
@@ -355,7 +380,7 @@ const FundTransferModal = ({ visible, onClose, onSaved }) => {
                 <CFormTextarea
                   name="notes"
                   rows={2}
-                  placeholder="Contoh: Pengisian dana kas kecil rutin mingguan"
+                  placeholder="Keterangan atau alasan pemindahan dana..."
                   value={form.notes}
                   onChange={handleChange}
                   invalid={Boolean(getFieldError(errors, 'notes'))}

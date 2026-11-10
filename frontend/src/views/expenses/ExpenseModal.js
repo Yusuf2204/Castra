@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import {
   CModal,
   CModalHeader,
@@ -48,6 +48,7 @@ import api from '../../services/api'
 import { toastSuccess, toastError, toastWarning } from '../../services/toastService'
 import { getFieldError } from '../../utils/formErrors'
 import VoucherModal from '../../components/vouchers/VoucherModal'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return 'Rp 0'
@@ -124,6 +125,32 @@ const ExpenseModal = ({
   const [autoOcr, setAutoOcr] = useState(true)
   const [lastSavedId, setLastSavedId] = useState(null)
   const [activeTab, setActiveTab] = useState('form')
+
+  const accountOptions = useMemo(() => {
+    return accounts.map((acc) => {
+      const typeLabel =
+        acc.type === 'petty_cash'
+          ? 'Kas Kecil'
+          : acc.type === 'bank'
+            ? 'Bank'
+            : acc.type === 'e_wallet'
+              ? 'E-Wallet'
+              : 'Tunai'
+      return {
+        value: acc.id,
+        label: `${acc.name} (${typeLabel}) - Sisa: ${formatCurrency(acc.current_balance)}`,
+      }
+    })
+  }, [accounts])
+
+  const categoryOptions = useMemo(() => {
+    return categories
+      .filter((c) => c.is_active || c.id === Number(form.category_id))
+      .map((c) => ({
+        value: c.id,
+        label: c.budget_group ? `${c.name} (${c.budget_group.name})` : c.name,
+      }))
+  }, [categories, form.category_id])
 
   const handleApprove = async (id) => {
     setActionLoadingId(id)
@@ -656,9 +683,9 @@ const ExpenseModal = ({
                         key={item.id}
                         className={
                           editingItem?.id === item.id
-                            ? 'bg-primary-subtle bg-opacity-25 border-start border-3 border-primary'
+                            ? 'row-highlight-editing border-start border-3 border-primary'
                             : lastSavedId === item.id
-                            ? 'bg-success-subtle bg-opacity-25 border-start border-3 border-success'
+                            ? 'row-highlight-saved border-start border-3 border-success'
                             : ''
                         }
                       >
@@ -1188,27 +1215,16 @@ const ExpenseModal = ({
                       Sumber Kas / Rekening *
                     </label>
                   </div>
-                  <CFormSelect
+                  <CustomSelect
                     name="account_id"
                     value={form.account_id}
                     onChange={handleChange}
+                    options={accountOptions}
+                    placeholder="-- Pilih Akun Kas / Bank --"
                     invalid={Boolean(getFieldError(errors, 'account_id'))}
                     feedbackInvalid={getFieldError(errors, 'account_id')}
                     disabled={saving}
-                  >
-                    <option value="">-- Pilih Akun Kas --</option>
-                    {accounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} (
-                        {acc.type === 'petty_cash'
-                          ? 'Kas Kecil'
-                          : acc.type === 'bank'
-                            ? 'Bank'
-                            : 'Tunai'}
-                        ) - Sisa: {formatCurrency(acc.current_balance)}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                  />
                 </div>
 
                 {/* Category Input */}
@@ -1224,23 +1240,16 @@ const ExpenseModal = ({
                       </span>
                     )}
                   </div>
-                  <CFormSelect
+                  <CustomSelect
                     name="category_id"
                     value={form.category_id}
                     onChange={handleChange}
+                    options={categoryOptions}
+                    placeholder="-- Cari / Pilih Kategori --"
                     invalid={Boolean(getFieldError(errors, 'category_id'))}
                     feedbackInvalid={getFieldError(errors, 'category_id')}
                     disabled={saving}
-                  >
-                    <option value="">-- Pilih Kategori Pengeluaran --</option>
-                    {categories
-                      .filter((c) => c.is_active || c.id === Number(form.category_id))
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} {c.budget_group ? `(${c.budget_group.name})` : ''}
-                        </option>
-                      ))}
-                  </CFormSelect>
+                  />
                 </div>
 
                 {/* Amount Input with Live Terbilang / Currency preview */}
@@ -1320,7 +1329,7 @@ const ExpenseModal = ({
                     type="text"
                     name="payee"
                     maxLength={150}
-                    placeholder="Contoh: Pak Wahyu, SPBU Pertamina, Toko ATK..."
+                    placeholder="Nama penerima, toko, atau merchant..."
                     value={form.payee}
                     onChange={handleChange}
                     invalid={Boolean(getFieldError(errors, 'payee'))}
@@ -1341,7 +1350,7 @@ const ExpenseModal = ({
                     type="text"
                     name="voucher_no"
                     maxLength={50}
-                    placeholder="Contoh: BKK-202611-0001"
+                    placeholder="Nomor bukti kas keluar (otomatis jika kosong)..."
                     value={form.voucher_no}
                     onChange={handleChange}
                     invalid={Boolean(getFieldError(errors, 'voucher_no'))}
@@ -1367,7 +1376,7 @@ const ExpenseModal = ({
                     name="notes"
                     rows={2}
                     maxLength={500}
-                    placeholder="Keterangan pengeluaran (contoh: Belanja ATK kantor, sarapan tim)..."
+                    placeholder="Tuliskan keterangan atau rincian transaksi..."
                     value={form.notes}
                     onChange={handleChange}
                     invalid={Boolean(getFieldError(errors, 'notes'))}
@@ -1426,20 +1435,15 @@ const ExpenseModal = ({
                         {splits.map((s, idx) => (
                           <div key={idx} className="row g-2 align-items-center mb-2">
                             <div className="col-md-5">
-                              <CFormSelect
+                              <CustomSelect
                                 size="sm"
                                 value={s.category_id}
+                                options={categoryOptions}
+                                placeholder="-- Pilih Kategori --"
                                 onChange={(e) =>
                                   handleSplitChange(idx, 'category_id', e.target.value)
                                 }
-                              >
-                                <option value="">-- Pilih Kategori --</option>
-                                {categories.map((c) => (
-                                  <option key={c.id} value={c.id}>
-                                    {c.name}
-                                  </option>
-                                ))}
-                              </CFormSelect>
+                              />
                             </div>
                             <div className="col-md-3">
                               <CFormInput
@@ -1454,7 +1458,7 @@ const ExpenseModal = ({
                               <CFormInput
                                 size="sm"
                                 type="text"
-                                placeholder="Catatan item..."
+                                placeholder="Keterangan item (opsional)..."
                                 value={s.notes}
                                 onChange={(e) => handleSplitChange(idx, 'notes', e.target.value)}
                               />
@@ -1524,31 +1528,7 @@ const ExpenseModal = ({
       )}
     </CModalBody>
 
-    <CModalFooter className="d-flex justify-content-between align-items-center">
-      <div>
-        {activeTab === 'form' ? (
-          <CButton
-            color="link"
-            className="text-decoration-none p-0 text-body-secondary small"
-            onClick={() => setActiveTab('detail')}
-          >
-            <CIcon icon={cilList} className="me-1" />
-            Lihat Detail Transaksi Hari Ini ({dailyItems.length}) &rarr;
-          </CButton>
-        ) : (
-          <CButton
-            color="link"
-            className="text-decoration-none p-0 text-primary small"
-            onClick={() => {
-              handleCancelEdit()
-              setActiveTab('form')
-            }}
-          >
-            &larr; <CIcon icon={cilPencil} className="me-1" />
-            Kembali ke Form Input Transaksi
-          </CButton>
-        )}
-      </div>
+    <CModalFooter>
       <CButton color="secondary" onClick={onClose} disabled={saving}>
         Tutup
       </CButton>

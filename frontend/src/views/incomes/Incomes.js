@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import {
   CCard,
   CCardBody,
@@ -25,6 +25,7 @@ import IncomesTable from './IncomesTable'
 import IncomeModal from './IncomeModal'
 import api from '../../services/api'
 import { toastError, toastSuccess } from '../../services/toastService'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const MONTH_NAMES = [
   'Januari',
@@ -79,6 +80,20 @@ const Incomes = () => {
     account_id: '',
     category_id: '',
   })
+
+  const accountFilterOptions = useMemo(() => {
+    return accounts.map((acc) => ({
+      value: acc.id,
+      label: acc.name,
+    }))
+  }, [accounts])
+
+  const categoryFilterOptions = useMemo(() => {
+    return categories.map((c) => ({
+      value: c.id,
+      label: c.name,
+    }))
+  }, [categories])
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false)
@@ -338,37 +353,29 @@ const Incomes = () => {
                 </CCol>
 
                 <CCol md={4}>
-                  <CFormSelect
+                  <CustomSelect
                     value={filters.account_id}
                     onChange={(e) => {
                       setTablePage(1)
                       setFilters((prev) => ({ ...prev, account_id: e.target.value }))
                     }}
-                  >
-                    <option value="">Semua Akun / Rekening</option>
-                    {accounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                    options={accountFilterOptions}
+                    placeholder="Semua Akun / Rekening"
+                    isClearable
+                  />
                 </CCol>
 
                 <CCol md={3}>
-                  <CFormSelect
+                  <CustomSelect
                     value={filters.category_id}
                     onChange={(e) => {
                       setTablePage(1)
                       setFilters((prev) => ({ ...prev, category_id: e.target.value }))
                     }}
-                  >
-                    <option value="">Semua Kategori</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                    options={categoryFilterOptions}
+                    placeholder="Semua Kategori"
+                    isClearable
+                  />
                 </CCol>
               </CRow>
 

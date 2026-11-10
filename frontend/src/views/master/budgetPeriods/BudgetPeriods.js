@@ -305,7 +305,7 @@ const BudgetPeriods = () => {
                       return (
                         <CTableRow
                           key={p.id}
-                          className={isSelected ? 'table-primary bg-opacity-25' : ''}
+                          className={isSelected ? 'table-primary border-start border-3 border-primary' : ''}
                           style={{ cursor: 'pointer' }}
                           onClick={() => setSelectedPeriod(p)}
                         >
@@ -494,7 +494,7 @@ const BudgetPeriods = () => {
                 required
                 value={periodForm.name}
                 onChange={(e) => setPeriodForm({ ...periodForm, name: e.target.value })}
-                placeholder="Contoh: Siklus 5 Okt - 4 Nov 2026"
+                placeholder="Nama siklus anggaran..."
               />
             </div>
 
@@ -546,7 +546,7 @@ const BudgetPeriods = () => {
                 rows={2}
                 value={periodForm.notes}
                 onChange={(e) => setPeriodForm({ ...periodForm, notes: e.target.value })}
-                placeholder="Contoh: Gaji mundur 2 hari karena akhir pekan"
+                placeholder="Catatan siklus anggaran (opsional)..."
               />
             </div>
 

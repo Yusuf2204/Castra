@@ -112,7 +112,7 @@ const AccountsForm = ({ visible, onClose, account, onSaved }) => {
                 type="text"
                 name="name"
                 maxLength={100}
-                placeholder="Contoh: Kas Kecil Kantor, Bank BCA Operasional"
+                placeholder="Masukkan nama akun kas atau rekening bank..."
                 value={form.name}
                 onChange={handleChange}
                 invalid={Boolean(getFieldError(errors, 'name'))}
@@ -147,7 +147,7 @@ const AccountsForm = ({ visible, onClose, account, onSaved }) => {
                 type="text"
                 name="account_number"
                 maxLength={50}
-                placeholder="Contoh: 123-456-7890"
+                placeholder="Nomor rekening / akun (opsional)..."
                 value={form.account_number}
                 onChange={handleChange}
                 disabled={saving}

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import {
   CCard,
   CCardBody,
@@ -25,6 +25,7 @@ import ExpensesTable from './ExpensesTable'
 import ExpenseModal from './ExpenseModal'
 import api from '../../services/api'
 import { toastError, toastSuccess } from '../../services/toastService'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const MONTH_NAMES = [
   'Januari',
@@ -79,6 +80,13 @@ const Expenses = () => {
     category_id: '',
     budget_group_id: '',
   })
+
+  const categoryFilterOptions = useMemo(() => {
+    return categories.map((c) => ({
+      value: c.id,
+      label: c.name,
+    }))
+  }, [categories])
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false)
@@ -338,20 +346,16 @@ const Expenses = () => {
                 </CCol>
 
                 <CCol md={3}>
-                  <CFormSelect
+                  <CustomSelect
                     value={filters.category_id}
                     onChange={(e) => {
                       setTablePage(1)
                       setFilters((prev) => ({ ...prev, category_id: e.target.value }))
                     }}
-                  >
-                    <option value="">Semua Kategori</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                    options={categoryFilterOptions}
+                    placeholder="Semua Kategori"
+                    isClearable
+                  />
                 </CCol>
 
                 <CCol md={3}>

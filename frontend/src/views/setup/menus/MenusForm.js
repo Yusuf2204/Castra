@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { CForm, CFormInput, CButton, CSpinner } from '@coreui/react'
-import Select from 'react-select'
+import CustomSelect from '../../../components/common/CustomSelect'
 import api from '../../../services/api'
 import { toastSuccess } from '../../../services/toastService'
 import { getFieldError } from '../../../utils/formErrors'
@@ -113,20 +113,17 @@ const MenusForm = ({ menu, menus, onReset, onSaved }) => {
 
       <div className="mb-3">
         <label className="form-label">Parent Menu</label>
-        <Select
-          classNamePrefix="react-select"
-          className="react-select-container"
+        <CustomSelect
+          name="menu_parent_id"
           options={parentOptions}
-          value={
-            form.menu_parent_id ? parentOptions.find((o) => o.value === form.menu_parent_id) : null
-          }
+          value={form.menu_parent_id}
           onChange={handleParentChange}
+          placeholder="Pilih parent menu..."
           isClearable
-          isDisabled={saving}
+          invalid={Boolean(getFieldError(errors, 'menu_parent_id'))}
+          feedbackInvalid={getFieldError(errors, 'menu_parent_id')}
+          disabled={saving}
         />
-        {getFieldError(errors, 'menu_parent_id') && (
-          <div className="invalid-feedback d-block">{getFieldError(errors, 'menu_parent_id')}</div>
-        )}
       </div>
 
       <CFormInput

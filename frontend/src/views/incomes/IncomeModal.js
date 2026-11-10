@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import {
   CModal,
   CModalHeader,
@@ -48,6 +48,7 @@ import api from '../../services/api'
 import { toastSuccess, toastError, toastWarning } from '../../services/toastService'
 import { getFieldError } from '../../utils/formErrors'
 import VoucherModal from '../../components/vouchers/VoucherModal'
+import CustomSelect from '../../components/common/CustomSelect'
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return 'Rp 0'
@@ -117,6 +118,32 @@ const IncomeModal = ({
   const [lastSavedId, setLastSavedId] = useState(null)
   const [activeTab, setActiveTab] = useState('form')
   const fileInputRef = useRef(null)
+
+  const accountOptions = useMemo(() => {
+    return accounts.map((acc) => {
+      const typeLabel =
+        acc.type === 'petty_cash'
+          ? 'Kas Kecil'
+          : acc.type === 'bank'
+            ? 'Bank'
+            : acc.type === 'e_wallet'
+              ? 'E-Wallet'
+              : 'Tunai'
+      return {
+        value: acc.id,
+        label: `${acc.name} (${typeLabel}) - Sisa: ${formatCurrency(acc.current_balance)}`,
+      }
+    })
+  }, [accounts])
+
+  const categoryOptions = useMemo(() => {
+    return categories
+      .filter((c) => c.is_active || c.id === Number(form.category_id))
+      .map((c) => ({
+        value: c.id,
+        label: c.name,
+      }))
+  }, [categories, form.category_id])
 
   // Reset modal state on open/close and fetch accounts
   useEffect(() => {
@@ -593,9 +620,9 @@ const IncomeModal = ({
                         key={item.id}
                         className={
                           editingItem?.id === item.id
-                            ? 'bg-primary-subtle bg-opacity-25 border-start border-3 border-primary'
+                            ? 'row-highlight-editing border-start border-3 border-primary'
                             : lastSavedId === item.id
-                            ? 'bg-success-subtle bg-opacity-25 border-start border-3 border-success'
+                            ? 'row-highlight-saved border-start border-3 border-success'
                             : ''
                         }
                       >
@@ -1081,27 +1108,16 @@ const IncomeModal = ({
                       </span>
                     )}
                   </div>
-                  <CFormSelect
+                  <CustomSelect
                     name="account_id"
                     value={form.account_id}
                     onChange={handleChange}
+                    options={accountOptions}
+                    placeholder="-- Pilih Akun Kas / Bank --"
                     invalid={Boolean(getFieldError(errors, 'account_id'))}
                     feedbackInvalid={getFieldError(errors, 'account_id')}
                     disabled={saving}
-                  >
-                    <option value="">-- Pilih Akun Kas / Bank --</option>
-                    {accounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} (
-                        {acc.type === 'petty_cash'
-                          ? 'Kas Kecil'
-                          : acc.type === 'bank'
-                            ? 'Bank'
-                            : 'Tunai'}
-                        ) - Sisa: {formatCurrency(acc.current_balance)}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                  />
                 </div>
 
                 {/* Income Category */}
@@ -1117,23 +1133,16 @@ const IncomeModal = ({
                       </span>
                     )}
                   </div>
-                  <CFormSelect
+                  <CustomSelect
                     name="category_id"
                     value={form.category_id}
                     onChange={handleChange}
+                    options={categoryOptions}
+                    placeholder="-- Cari / Pilih Kategori --"
                     invalid={Boolean(getFieldError(errors, 'category_id'))}
                     feedbackInvalid={getFieldError(errors, 'category_id')}
                     disabled={saving}
-                  >
-                    <option value="">-- Pilih Kategori Pemasukan --</option>
-                    {categories
-                      .filter((c) => c.is_active || c.id === Number(form.category_id))
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                  </CFormSelect>
+                  />
                 </div>
 
                 {/* Amount with Live Terbilang Preview */}
@@ -1208,7 +1217,7 @@ const IncomeModal = ({
                     type="text"
                     name="voucher_no"
                     maxLength={50}
-                    placeholder="Contoh: BKM-202611-0001"
+                    placeholder="Nomor bukti kas masuk (otomatis jika kosong)..."
                     value={form.voucher_no}
                     onChange={handleChange}
                     invalid={Boolean(getFieldError(errors, 'voucher_no'))}
@@ -1234,7 +1243,7 @@ const IncomeModal = ({
                     name="notes"
                     rows={2}
                     maxLength={500}
-                    placeholder="Keterangan tambahan (contoh: Gaji bulanan, transfer project)..."
+                    placeholder="Tuliskan keterangan atau rincian penerimaan..."
                     value={form.notes}
                     onChange={handleChange}
                     invalid={Boolean(getFieldError(errors, 'notes'))}
@@ -1287,31 +1296,7 @@ const IncomeModal = ({
       )}
     </CModalBody>
 
-    <CModalFooter className="d-flex justify-content-between align-items-center">
-      <div>
-        {activeTab === 'form' ? (
-          <CButton
-            color="link"
-            className="text-decoration-none p-0 text-body-secondary small"
-            onClick={() => setActiveTab('detail')}
-          >
-            <CIcon icon={cilList} className="me-1" />
-            Lihat Detail Transaksi Hari Ini ({dailyItems.length}) &rarr;
-          </CButton>
-        ) : (
-          <CButton
-            color="link"
-            className="text-decoration-none p-0 text-success small"
-            onClick={() => {
-              handleCancelEdit()
-              setActiveTab('form')
-            }}
-          >
-            &larr; <CIcon icon={cilPencil} className="me-1" />
-            Kembali ke Form Input Transaksi
-          </CButton>
-        )}
-      </div>
+    <CModalFooter>
       <CButton color="secondary" onClick={onClose} disabled={saving}>
         Tutup
       </CButton>

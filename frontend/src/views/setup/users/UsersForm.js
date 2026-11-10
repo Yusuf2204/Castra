@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { CForm, CFormInput, CButton, CSpinner } from '@coreui/react'
-import Select from 'react-select'
+import CustomSelect from '../../../components/common/CustomSelect'
 import api from '../../../services/api'
 import { toastSuccess } from '../../../services/toastService'
 import { getFieldError } from '../../../utils/formErrors'
@@ -131,19 +131,17 @@ const UsersForm = ({ user, onReset, onSaved }) => {
 
       <div className="mb-4">
         <label className="form-label">Role</label>
-        <Select
-          classNamePrefix="react-select"
-          className="react-select-container"
+        <CustomSelect
+          name="role_id"
           options={roles}
           placeholder="Select role..."
-          value={form.role_id ? roles.find((r) => r.value === form.role_id) : null}
+          value={form.role_id}
           onChange={handleRoleChange}
           isClearable
-          isDisabled={saving}
+          invalid={Boolean(getFieldError(errors, 'role_id'))}
+          feedbackInvalid={getFieldError(errors, 'role_id')}
+          disabled={saving}
         />
-        {getFieldError(errors, 'role_id') && (
-          <div className="invalid-feedback d-block">{getFieldError(errors, 'role_id')}</div>
-        )}
       </div>
 
       <CButton type="submit" color="primary" disabled={saving}>

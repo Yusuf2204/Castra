@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { useSelector } from 'react-redux'
 import {
@@ -33,6 +33,7 @@ import {
 } from '@coreui/icons'
 import api from '../../services/api'
 import { toastError } from '../../services/toastService'
+import CustomSelect from '../../components/common/CustomSelect'
 import VoucherModal from '../../components/vouchers/VoucherModal'
 
 const formatCurrency = (val) => {
@@ -88,6 +89,23 @@ const PettyCashBookReport = () => {
   const [selectedVoucher, setSelectedVoucher] = useState(null)
   const [showVoucherModal, setShowVoucherModal] = useState(false)
   const [withReceipts, setWithReceipts] = useState(true)
+
+  const accountOptions = useMemo(() => {
+    return accounts.map((acc) => {
+      const typeLabel =
+        acc.type === 'petty_cash'
+          ? 'Kas Kecil'
+          : acc.type === 'bank'
+            ? 'Bank'
+            : acc.type === 'e_wallet'
+              ? 'E-Wallet'
+              : 'Kas Tunai'
+      return {
+        value: acc.id,
+        label: `${acc.name} (${typeLabel})`,
+      }
+    })
+  }, [accounts])
 
   // Fetch accounts list once
   useEffect(() => {
@@ -381,18 +399,13 @@ const PettyCashBookReport = () => {
               <label className="form-label small fw-bold text-secondary mb-1">
                 Pilih Akun Kas / Bank:
               </label>
-              <CFormSelect
+              <CustomSelect
                 value={selectedAccountId}
                 onChange={(e) => setSelectedAccountId(e.target.value)}
+                options={accountOptions}
+                placeholder="-- Pilih Akun Kas / Bank --"
                 disabled={loading || downloadingPdf}
-                className="fw-semibold"
-              >
-                {accounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name} ({acc.type === 'petty_cash' ? 'Kas Kecil' : acc.type === 'bank' ? 'Bank' : 'Kas Tunai'})
-                  </option>
-                ))}
-              </CFormSelect>
+              />
             </div>
 
             <div className="col-lg-3 col-sm-6">
