@@ -173,70 +173,121 @@ const PettyCashBookReport = () => {
     }
   }
 
-  // Export to CSV / Excel
+  // Export to CSV / Excel with Header, Hyperlinks & Summary
   const handleExportCSV = () => {
     if (!data || !data.transactions || data.transactions.length === 0) {
       toastError('Tidak ada data transaksi untuk diekspor.')
       return
     }
 
+    const origin = window.location.origin
+
+    // 1. Metadata Header
+    const metadata = [
+      ['"LAPORAN BUKU KAS KECIL & MUTASI KAS"'],
+      ['"Entitas / Perusahaan"', `"${(company?.name || 'Castra System').replace(/"/g, '""')}"`],
+      ['"Akun Kas / Bank"', `"${(data.account?.name || 'Kas').replace(/"/g, '""')}"`],
+      ['"Periode Mutasi"', `"${startDate} s/d ${endDate}"`],
+      ['"Saldo Awal"', data.opening_balance],
+      ['"Waktu Ekspor"', `"${new Date().toLocaleString('id-ID')}"`],
+      [], // Empty row separator
+    ]
+
+    // 2. Table Column Headers
     const headers = [
       'No',
       'Tanggal',
       'No. Bukti / Voucher',
       'Tipe',
       'Kategori',
-      'Keterangan',
+      'Uraian / Keterangan',
       'Penerima / Sumber',
       'Masuk (Rp)',
       'Keluar (Rp)',
       'Saldo Berjalan (Rp)',
-      'Bukti Fisik',
+      'Nama Berkas Nota',
+      'Tautan Bukti Nota',
     ]
 
-    const rows = data.transactions.map((t, idx) => [
-      idx + 1,
-      t.date,
-      `"${t.voucher_no || '-'}"`,
-      `"${t.type}"`,
-      `"${t.category || '-'}"`,
-      `"${(t.description || '').replace(/"/g, '""')}"`,
-      `"${(t.payee || '').replace(/"/g, '""')}"`,
-      t.amount_in,
-      t.amount_out,
-      t.running_balance,
-      t.attachment_url || t.attachment_path ? 'Ada' : '-',
-    ])
-
-    // Prepend Opening Balance Row
-    rows.unshift([
+    // 3. Opening Balance Row
+    const openingRow = [
       0,
       data.period.start_date,
       '-',
       'Saldo Awal',
       '-',
-      'Saldo Awal Periode',
+      'Saldo kas awal periode',
       '-',
       0,
       0,
       data.opening_balance,
       '-',
-    ])
+      '-',
+    ]
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,\uFEFF' +
-      [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\r\n')
+    // 4. Transaction Rows
+    const rows = data.transactions.map((t, idx) => {
+      const hasAttach = Boolean(t.attachment_url || t.attachment_path)
+      const fileName = t.attachment_path ? t.attachment_path.split('/').pop() : '-'
+      const fileUrl = hasAttach
+        ? `${origin}${t.attachment_url || `/storage/${t.attachment_path}`}`
+        : null
+      const linkFormula = fileUrl
+        ? `"=HYPERLINK(""${fileUrl}""; ""Buka Nota"")"`
+        : `"-"`
 
-    const encodedUri = encodeURI(csvContent)
+      return [
+        idx + 1,
+        t.date,
+        `"${t.voucher_no || '-'}"`,
+        `"${t.type}"`,
+        `"${t.category || '-'}"`,
+        `"${(t.description || '').replace(/"/g, '""')}"`,
+        `"${(t.payee || '').replace(/"/g, '""')}"`,
+        t.amount_in,
+        t.amount_out,
+        t.running_balance,
+        `"${fileName}"`,
+        linkFormula,
+      ]
+    })
+
+    // 5. Total Summary Row
+    const summaryRow = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '"TOTAL MUTASI & SALDO AKHIR"',
+      '',
+      data.total_in,
+      data.total_out,
+      data.closing_balance,
+      '',
+      '',
+    ]
+
+    const csvLines = [
+      ...metadata.map((r) => r.join(';')),
+      headers.join(';'),
+      openingRow.join(';'),
+      ...rows.map((r) => r.join(';')),
+      summaryRow.join(';'),
+    ]
+
+    const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], {
+      type: 'text/csv;charset=utf-8;',
+    })
+    const blobUrl = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute(
-      'download',
-      `Buku_Kas_${data.account.name.replace(/\s+/g, '_')}_${startDate}_sd_${endDate}.csv`,
-    )
+    link.href = blobUrl
+    const cleanAccountName = (data?.account?.name || 'Kas').replace(/[^A-Za-z0-9_\-]/g, '_')
+    link.download = `Buku_Kas_${cleanAccountName}_${startDate}_sd_${endDate}.csv`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000)
   }
 
   return (
