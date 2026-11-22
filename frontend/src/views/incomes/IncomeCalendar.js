@@ -1,7 +1,8 @@
 import React from 'react'
 import { CSpinner } from '@coreui/react'
 
-const DAYS_HEADER = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+const DAYS_HEADER_LONG = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+const DAYS_HEADER_SHORT = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
 
 const formatCurrencyCompact = (val) => {
   if (!val) return ''
@@ -78,28 +79,22 @@ const IncomeCalendar = ({ year, month, calendarData, loading, onDateClick }) => 
         className="d-grid text-center fw-bold py-2 border-bottom bg-body-tertiary"
         style={{ gridTemplateColumns: 'repeat(7, 1fr)' }}
       >
-        {DAYS_HEADER.map((dayName, idx) => (
-          <div key={dayName} className={idx >= 5 ? 'text-danger' : 'text-body'}>
-            {dayName}
+        {DAYS_HEADER_LONG.map((dayName, idx) => (
+          <div key={dayName} className={`small ${idx >= 5 ? 'text-danger' : 'text-body'}`}>
+            <span className="d-none d-sm-inline">{dayName}</span>
+            <span className="d-inline d-sm-none">{DAYS_HEADER_SHORT[idx]}</span>
           </div>
         ))}
       </div>
 
       {/* Calendar Grid */}
-      <div
-        className="d-grid"
-        style={{
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          minHeight: '480px',
-        }}
-      >
+      <div className="calendar-grid-container">
         {cells.map((cell) => {
           if (cell.empty) {
             return (
               <div
                 key={cell.key}
-                className="border-bottom border-end p-2 bg-body-tertiary opacity-25"
-                style={{ minHeight: '85px' }}
+                className="calendar-cell border-bottom border-end bg-body-tertiary opacity-25"
               />
             )
           }
@@ -110,13 +105,12 @@ const IncomeCalendar = ({ year, month, calendarData, loading, onDateClick }) => 
             <div
               key={cell.key}
               onClick={() => onDateClick(cell.dateStr)}
-              className={`border-bottom border-end p-2 position-relative d-flex flex-column justify-content-between transition-all hover-bg-light ${
+              className={`calendar-cell border-bottom border-end position-relative d-flex flex-column justify-content-between transition-all hover-bg-light ${
                 cell.isToday
                   ? 'border-primary border-2 bg-primary-subtle bg-opacity-10'
                   : 'bg-body'
               }`}
               style={{
-                minHeight: '85px',
                 cursor: 'pointer',
                 transition: 'background-color 0.15s ease',
               }}
@@ -129,12 +123,12 @@ const IncomeCalendar = ({ year, month, calendarData, loading, onDateClick }) => 
               <div className="d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center gap-1">
                   <span
-                    className={`d-inline-flex align-items-center justify-content-center rounded-circle small ${
+                    className={`d-inline-flex align-items-center justify-content-center rounded-circle ${
                       cell.isToday
                         ? 'bg-primary text-white fw-bold shadow-sm'
                         : 'text-body fw-semibold'
                     }`}
-                    style={{ width: '24px', height: '24px', fontSize: '0.82rem' }}
+                    style={{ width: '22px', height: '22px', fontSize: '0.78rem' }}
                   >
                     {cell.day}
                   </span>
@@ -159,11 +153,16 @@ const IncomeCalendar = ({ year, month, calendarData, loading, onDateClick }) => 
 
               {hasIncome ? (
                 <div className="mt-1 text-end">
-                  <div className="fw-semibold text-success" style={{ fontSize: '0.82rem' }}>
+                  <div className="fw-semibold text-success d-none d-md-block" style={{ fontSize: '0.82rem' }}>
                     <span className="d-none d-lg-inline">
                       {formatCurrencyFull(cell.dayInfo.total)}
                     </span>
                     <span className="d-inline d-lg-none">
+                      {formatCurrencyCompact(cell.dayInfo.total)}
+                    </span>
+                  </div>
+                  <div className="d-block d-md-none text-end">
+                    <span className="badge bg-success-subtle text-success border border-success-subtle p-0 px-1" style={{ fontSize: '9px' }}>
                       {formatCurrencyCompact(cell.dayInfo.total)}
                     </span>
                   </div>

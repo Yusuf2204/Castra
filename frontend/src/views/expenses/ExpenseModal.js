@@ -572,11 +572,11 @@ const ExpenseModal = ({
   return (
     <>
       <CModal size="xl" visible={visible} onClose={onClose} backdrop="static">
-        <CModalHeader closeButton>
-          <CModalTitle className="d-flex align-items-center gap-2">
-            <span>Pengeluaran: {formatDateIndonesian(selectedDate)}</span>
+        <CModalHeader closeButton className="py-2 py-sm-3 pe-3">
+          <CModalTitle className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2 fs-6 fs-sm-5 pe-2 w-100">
+            <span className="fw-bold">Pengeluaran: {formatDateIndonesian(selectedDate)}</span>
             {totalDaily > 0 && (
-              <CBadge color="danger" className="ms-2 fs-6">
+              <CBadge color="danger" className="fs-7 fw-semibold">
                 Total: {formatCurrency(totalDaily)}
               </CBadge>
             )}

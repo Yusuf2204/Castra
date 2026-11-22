@@ -40,13 +40,13 @@ const formatCurrency = (amount) => {
 
 const SummaryCard = ({ color, icon, label, value, subtext, loading }) => (
   <CCard className={`h-100 border-start border-start-4 border-start-${color} shadow-sm`}>
-    <CCardBody className="d-flex align-items-center justify-content-between">
-      <div>
-        <div className="text-body-secondary small mb-1">{label}</div>
-        <div className="fs-4 fw-bold">{loading ? <CSpinner size="sm" /> : value}</div>
-        {subtext && <div className="text-body-secondary small mt-1">{subtext}</div>}
+    <CCardBody className="d-flex align-items-center justify-content-between p-2 p-sm-3">
+      <div className="overflow-hidden">
+        <div className="text-body-secondary small mb-1 text-truncate">{label}</div>
+        <div className="fs-5 fs-sm-4 fw-bold text-truncate">{loading ? <CSpinner size="sm" /> : value}</div>
+        {subtext && <div className="text-body-secondary small mt-1 text-truncate" style={{ fontSize: '0.72rem' }}>{subtext}</div>}
       </div>
-      <div className={`text-${color} p-2 rounded-circle bg-${color} bg-opacity-10`}>
+      <div className={`text-${color} p-2 rounded-circle bg-${color} bg-opacity-10 d-none d-sm-flex align-items-center justify-content-center flex-shrink-0 ms-2`}>
         <CIcon icon={icon} size="xl" />
       </div>
     </CCardBody>
@@ -171,12 +171,12 @@ const Dashboard = () => {
               </div>
             </CCol>
 
-            <CCol lg={4} className="d-flex justify-content-lg-end gap-2 flex-wrap">
-              <CButton color="primary" onClick={() => setTransferModalVisible(true)}>
+            <CCol lg={4} className="d-flex justify-content-start justify-content-lg-end gap-2 flex-wrap w-100 w-lg-auto mt-3 mt-lg-0">
+              <CButton color="primary" className="flex-grow-1 flex-lg-grow-0" onClick={() => setTransferModalVisible(true)}>
                 <CIcon icon={cilPlus} className="me-2" />
                 Isi Kas Kecil (Top-Up)
               </CButton>
-              <Link to="/master/accounts" className="btn btn-outline-secondary">
+              <Link to="/master/accounts" className="btn btn-outline-secondary flex-grow-1 flex-lg-grow-0">
                 Kelola Akun
               </Link>
             </CCol>
@@ -185,8 +185,8 @@ const Dashboard = () => {
       </CCard>
 
       {/* Row 1: Financial KPI Cards */}
-      <CRow className="g-3 mb-4">
-        <CCol sm={6} xl={3}>
+      <CRow className="g-2 g-sm-3 mb-4">
+        <CCol xs={6} xl={3}>
           <SummaryCard
             label="Arus Kas Bersih (Bulan Ini)"
             value={formatCurrency(kpis.month_net)}
@@ -196,7 +196,7 @@ const Dashboard = () => {
             loading={loading}
           />
         </CCol>
-        <CCol sm={6} xl={3}>
+        <CCol xs={6} xl={3}>
           <SummaryCard
             label="Pemasukan (Bulan Ini)"
             value={formatCurrency(kpis.month_income)}
@@ -206,7 +206,7 @@ const Dashboard = () => {
             loading={loading}
           />
         </CCol>
-        <CCol sm={6} xl={3}>
+        <CCol xs={6} xl={3}>
           <SummaryCard
             label="Pengeluaran (Bulan Ini)"
             value={formatCurrency(kpis.month_expense)}
@@ -216,7 +216,7 @@ const Dashboard = () => {
             loading={loading}
           />
         </CCol>
-        <CCol sm={6} xl={3}>
+        <CCol xs={6} xl={3}>
           <SummaryCard
             label={
               kpis.active_period ? 'Realisasi Siklus Anggaran' : 'Realisasi Anggaran'

@@ -315,3 +315,40 @@ body {
     color: var(--cui-secondary-color) !important;
   }
 }
+
+/* === Mobile & Multidevice Responsiveness Enhancements === */
+.calendar-grid-container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  min-height: 280px;
+
+  @media (min-width: 768px) {
+    min-height: 480px;
+  }
+}
+
+.calendar-cell {
+  min-height: 48px;
+  padding: 0.25rem 0.15rem;
+
+  @media (min-width: 768px) {
+    min-height: 85px;
+    padding: 0.5rem;
+  }
+}
+
+/* Responsive Table enhancement with smooth touch scroll */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Mobile responsive modal dialog padding */
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  .modal-content {
+    border-radius: 0.5rem;
+  }
+}
