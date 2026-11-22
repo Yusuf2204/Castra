@@ -1,5 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 import PropTypes from 'prop-types'
 
 import SimpleBar from 'simplebar-react'
@@ -8,7 +9,13 @@ import 'simplebar-react/dist/simplebar.min.css'
 import { CBadge, CNavLink, CSidebarNav, CNavItem, CNavGroup } from '@coreui/react'
 
 export const AppSidebarNav = ({ items }) => {
-  4
+  const dispatch = useDispatch()
+
+  const handleNavClick = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 992) {
+      dispatch({ type: 'set', sidebarShow: false })
+    }
+  }
 
   const componentMap = {
     CNavItem,
@@ -41,7 +48,11 @@ export const AppSidebarNav = ({ items }) => {
     return (
       <Component as="div" key={index}>
         {rest.to || rest.href ? (
-          <CNavLink {...(rest.to && { as: NavLink })} {...rest}>
+          <CNavLink
+            {...(rest.to && { as: NavLink })}
+            {...rest}
+            onClick={handleNavClick}
+          >
             {navLink(name, icon, badge, indent)}
           </CNavLink>
         ) : (

@@ -152,7 +152,7 @@ const Login = () => {
                 </CCardBody>
               </CCard>
 
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+              <CCard className="text-white bg-primary py-4 py-md-5 col-12 col-md-5">
                 <CCardBody className="text-center">
                   <h2>Sign up</h2>
                   <p>Create new account</p>

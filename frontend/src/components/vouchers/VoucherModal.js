@@ -233,8 +233,9 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
         </style>
 
         {/* Voucher Container Sheet */}
-        <div className="voucher-paper-sheet border border-2 border-dark p-4 bg-white text-dark rounded-1">
-          {/* Title Dokumen (Tanpa Kop Surat sesuai arahan) */}
+        <div className="overflow-x-auto w-100">
+          <div className="voucher-paper-sheet border border-2 border-dark p-3 p-sm-4 bg-white text-dark rounded-1" style={{ minWidth: '480px' }}>
+            {/* Title Dokumen (Tanpa Kop Surat sesuai arahan) */}
           <div className="d-flex justify-content-between align-items-center border-bottom border-dark pb-3 mb-3">
             <div>
               <h4 className="fw-bold mb-0 text-uppercase tracking-wide">{voucherTitle}</h4>
@@ -438,10 +439,11 @@ const VoucherModal = ({ visible, onClose, transaction, type = 'expense' }) => {
               )}
             </div>
           )}
+          </div>
         </div>
       </CModalBody>
 
-      <CModalFooter className="d-print-none justify-content-between">
+      <CModalFooter className="d-print-none justify-content-between flex-column flex-sm-row gap-2">
         <div className="d-flex align-items-center gap-2">
           {receiptUrl && (
             <div className="form-check form-switch mb-0 small">

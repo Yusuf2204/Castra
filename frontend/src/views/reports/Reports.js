@@ -70,11 +70,12 @@ const Reports = () => {
           <CRow className="g-3 align-items-center justify-content-between">
             {/* Left: Tab Navigator */}
             <CCol lg={7}>
-              <CButtonGroup size="sm" className="w-100 flex-wrap">
+              <div className="d-flex flex-wrap gap-1 gap-sm-2">
                 <CButton
                   color={activeTab === 'cash-flow' ? 'primary' : 'outline-secondary'}
                   onClick={() => setActiveTab('cash-flow')}
-                  className="py-2"
+                  size="sm"
+                  className="py-1 py-sm-2 px-2 px-sm-3"
                 >
                   <CIcon icon={cilChartLine} className="me-1" />
                   Arus Kas
@@ -82,7 +83,8 @@ const Reports = () => {
                 <CButton
                   color={activeTab === 'budget-comparison' ? 'primary' : 'outline-secondary'}
                   onClick={() => setActiveTab('budget-comparison')}
-                  className="py-2"
+                  size="sm"
+                  className="py-1 py-sm-2 px-2 px-sm-3"
                 >
                   <CIcon icon={cilBalanceScale} className="me-1" />
                   Anggaran
@@ -90,7 +92,8 @@ const Reports = () => {
                 <CButton
                   color={activeTab === 'category-breakdown' ? 'primary' : 'outline-secondary'}
                   onClick={() => setActiveTab('category-breakdown')}
-                  className="py-2"
+                  size="sm"
+                  className="py-1 py-sm-2 px-2 px-sm-3"
                 >
                   <CIcon icon={cilChartPie} className="me-1" />
                   Kategori
@@ -98,12 +101,13 @@ const Reports = () => {
                 <CButton
                   color={activeTab === 'petty-cash-book' ? 'primary' : 'outline-secondary'}
                   onClick={() => setActiveTab('petty-cash-book')}
-                  className="py-2"
+                  size="sm"
+                  className="py-1 py-sm-2 px-2 px-sm-3"
                 >
                   <CIcon icon={cilWallet} className="me-1" />
-                  Buku Kas / Petty Cash
+                  Buku Kas
                 </CButton>
-              </CButtonGroup>
+              </div>
             </CCol>
 
             {/* Right: Period Filter Controls */}

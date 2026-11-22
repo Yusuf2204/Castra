@@ -239,92 +239,102 @@ const Expenses = () => {
       <CCard className="shadow-sm">
         {/* Top Header Toolbar */}
         <CCardHeader className="py-3">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
-            {/* Left: Title & Month Selector */}
-            <div className="d-flex align-items-center gap-2">
-              <h5 className="mb-0 fw-bold me-2">Pengeluaran</h5>
-
-              <CButtonGroup size="sm">
-                <CButton
-                  color="outline-secondary"
-                  onClick={handlePrevMonth}
-                  title="Bulan Sebelumnya"
-                >
-                  <CIcon icon={cilChevronLeft} />
-                </CButton>
-                <CButton color="secondary" className="fw-semibold px-3" disabled>
-                  {MONTH_NAMES[month - 1]} {year}
-                </CButton>
-                <CButton
-                  color="outline-secondary"
-                  onClick={handleNextMonth}
-                  title="Bulan Berikutnya"
-                >
-                  <CIcon icon={cilChevronRight} />
-                </CButton>
-              </CButtonGroup>
-
-              <CButton size="sm" color="outline-secondary" onClick={handleTodayMonth}>
-                Bulan Ini
-              </CButton>
-
-              <CButton
-                size="sm"
-                color="outline-secondary"
-                onClick={() => {
-                  fetchCalendar()
-                  if (viewMode === 'table') fetchTable()
-                }}
-                title="Muat Ulang"
-              >
-                <CIcon icon={cilReload} />
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            {/* Top row on mobile / Left on desktop: Title & Action Button */}
+            <div className="d-flex justify-content-between align-items-center w-100 w-md-auto">
+              <h5 className="mb-0 fw-bold">Pengeluaran</h5>
+              <CButton color="danger" className="text-white btn-sm d-md-none" onClick={handleAddNew}>
+                <CIcon icon={cilPlus} className="me-1" />
+                Tambah
               </CButton>
             </div>
 
-            {/* Right: View Switcher & Add Button */}
-            <div className="d-flex align-items-center gap-2">
-              <CButtonGroup size="sm">
-                <CButton
-                  color={viewMode === 'calendar' ? 'primary' : 'outline-secondary'}
-                  onClick={() => setViewMode('calendar')}
-                >
-                  <CIcon icon={cilCalendar} className="me-1" />
-                  Kalender
-                </CButton>
-                <CButton
-                  color={viewMode === 'table' ? 'primary' : 'outline-secondary'}
-                  onClick={() => setViewMode('table')}
-                >
-                  <CIcon icon={cilList} className="me-1" />
-                  Tabel
-                </CButton>
-              </CButtonGroup>
+            {/* Navigation & Actions */}
+            <div className="d-flex flex-wrap align-items-center justify-content-between justify-content-md-end gap-2 w-100 w-md-auto">
+              {/* Month Selector */}
+              <div className="d-flex align-items-center gap-1 gap-sm-2">
+                <CButtonGroup size="sm">
+                  <CButton
+                    color="outline-secondary"
+                    onClick={handlePrevMonth}
+                    title="Bulan Sebelumnya"
+                  >
+                    <CIcon icon={cilChevronLeft} />
+                  </CButton>
+                  <CButton color="secondary" className="fw-semibold px-2 px-sm-3 text-nowrap" disabled>
+                    {MONTH_NAMES[month - 1]} {year}
+                  </CButton>
+                  <CButton
+                    color="outline-secondary"
+                    onClick={handleNextMonth}
+                    title="Bulan Berikutnya"
+                  >
+                    <CIcon icon={cilChevronRight} />
+                  </CButton>
+                </CButtonGroup>
 
-              <CButton color="danger" className="text-white btn-sm" onClick={handleAddNew}>
-                <CIcon icon={cilPlus} className="me-1" />
-                Tambah Pengeluaran
-              </CButton>
+                <CButton size="sm" color="outline-secondary" onClick={handleTodayMonth} className="d-none d-sm-inline-block">
+                  Bulan Ini
+                </CButton>
+
+                <CButton
+                  size="sm"
+                  color="outline-secondary"
+                  onClick={() => {
+                    fetchCalendar()
+                    if (viewMode === 'table') fetchTable()
+                  }}
+                  title="Muat Ulang"
+                >
+                  <CIcon icon={cilReload} />
+                </CButton>
+              </div>
+
+              {/* View Switcher & Desktop Add Button */}
+              <div className="d-flex align-items-center gap-2">
+                <CButtonGroup size="sm">
+                  <CButton
+                    color={viewMode === 'calendar' ? 'primary' : 'outline-secondary'}
+                    onClick={() => setViewMode('calendar')}
+                  >
+                    <CIcon icon={cilCalendar} className="me-1" />
+                    <span className="d-none d-sm-inline">Kalender</span>
+                  </CButton>
+                  <CButton
+                    color={viewMode === 'table' ? 'primary' : 'outline-secondary'}
+                    onClick={() => setViewMode('table')}
+                  >
+                    <CIcon icon={cilList} className="me-1" />
+                    <span className="d-none d-sm-inline">Tabel</span>
+                  </CButton>
+                </CButtonGroup>
+
+                <CButton color="danger" className="text-white btn-sm d-none d-md-inline-flex align-items-center" onClick={handleAddNew}>
+                  <CIcon icon={cilPlus} className="me-1" />
+                  Tambah Pengeluaran
+                </CButton>
+              </div>
             </div>
           </div>
 
           {/* Month Summary Banner */}
-          <div className="mt-3 p-3 rounded bg-body-tertiary border d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div className="mt-3 p-2 p-sm-3 rounded bg-body-tertiary border d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
             <div>
-              <span className="text-secondary text-uppercase fw-semibold small d-block mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+              <span className="text-secondary text-uppercase fw-semibold small d-block mb-1" style={{ fontSize: '0.72rem', letterSpacing: '0.5px' }}>
                 Total Pengeluaran &bull; {MONTH_NAMES[month - 1]} {year}
               </span>
-              <h4 className="fw-bold mb-0 text-danger d-flex align-items-baseline gap-1">
+              <h4 className="fw-bold mb-0 text-danger fs-5 fs-sm-4 d-flex align-items-baseline gap-1">
                 <span>{formatCurrency(calendarData?.total_month || 0)}</span>
               </h4>
             </div>
-            <div className="d-flex align-items-center gap-2">
+            <div className="d-flex flex-wrap align-items-center gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
               {viewMode === 'table' && (filters.search || filters.category_id || filters.budget_group_id) && tableMeta && (
-                <span className="badge bg-secondary-subtle text-body border border-secondary-subtle px-3 py-2 fs-6 fw-normal">
-                  Hasil Filter: <strong>{tableMeta.total}</strong> transaksi
+                <span className="badge bg-secondary-subtle text-body border border-secondary-subtle px-2 py-1 px-sm-3 py-sm-2 small fw-normal">
+                  Filter: <strong>{tableMeta.total}</strong>
                 </span>
               )}
-              <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 fw-semibold">
-                {calendarData?.transaction_count || 0} Transaksi Keluar Bulan Ini
+              <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 px-sm-3 py-sm-2 small fw-semibold">
+                {calendarData?.transaction_count || 0} Transaksi Keluar
               </span>
             </div>
           </div>

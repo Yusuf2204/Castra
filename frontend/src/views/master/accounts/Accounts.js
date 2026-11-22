@@ -163,18 +163,20 @@ const Accounts = () => {
       <CCard className="shadow-sm border-0 mb-4">
         <CCardHeader className="bg-transparent d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <h5 className="mb-0 fw-bold">Master Akun Kas & Bank</h5>
-          <div className="d-flex gap-2 flex-wrap">
+          <div className="d-flex gap-2 flex-wrap w-100 w-md-auto">
             <CFormInput
               type="text"
               placeholder="Cari nama akun..."
               value={filters.search}
               onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-              style={{ width: '200px' }}
+              className="flex-grow-1"
+              style={{ minWidth: '140px' }}
             />
             <CFormSelect
               value={filters.type}
               onChange={(e) => setFilters((prev) => ({ ...prev, type: e.target.value }))}
-              style={{ width: '160px' }}
+              className="flex-grow-1"
+              style={{ minWidth: '130px' }}
             >
               <option value="">Semua Tipe</option>
               <option value="petty_cash">Kas Kecil</option>

@@ -18,6 +18,7 @@ Thumbs.db
 *.old
 *.orig
 *.tmp
+*.sql
 
 # IDEs
 .idea/
