@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import api from '../../../services/api'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import {
   CButton,
@@ -270,10 +270,10 @@ const Login = () => {
                       </CButton>
 
                       <div className="text-center text-body-secondary small mt-3">
-                        Belum memiliki akses akun?{' '}
-                        <span className="text-body fw-semibold">
-                          Hubungi Administrator kantor Anda.
-                        </span>
+                        Belum memiliki akun?{' '}
+                        <Link to="/register" className="text-primary fw-semibold text-decoration-none">
+                          Daftar Akun Baru
+                        </Link>
                       </div>
                     </CForm>
                   </div>

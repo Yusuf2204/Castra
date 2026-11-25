@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 // MAIN
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::get('company', [CompanyController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
