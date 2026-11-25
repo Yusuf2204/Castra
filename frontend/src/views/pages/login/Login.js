@@ -211,47 +211,53 @@ const Login = () => {
                         </CInputGroup>
                       </div>
 
-                      <div className="mb-4">
-                        <div className="d-flex justify-content-between align-items-center mb-1">
-                          <label className="form-label small fw-semibold text-body-secondary mb-0">
-                            Password
-                          </label>
-                        </div>
-                        <CInputGroup>
-                          <CInputGroupText className="bg-body-secondary border-end-0 text-secondary">
-                            <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} />
-                          </CInputGroupText>
-                          <CFormInput
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Masukkan password Anda"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => {
-                              setErrors({ ...errors, password: null, auth: null })
-                              setPassword(e.target.value)
-                            }}
-                            invalid={Boolean(
-                              getFieldError(errors, 'password') || getFieldError(errors, 'auth'),
+                      {(() => {
+                        const passwordError = getFieldError(errors, 'password') || getFieldError(errors, 'auth')
+                        return (
+                          <div className="mb-4">
+                            <div className="d-flex justify-content-between align-items-center mb-1">
+                              <label className="form-label small fw-semibold text-body-secondary mb-0">
+                                Password
+                              </label>
+                            </div>
+                            <CInputGroup className={passwordError ? 'has-validation' : ''}>
+                              <CInputGroupText className={`bg-body-secondary border-end-0 ${passwordError ? 'border-danger text-danger' : 'text-secondary'}`}>
+                                <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} />
+                              </CInputGroupText>
+                              <CFormInput
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Masukkan password Anda"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={(e) => {
+                                  setErrors({ ...errors, password: null, auth: null })
+                                  setPassword(e.target.value)
+                                }}
+                                invalid={Boolean(passwordError)}
+                                disabled={loading}
+                                className="py-2 border-end-0"
+                                style={{ backgroundImage: 'none' }}
+                                required
+                              />
+                              <CButton
+                                type="button"
+                                color={passwordError ? 'danger' : 'secondary'}
+                                variant="outline"
+                                className={`border-start-0 d-flex align-items-center ${passwordError ? 'border-danger text-danger' : 'text-secondary'}`}
+                                onClick={() => setShowPassword(!showPassword)}
+                                title={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+                              >
+                                <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} />
+                              </CButton>
+                            </CInputGroup>
+                            {passwordError && (
+                              <div className="text-danger small mt-1">
+                                {passwordError}
+                              </div>
                             )}
-                            feedbackInvalid={
-                              getFieldError(errors, 'password') || getFieldError(errors, 'auth')
-                            }
-                            disabled={loading}
-                            className="py-2 border-end-0"
-                            required
-                          />
-                          <CButton
-                            type="button"
-                            color="secondary"
-                            variant="outline"
-                            className="border-start-0 text-secondary d-flex align-items-center"
-                            onClick={() => setShowPassword(!showPassword)}
-                            title={showPassword ? 'Sembunyikan password' : 'Lihat password'}
-                          >
-                            <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} />
-                          </CButton>
-                        </CInputGroup>
-                      </div>
+                          </div>
+                        )
+                      })()}
 
                       <CButton
                         type="submit"
