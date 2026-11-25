@@ -12,6 +12,66 @@
         }
     ],
     "paths": {
+        "/register": {
+            "post": {
+                "tags": [
+                    "Setup - Auth"
+                ],
+                "summary": "Register a new user, auto-initialize financial templates, and issue access token",
+                "operationId": "1817c3f36f9152f04b57256fd84d155f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterRequest"
+                            },
+                            "example": {
+                                "name": "Budi Santoso",
+                                "email": "budi@example.com",
+                                "password": "secret123",
+                                "password_confirmation": "secret123"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registrasi akun berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RegisterSuccessResponse"
+                                },
+                                "example": {
+                                    "data": {
+                                        "token": "2|yyyyy",
+                                        "user": {
+                                            "id": 2,
+                                            "name": "Budi Santoso",
+                                            "email": "budi@example.com",
+                                            "role_id": 2
+                                        }
+                                    },
+                                    "message": "Registrasi akun berhasil!",
+                                    "errors": null
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "tags": [
@@ -4501,6 +4561,75 @@
                     "role_id": {
                         "type": "integer",
                         "example": 1,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterRequest": {
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Budi Santoso"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "budi@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secret123"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secret123"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterSuccessResponse": {
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "token": {
+                                "type": "string",
+                                "example": "2|yyyyy"
+                            },
+                            "user": {
+                                "$ref": "#/components/schemas/AuthUser"
+                            },
+                            "company": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Company"
+                                    }
+                                ],
+                                "nullable": true
+                            },
+                            "navigation": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/RoleMenuTree"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Registrasi akun berhasil!"
+                    },
+                    "errors": {
+                        "example": null,
                         "nullable": true
                     }
                 },
