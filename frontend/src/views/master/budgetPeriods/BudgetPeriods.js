@@ -620,17 +620,17 @@ const BudgetPeriods = () => {
         </CModalHeader>
         <CModalBody>
           <div className="p-3 bg-body-tertiary border rounded mb-3">
-            <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
               <div>
-                <span className="small text-body-secondary d-block">Target Gaji:</span>
+                <span className="small text-body-secondary d-block" style={{ fontSize: '0.75rem' }}>Target Gaji:</span>
                 <strong className="fs-6 text-body">{formatCurrency(incomeAllocated)}</strong>
               </div>
               <div>
-                <span className="small text-body-secondary d-block">Total Pagu Terbagi:</span>
+                <span className="small text-body-secondary d-block" style={{ fontSize: '0.75rem' }}>Total Pagu Terbagi:</span>
                 <strong className="fs-6 text-primary">{formatCurrency(totalAllocatedInModal)}</strong>
               </div>
               <div>
-                <span className="small text-body-secondary d-block">Sisa / Selisih:</span>
+                <span className="small text-body-secondary d-block" style={{ fontSize: '0.75rem' }}>Sisa / Selisih:</span>
                 <strong
                   className={`fs-6 ${unallocatedDifference < 0 ? 'text-danger' : 'text-success'}`}
                 >
@@ -656,7 +656,7 @@ const BudgetPeriods = () => {
             )}
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-2">
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-2">
             <span className="small text-body-secondary fw-semibold">
               Rincian Alokasi Kategori Belanja:
             </span>
@@ -666,10 +666,11 @@ const BudgetPeriods = () => {
               variant="outline"
               onClick={handleAutoDistribute}
               disabled={incomeAllocated <= 0 || savingAllocations}
-              className="d-flex align-items-center gap-1"
+              className="d-flex align-items-center gap-1 w-100 w-sm-auto justify-content-center"
             >
               <CIcon icon={cilReload} />
-              Hitung Otomatis dari Porsi Gaji
+              <span className="d-none d-sm-inline">Hitung Otomatis dari Porsi Gaji</span>
+              <span className="d-sm-none">Hitung Otomatis Porsi</span>
             </CButton>
           </div>
 

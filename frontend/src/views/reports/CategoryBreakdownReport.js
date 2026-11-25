@@ -68,16 +68,16 @@ const CategoryBreakdownReport = ({ month }) => {
     <div>
       {/* Budget Groups Breakdown Cards */}
       <h6 className="fw-bold mb-3">Rincian Berdasarkan Kelompok Anggaran (Alokasi)</h6>
-      <div className="row g-3 mb-4">
+      <div className="row g-2 g-sm-3 mb-4">
         {data.budget_groups.map((bg) => (
-          <div key={bg.id} className="col-md-3">
+          <div key={bg.id} className="col-6 col-md-3">
             <CCard className="h-100 shadow-sm border-top border-top-3 border-top-primary">
-              <CCardBody>
+              <CCardBody className="p-2 p-sm-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
-                  <span className="fw-bold">{bg.name}</span>
+                  <span className="fw-bold small text-truncate me-1">{bg.name}</span>
                   <CBadge color="primary">{bg.percentage}%</CBadge>
                 </div>
-                <div className="fs-5 fw-bold text-danger mb-2">{formatCurrency(bg.total)}</div>
+                <div className="fs-6 fs-sm-5 fw-bold text-danger mb-2 text-truncate">{formatCurrency(bg.total)}</div>
                 <CProgress thin>
                   <CProgressBar color="primary" value={bg.percentage} />
                 </CProgress>

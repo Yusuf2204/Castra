@@ -136,7 +136,7 @@ const Reports = () => {
               )}
 
               {activeTab === 'budget-comparison' && (
-                <div className="d-flex align-items-center gap-2 flex-wrap">
+                <div className="d-flex align-items-center gap-2 flex-wrap w-100 w-lg-auto justify-content-start justify-content-lg-end">
                   <CButtonGroup size="sm">
                     <CButton
                       color={budgetMode === 'period' ? 'info' : 'outline-secondary'}
@@ -155,7 +155,7 @@ const Reports = () => {
                   </CButtonGroup>
 
                   {budgetMode === 'period' ? (
-                    <div style={{ minWidth: '220px', maxWidth: '300px' }}>
+                    <div className="flex-grow-1" style={{ minWidth: '180px', maxWidth: '300px' }}>
                       <CustomSelect
                         size="sm"
                         value={selectedPeriodId}

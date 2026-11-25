@@ -120,14 +120,14 @@ const BudgetComparisonReport = ({ month, periodId }) => {
       )}
 
       {/* 4 Summary Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3">
+      <div className="row g-2 g-sm-3 mb-4">
+        <div className="col-6 col-md-3">
           <CCard className="border-start border-start-4 border-start-info h-100 shadow-sm">
-            <CCardBody>
-              <div className="text-body-secondary small mb-1">TOTAL PAGU ESTIMASI</div>
-              <div className="fs-5 fw-bold text-info">{formatCurrency(data.total_estimated)}</div>
+            <CCardBody className="p-2 p-sm-3">
+              <div className="text-body-secondary small mb-1 text-truncate">TOTAL PAGU ESTIMASI</div>
+              <div className="fs-6 fs-sm-5 fw-bold text-info text-truncate">{formatCurrency(data.total_estimated)}</div>
               {isPeriodMode && (
-                <div className="small text-body-secondary mt-1">
+                <div className="small text-body-secondary mt-1 text-truncate" style={{ fontSize: '0.72rem' }}>
                   Target Gaji: {formatCurrency(data.period.total_income_allocated)}
                 </div>
               )}
@@ -135,46 +135,46 @@ const BudgetComparisonReport = ({ month, periodId }) => {
           </CCard>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-6 col-md-3">
           <CCard className="border-start border-start-4 border-start-danger h-100 shadow-sm">
-            <CCardBody>
-              <div className="text-body-secondary small mb-1">TOTAL PENGELUARAN AKTUAL</div>
-              <div className="fs-5 fw-bold text-danger">{formatCurrency(data.total_actual)}</div>
-              <div className="small text-body-secondary mt-1">
-                {isPeriodMode ? 'Pengeluaran dalam siklus' : 'Pengeluaran kalender'}
+            <CCardBody className="p-2 p-sm-3">
+              <div className="text-body-secondary small mb-1 text-truncate">TOTAL PENGELUARAN</div>
+              <div className="fs-6 fs-sm-5 fw-bold text-danger text-truncate">{formatCurrency(data.total_actual)}</div>
+              <div className="small text-body-secondary mt-1 text-truncate" style={{ fontSize: '0.72rem' }}>
+                {isPeriodMode ? 'Pengeluaran siklus' : 'Pengeluaran kalender'}
               </div>
             </CCardBody>
           </CCard>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-6 col-md-3">
           <CCard
             className={`border-start border-start-4 h-100 shadow-sm ${
               data.total_variance >= 0 ? 'border-start-success' : 'border-start-warning'
             }`}
           >
-            <CCardBody>
-              <div className="text-body-secondary small mb-1">SISA SALDO ANGGARAN</div>
+            <CCardBody className="p-2 p-sm-3">
+              <div className="text-body-secondary small mb-1 text-truncate">SISA SALDO ANGGARAN</div>
               <div
-                className={`fs-5 fw-bold ${
+                className={`fs-6 fs-sm-5 fw-bold text-truncate ${
                   data.total_variance >= 0 ? 'text-success' : 'text-danger'
                 }`}
               >
                 {formatCurrency(data.total_variance)}
               </div>
-              <div className="small text-body-secondary mt-1">
+              <div className="small text-body-secondary mt-1 text-truncate" style={{ fontSize: '0.72rem' }}>
                 {data.total_variance >= 0 ? 'Surplus anggaran' : 'Defisit anggaran'}
               </div>
             </CCardBody>
           </CCard>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-6 col-md-3">
           <CCard className="border-start border-start-4 border-start-primary h-100 shadow-sm">
-            <CCardBody>
-              <div className="text-body-secondary small mb-1">PERSENTASE PEMAKAIAN</div>
-              <div className="fs-5 fw-bold text-primary">{data.overall_usage_percentage}%</div>
-              <div className="small text-body-secondary mt-1">
+            <CCardBody className="p-2 p-sm-3">
+              <div className="text-body-secondary small mb-1 text-truncate">REALISASI PAGU</div>
+              <div className="fs-6 fs-sm-5 fw-bold text-primary text-truncate">{data.overall_usage_percentage}%</div>
+              <div className="small text-body-secondary mt-1 text-truncate" style={{ fontSize: '0.72rem' }}>
                 {data.overall_usage_percentage > 100
                   ? 'Over Budget'
                   : data.overall_usage_percentage >= 80

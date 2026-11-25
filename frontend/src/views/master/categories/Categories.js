@@ -137,10 +137,10 @@ const Categories = () => {
     <CRow>
       <CCol md={8}>
         <CCard className="mb-4">
-          <CCardHeader className="d-flex justify-content-between align-items-center">
-            <div className="d-flex align-items-center gap-2">
+          <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div className="d-flex flex-wrap align-items-center gap-2">
               <span className="fw-semibold">Master Kategori</span>
-              <CButtonGroup size="sm" className="ms-3" role="group">
+              <CButtonGroup size="sm" role="group">
                 <CButton
                   color={activeTab === 'expense' ? 'primary' : 'outline-secondary'}
                   onClick={() => handleTabChange('expense')}
@@ -155,7 +155,7 @@ const Categories = () => {
                 </CButton>
               </CButtonGroup>
             </div>
-            <CButton size="sm" color="secondary" title="Muat ulang" onClick={fetchCategories}>
+            <CButton size="sm" color="secondary" variant="outline" title="Muat ulang" onClick={fetchCategories}>
               <CIcon icon={cilReload} />
             </CButton>
           </CCardHeader>
