@@ -23,6 +23,7 @@ const AppHeader = () => {
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
+  const company = useSelector((state) => state.company)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,13 +37,20 @@ const AppHeader = () => {
 
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
-      <CContainer className="border-bottom px-2 px-sm-3 px-md-4" fluid>
-        <CHeaderToggler
-          onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
-          style={{ marginInlineStart: '-14px' }}
-        >
-          <CIcon icon={cilMenu} size="lg" />
-        </CHeaderToggler>
+      <CContainer className="border-bottom px-2 px-sm-3 px-md-4 d-flex justify-content-between align-items-center" fluid>
+        <div className="d-flex align-items-center">
+          <CHeaderToggler
+            onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
+            style={{ marginInlineStart: '-14px' }}
+            className="d-none d-md-flex"
+            title="Toggle Sidebar"
+          >
+            <CIcon icon={cilMenu} size="lg" />
+          </CHeaderToggler>
+          <div className="d-md-none fw-bold fs-5 text-primary py-1">
+            {company?.comp_name || 'Castra'}
+          </div>
+        </div>
         <CHeaderNav>
           <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
