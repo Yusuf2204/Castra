@@ -102,8 +102,6 @@ const Login = () => {
                   md={5}
                   className="login-showcase-panel text-white p-4 p-lg-5 d-flex flex-column justify-content-between position-relative"
                 >
-                  <div className="showcase-glow-circle"></div>
-
                   <div>
                     {/* Brand Header */}
                     <div className="mb-4">
@@ -129,38 +127,32 @@ const Login = () => {
                       Platform terintegrasi untuk pencatatan kas operasional, siklus anggaran gajian, dan otomasi bukti nota fisik.
                     </p>
 
-                    {/* Feature Highlights (Visible on tablet & desktop) */}
+                    {/* Feature Highlights with CoreUI Icons */}
                     <div className="d-none d-md-flex flex-column gap-3 mb-4">
-                      <div className="d-flex align-items-start gap-3">
-                        <div className="p-2 rounded-circle bg-white bg-opacity-15 text-white flex-shrink-0">
-                          <CIcon icon={cilWallet} />
-                        </div>
+                      <div className="d-flex align-items-start">
+                        <CIcon icon={cilWallet} size="xl" className="text-white me-3 flex-shrink-0 mt-1" />
                         <div>
-                          <div className="fw-semibold small">Buku Kas Kecil (Imprest Fund)</div>
+                          <div className="fw-semibold small text-white">Buku Kas Kecil (Imprest Fund)</div>
                           <div className="text-white-50" style={{ fontSize: '0.78rem' }}>
                             Pencatatan kas operasional dengan plafon saldo dan mutasi real-time.
                           </div>
                         </div>
                       </div>
 
-                      <div className="d-flex align-items-start gap-3">
-                        <div className="p-2 rounded-circle bg-white bg-opacity-15 text-white flex-shrink-0">
-                          <CIcon icon={cilCalendar} />
-                        </div>
+                      <div className="d-flex align-items-start">
+                        <CIcon icon={cilCalendar} size="xl" className="text-white me-3 flex-shrink-0 mt-1" />
                         <div>
-                          <div className="fw-semibold small">Anggaran Berbasis Siklus Gajian</div>
+                          <div className="fw-semibold small text-white">Anggaran Berbasis Siklus Gajian</div>
                           <div className="text-white-50" style={{ fontSize: '0.78rem' }}>
                             Alokasi pagu belanja fleksibel mengikuti pergeseran tanggal gajian.
                           </div>
                         </div>
                       </div>
 
-                      <div className="d-flex align-items-start gap-3">
-                        <div className="p-2 rounded-circle bg-white bg-opacity-15 text-white flex-shrink-0">
-                          <CIcon icon={cilBolt} />
-                        </div>
+                      <div className="d-flex align-items-start">
+                        <CIcon icon={cilBolt} size="xl" className="text-white me-3 flex-shrink-0 mt-1" />
                         <div>
-                          <div className="fw-semibold small">Pindai Otomatis Nota dengan AI OCR</div>
+                          <div className="fw-semibold small text-white">Pindai Otomatis Nota dengan AI OCR</div>
                           <div className="text-white-50" style={{ fontSize: '0.78rem' }}>
                             Ekstraksi nominal dan deteksi nota belanja langsung dari struk fisik.
                           </div>
