@@ -114,14 +114,14 @@ const Login = () => {
                       />
                       <div className="d-block">
                         <span className="badge bg-white bg-opacity-25 text-white px-3 py-1 small rounded-pill">
-                          Sistem Keuangan &amp; Kas Kantor
+                          Sistem Keuangan & Kas Kantor
                         </span>
                       </div>
                     </div>
 
                     {/* Headline */}
                     <h3 className="fw-bold mb-3 lh-sm text-white">
-                      Kelola Kas &amp; Anggaran Lebih Akurat dan Transparan.
+                      Kelola Kas & Anggaran Lebih Akurat dan Transparan.
                     </h3>
                     <p className="text-white-50 small mb-4">
                       Platform terintegrasi untuk pencatatan kas operasional, siklus anggaran gajian, dan otomasi bukti nota fisik.
@@ -164,7 +164,7 @@ const Login = () => {
                   {/* Panel Footer Security Note */}
                   <div className="d-flex align-items-center gap-2 pt-3 border-top border-white border-opacity-25 text-white-50 small">
                     <CIcon icon={cilShieldAlt} size="sm" className="text-white" />
-                    <span style={{ fontSize: '0.75rem' }}>Data Finansial Terenkripsi &amp; Terlindungi</span>
+                    <span style={{ fontSize: '0.75rem' }}>Data Finansial Terenkripsi & Terlindungi</span>
                   </div>
                 </CCol>
 

@@ -164,7 +164,7 @@ const Register = () => {
                   {/* Panel Footer Security Note */}
                   <div className="d-flex align-items-center gap-2 pt-3 border-top border-white border-opacity-25 text-white-50 small">
                     <CIcon icon={cilShieldAlt} size="sm" className="text-white" />
-                    <span style={{ fontSize: '0.75rem' }}>Data Finansial Terenkripsi &amp; Terlindungi</span>
+                    <span style={{ fontSize: '0.75rem' }}>Data Finansial Terenkripsi & Terlindungi</span>
                   </div>
                 </CCol>
 
@@ -314,10 +314,10 @@ const Register = () => {
                         {loading ? (
                           <>
                             <CSpinner size="sm" className="me-2" />
-                            Membuat Akun &amp; Menyiapkan Data...
+                            Membuat Akun & Menyiapkan Data...
                           </>
                         ) : (
-                          'Daftar &amp; Masuk ke Dashboard'
+                          'Daftar & Masuk ke Dashboard'
                         )}
                       </CButton>
 
