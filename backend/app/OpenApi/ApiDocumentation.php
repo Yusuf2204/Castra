@@ -83,6 +83,37 @@ use OpenApi\Annotations as OA;
  * )
  *
  * @OA\Schema(
+ *     schema="RegisterRequest",
+ *     required={"name","email","password","password_confirmation"},
+ *
+ *     @OA\Property(property="name", type="string", example="Budi Santoso"),
+ *     @OA\Property(property="email", type="string", format="email", example="budi@example.com"),
+ *     @OA\Property(property="password", type="string", format="password", example="secret123"),
+ *     @OA\Property(property="password_confirmation", type="string", format="password", example="secret123")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="RegisterSuccessResponse",
+ *
+ *     @OA\Property(
+ *         property="data",
+ *         type="object",
+ *         @OA\Property(property="token", type="string", example="2|yyyyy"),
+ *         @OA\Property(property="user", ref="#/components/schemas/AuthUser"),
+ *         @OA\Property(property="company", ref="#/components/schemas/Company", nullable=true),
+ *         @OA\Property(
+ *             property="navigation",
+ *             type="array",
+ *
+ *             @OA\Items(ref="#/components/schemas/RoleMenuTree")
+ *         )
+ *     ),
+ *
+ *     @OA\Property(property="message", type="string", example="Registrasi akun berhasil!"),
+ *     @OA\Property(property="errors", nullable=true, example=null)
+ * )
+ *
+ * @OA\Schema(
  *     schema="LoginRequest",
  *     required={"email","password"},
  *
@@ -685,6 +716,48 @@ use OpenApi\Annotations as OA;
  */
 class ApiDocumentation
 {
+    /**
+     * @OA\Post(
+     *     path="/register",
+     *     tags={"Setup - Auth"},
+     *     summary="Register a new user, auto-initialize financial templates, and issue access token",
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/RegisterRequest",
+     *             example={"name":"Budi Santoso","email":"budi@example.com","password":"secret123","password_confirmation":"secret123"}
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Registrasi akun berhasil",
+     *
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/RegisterSuccessResponse",
+     *             example={
+     *                 "data": {
+     *                     "token": "2|yyyyy",
+     *                     "user": {
+     *                         "id": 2,
+     *                         "name": "Budi Santoso",
+     *                         "email": "budi@example.com",
+     *                         "role_id": 2
+     *                     }
+     *                 },
+     *                 "message": "Registrasi akun berhasil!",
+     *                 "errors": null
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse"))
+     * )
+     */
+    public function register(): void {}
+
     /**
      * @OA\Post(
      *     path="/login",
