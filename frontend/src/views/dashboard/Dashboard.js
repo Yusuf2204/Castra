@@ -117,15 +117,20 @@ const Dashboard = () => {
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h2 className="mb-1">Dashboard</h2>
-          <div className="text-body-secondary">
+          <h2 className="mb-1 fs-4 fs-sm-2">Dashboard</h2>
+          <div className="text-body-secondary small">
             Ringkasan Keuangan & Operasional Sistem{' '}
             {data.finance.month ? `(${data.finance.month})` : ''}
           </div>
         </div>
-        <CButton color="secondary" variant="outline" onClick={loadDashboard} disabled={loading}>
-          <CIcon icon={cilReload} className="me-2" />
-          Refresh
+        <CButton
+          color="secondary"
+          variant="outline"
+          onClick={loadDashboard}
+          disabled={loading}
+          title="Muat Ulang / Refresh"
+        >
+          <CIcon icon={cilReload} />
         </CButton>
       </div>
 

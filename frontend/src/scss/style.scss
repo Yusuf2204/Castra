@@ -352,3 +352,43 @@ body {
     border-radius: 0.5rem;
   }
 }
+
+/* Mobile Bottom Navigation Bar */
+.app-bottom-nav {
+  z-index: 1030;
+  height: 56px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  backdrop-filter: blur(10px);
+  background-color: var(--cui-body-bg) !important;
+
+  .app-bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--cui-secondary-color);
+    position: relative;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+
+    &:active {
+      transform: scale(0.92);
+    }
+
+    &.active {
+      color: var(--cui-primary);
+
+      .nav-icon-wrapper {
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+/* Ensure mobile page content does not hide behind the fixed bottom nav */
+@media (max-width: 767.98px) {
+  .wrapper {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}

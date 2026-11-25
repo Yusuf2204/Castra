@@ -624,14 +624,14 @@ const ExpenseModal = ({
           {/* TAB 2: Detail & Riwayat Transaksi */}
           {activeTab === 'detail' && (
             <div className="mb-3">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 p-3 bg-body-tertiary rounded border">
+              <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3 p-3 bg-body-tertiary rounded border">
                 <div>
                   <h6 className="fw-bold mb-1">Riwayat Pengeluaran: {formatDateIndonesian(selectedDate)}</h6>
                   <div className="text-body-secondary small">
                     Total tercatat pada tanggal ini: <strong>{dailyItems.length} transaksi</strong>
                   </div>
                 </div>
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex flex-wrap align-items-center gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
                   {totalDaily > 0 && (
                     <CBadge color="danger" className="fs-6 py-2 px-3">
                       Total: {formatCurrency(totalDaily)}
@@ -1147,7 +1147,7 @@ const ExpenseModal = ({
               ) : (
                 /* Clean Unified Dropzone */
                 <div className="receipt-drop-zone-wrapper">
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1 mb-2">
                     <label className="form-label mb-0 fw-semibold small d-flex align-items-center gap-1">
                       <CIcon icon={cilPaperclip} className="text-primary" />
                       Bukti Transaksi / Nota Belanja
@@ -1443,8 +1443,8 @@ const ExpenseModal = ({
                           </CButton>
                         </div>
                         {splits.map((s, idx) => (
-                          <div key={idx} className="row g-2 align-items-center mb-2">
-                            <div className="col-md-5">
+                          <div key={idx} className="row g-2 align-items-center mb-2 p-2 p-md-0 border border-secondary-subtle rounded border-md-0 bg-body bg-md-transparent">
+                            <div className="col-12 col-md-5">
                               <CustomSelect
                                 size="sm"
                                 value={s.category_id}
@@ -1455,7 +1455,7 @@ const ExpenseModal = ({
                                 }
                               />
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-7 col-md-3">
                               <CFormInput
                                 size="sm"
                                 type="number"
@@ -1464,24 +1464,26 @@ const ExpenseModal = ({
                                 onChange={(e) => handleSplitChange(idx, 'amount', e.target.value)}
                               />
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-5 col-md-3">
                               <CFormInput
                                 size="sm"
                                 type="text"
-                                placeholder="Keterangan item (opsional)..."
+                                placeholder="Keterangan..."
                                 value={s.notes}
                                 onChange={(e) => handleSplitChange(idx, 'notes', e.target.value)}
                               />
                             </div>
-                            <div className="col-md-1 text-center">
+                            <div className="col-12 col-md-1 text-end text-md-center">
                               {splits.length > 1 && (
                                 <CButton
                                   size="sm"
                                   color="danger"
                                   variant="ghost"
-                                  className="p-1"
+                                  className="py-0 px-2 py-md-1"
                                   onClick={() => handleRemoveSplit(idx)}
+                                  title="Hapus baris alokasi"
                                 >
+                                  <span className="d-md-none small me-1">Hapus Baris</span>
                                   &times;
                                 </CButton>
                               )}
